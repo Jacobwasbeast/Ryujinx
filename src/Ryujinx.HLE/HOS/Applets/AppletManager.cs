@@ -26,6 +26,9 @@ namespace Ryujinx.HLE.HOS.Applets
                     return new BrowserApplet(system);
                 case AppletId.LibAppletOff:
                     return new BrowserApplet(system);
+                case AppletId.Cabinet:
+                    return new CabinetApplet(system);
+
             }
 
             throw new NotImplementedException($"{applet} applet is not implemented.");
