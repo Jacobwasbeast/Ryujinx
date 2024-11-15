@@ -31,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         private CancellationTokenSource _cancelTokenSource;
 
         private readonly NfpPermissionLevel _permissionLevel;
+        private string filePathAmiibo = "";
 
         public INfp(NfpPermissionLevel permissionLevel)
         {

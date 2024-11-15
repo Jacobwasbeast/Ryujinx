@@ -2,13 +2,17 @@ using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.Cpu;
+using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Services.Mii;
 using Ryujinx.HLE.HOS.Services.Mii.Types;
 using Ryujinx.HLE.HOS.Services.Nfc.Nfp.NfpManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
-
+using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Threading;
+using Gommon;
 namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 {
     static class VirtualAmiibo
@@ -67,7 +71,13 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
         public static RegisterInfo GetRegisterInfo(ITickSource tickSource, string amiiboId, string userName)
         {
             VirtualAmiiboFile amiiboFile = LoadAmiiboFile(amiiboId);
-            string nickname = amiiboFile.NickName ?? "Ryujinx";
+            string filePath = AppDataManager.AmiiboFileLocation;
+            string nickname = "Ryujinx";
+            if (!filePath.IsNullOrEmpty())
+            {
+                nickname = Path.GetFileNameWithoutExtension(filePath);
+            }
+           
             UtilityImpl utilityImpl = new(tickSource);
             CharInfo charInfo = new();
 
@@ -168,19 +178,67 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         private static VirtualAmiiboFile LoadAmiiboFile(string amiiboId)
         {
-            Directory.CreateDirectory(Path.Join(AppDataManager.BaseDirPath, "system", "amiibo"));
+            // Set up directory and file paths
+            var amiiboDirPath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo");
+            Directory.CreateDirectory(amiiboDirPath);
+            string defaultFilePath = Path.Combine(amiiboDirPath, $"{amiiboId}.json");
+            if (!File.Exists(defaultFilePath))
+            {
+                VirtualAmiiboFile virtualAmiiboFileDef = new VirtualAmiiboFile
+                {
+                    FileVersion = 0,
+                    TagUuid = Array.Empty<byte>(),
+                    AmiiboId = amiiboId,
+                    FirstWriteDate = DateTime.Now,
+                    LastWriteDate = DateTime.Now,
+                    WriteCounter = 0,
+                    ApplicationAreas = new List<VirtualAmiiboApplicationArea>(),
+                };
 
-            string filePath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo", $"{amiiboId}.json");
+                SaveAmiiboFile(virtualAmiiboFileDef, defaultFilePath);
+            }
+            string filePath;
+            if (AppDataManager.AmiiboFileLocation.IsNullOrEmpty())
+            {
+                var dialog = new OpenFileDialog
+                {
+                    Title = $"Load Amiibo File: {amiiboId}",
+                    InitialFileName = amiiboId,
+                    AllowMultiple = false,
+                    Filters = new List<FileDialogFilter>
+                {
+                    new FileDialogFilter { Name = "JSON", Extensions = new List<string> { "json" } }
+                },
+                    Directory = amiiboDirPath
+                };
 
+                filePath = null;
+
+                // Show dialog and get the file path using UI thread
+                Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    if (filePath == null)
+                    {
+                        var window = HiddenWindow();
+                        var result = await dialog.ShowAsync(window);
+                        filePath = result?.Length > 0 ? result[0] : defaultFilePath;
+                        window.Close();
+                    }
+                }).Wait();
+                AppDataManager.AmiiboFileLocation = filePath;
+            }
+            filePath = AppDataManager.AmiiboFileLocation;
             VirtualAmiiboFile virtualAmiiboFile;
 
             if (File.Exists(filePath))
             {
+                // Deserialize the file
                 virtualAmiiboFile = JsonHelper.DeserializeFromFile(filePath, _serializerContext.VirtualAmiiboFile);
             }
             else
             {
-                virtualAmiiboFile = new VirtualAmiiboFile()
+                // Create new file if it doesn't exist
+                virtualAmiiboFile = new VirtualAmiiboFile
                 {
                     FileVersion = 0,
                     TagUuid = Array.Empty<byte>(),
@@ -199,8 +257,52 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
 
         private static void SaveAmiiboFile(VirtualAmiiboFile virtualAmiiboFile)
         {
-            string filePath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo", $"{virtualAmiiboFile.AmiiboId}.json");
-            JsonHelper.SerializeToFile(filePath, virtualAmiiboFile, _serializerContext.VirtualAmiiboFile);
+            string defaultFilePath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo", $"{virtualAmiiboFile.AmiiboId}.json");
+            var dialog = new SaveFileDialog()
+            {
+                Title = "Save Amiibo File",
+                InitialFileName = virtualAmiiboFile.AmiiboId,
+                DefaultExtension = "json",
+                Filters = new List<FileDialogFilter>()
+                {
+                    new FileDialogFilter()
+                    {
+                        Name = "JSON",
+                        Extensions = new List<string>() { "json" }
+                    }
+                },
+                Directory = Path.GetDirectoryName(defaultFilePath),
+            };
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                var window = HiddenWindow();
+                var pathTask = await dialog.ShowAsync(window);
+
+                if (!string.IsNullOrWhiteSpace(pathTask))
+                {
+                    JsonHelper.SerializeToFile(pathTask, virtualAmiiboFile, _serializerContext.VirtualAmiiboFile);
+                }
+
+                window.Close(); 
+            }).Wait();
+            AppDataManager.AmiiboFileLocation = null;
         }
+        private static void SaveAmiiboFile(VirtualAmiiboFile virtualAmiiboFile, string path)
+        {
+            JsonHelper.SerializeToFile(path, virtualAmiiboFile, _serializerContext.VirtualAmiiboFile);
+        }
+
+        private static Avalonia.Controls.Window HiddenWindow()
+        {
+            var hiddenWindow = new Avalonia.Controls.Window
+            {
+                Width = 100,
+                Height = 100,
+                Opacity = 0,
+                ShowInTaskbar = false
+            };
+            return hiddenWindow;
+        }
+        public class App : Application { }
     }
 }
