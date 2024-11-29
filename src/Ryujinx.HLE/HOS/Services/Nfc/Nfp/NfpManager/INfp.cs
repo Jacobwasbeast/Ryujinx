@@ -1,3 +1,4 @@
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Memory;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.Exceptions;
@@ -200,6 +201,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                     break;
                 }
             }
+            AppDataManager.AmiiboFileLocation = null;
 
             return ResultCode.Success;
         }

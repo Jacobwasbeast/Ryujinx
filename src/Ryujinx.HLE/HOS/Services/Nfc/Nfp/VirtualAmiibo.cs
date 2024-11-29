@@ -181,22 +181,19 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
             // Set up directory and file paths
             var amiiboDirPath = Path.Join(AppDataManager.BaseDirPath, "system", "amiibo");
             Directory.CreateDirectory(amiiboDirPath);
-            string defaultFilePath = Path.Combine(amiiboDirPath, $"{amiiboId}.json");
-            if (!File.Exists(defaultFilePath))
+            string defaultFilePath = Path.Combine(amiiboDirPath, $"{amiiboId}-default.json");
+            VirtualAmiiboFile virtualAmiiboFileDef = new VirtualAmiiboFile
             {
-                VirtualAmiiboFile virtualAmiiboFileDef = new VirtualAmiiboFile
-                {
-                    FileVersion = 0,
-                    TagUuid = Array.Empty<byte>(),
-                    AmiiboId = amiiboId,
-                    FirstWriteDate = DateTime.Now,
-                    LastWriteDate = DateTime.Now,
-                    WriteCounter = 0,
-                    ApplicationAreas = new List<VirtualAmiiboApplicationArea>(),
-                };
+                FileVersion = 0,
+                TagUuid = Array.Empty<byte>(),
+                AmiiboId = amiiboId,
+                FirstWriteDate = DateTime.Now,
+                LastWriteDate = DateTime.Now,
+                WriteCounter = 0,
+                ApplicationAreas = new List<VirtualAmiiboApplicationArea>(),
+            };
 
-                SaveAmiiboFile(virtualAmiiboFileDef, defaultFilePath);
-            }
+            SaveAmiiboFile(virtualAmiiboFileDef, defaultFilePath);
             string filePath;
             if (AppDataManager.AmiiboFileLocation.IsNullOrEmpty())
             {
@@ -283,9 +280,8 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                     JsonHelper.SerializeToFile(pathTask, virtualAmiiboFile, _serializerContext.VirtualAmiiboFile);
                 }
 
-                window.Close(); 
+                window.Close();
             }).Wait();
-            AppDataManager.AmiiboFileLocation = null;
         }
         private static void SaveAmiiboFile(VirtualAmiiboFile virtualAmiiboFile, string path)
         {
