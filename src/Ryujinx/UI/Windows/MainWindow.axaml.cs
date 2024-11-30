@@ -7,14 +7,17 @@ using Avalonia.Threading;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Windowing;
+using Gommon;
 using LibHac.Tools.FsSystem;
 using Ryujinx.Ava.Common;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Input;
 using Ryujinx.Ava.UI.Applet;
 using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Ava.UI.Renderer;
 using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Common;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
@@ -106,6 +109,61 @@ namespace Ryujinx.Ava.UI.Windows
                 _ = this.GetObservable(IsActiveProperty).Subscribe(it => ViewModel.IsActive = it);
                 this.ScalingChanged += OnScalingChanged;
             }
+            Thread thread
+                = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        if (!AppDataManager.contentPath.IsNullOrEmpty()&&AppDataManager.id!=0)
+                        {
+                            Console.WriteLine("AppDataManager.contentPath: " + AppDataManager.contentPath);
+                            string path = AppDataManager.contentPath;
+                            long id = AppDataManager.id;
+                            Dispatcher.UIThread.Invoke(new Action(() =>
+                            {
+                                string name = "applet";
+                                Console.WriteLine("AppDataManager.id: " + id);
+                                switch (id)
+                                {
+                                    case 0x0100000000001002:
+                                        name = "cabinet";
+                                        break;
+                                    case 0x0100000000001005:
+                                        name = "error";
+                                        break;
+                                    case 0x0100000000001007:
+                                        name = "playerSelect";
+                                        break;
+                                    case 0x0100000000001008:
+                                        name = "swkbd";
+                                        break;
+                                    case 0x010000000000100A:
+                                        name = "web";
+                                        break;
+                                    case 0x010000000000100B:
+                                        name = "shop";
+                                        break;
+                                    case 0x010000000000100F:
+                                        name = "offlineWeb";
+                                        break;
+                                    case 0x0100000000001009:
+                                        name = "miiEdit";
+                                        break;
+                                }
+                                ApplicationData applicationData = new()
+                                {
+                                    Name = name,
+                                    Id = (ulong)id,
+                                    Path = path,
+                                };
+                                this.ViewModel.LoadAppletApplication(applicationData).Wait();
+                                AppDataManager.contentPath = "";
+                            }));
+                            
+                        }
+                    }
+                });
+            thread.Start();
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace Ryujinx.Graphics.Vulkan
             // Only negative result codes are errors.
             if (result.IsError())
             {
-                throw new VulkanException(result);
+                Console.WriteLine($"Vulkan API error: \"{result}\".");
             }
         }
     }

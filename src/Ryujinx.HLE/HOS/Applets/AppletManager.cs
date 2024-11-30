@@ -1,3 +1,4 @@
+using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets.Browser;
 using Ryujinx.HLE.HOS.Applets.Cabinet;
@@ -13,31 +14,48 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         public static IApplet Create(AppletId applet, Horizon system)
         {
+            long id = 0;
             switch (applet)
             {
                 case AppletId.Controller:
-                    return new ControllerApplet(system);
+                    id = 0x010000000000100C;
+                    break;
                 case AppletId.Error:
-                    return new ErrorApplet(system);
+                    id = 0x0100000000001005;
+                    break;
                 case AppletId.PlayerSelect:
-                    return new PlayerSelectApplet(system);
+                    id = 0x0100000000001007;
+                    break;
                 case AppletId.SoftwareKeyboard:
-                    return new SoftwareKeyboardApplet(system);
+                    id = 0x0100000000001008;
+                    break;
                 case AppletId.LibAppletWeb:
-                    return new BrowserApplet(system);
+                    id = 0x010000000000100A;
+                    break;
                 case AppletId.LibAppletShop:
-                    return new BrowserApplet(system);
+                    id = 0x010000000000100B;
+                    break;
                 case AppletId.LibAppletOff:
-                    return new BrowserApplet(system);
+                    id = 0x010000000000100F;
+                    break;
                 case AppletId.MiiEdit:
-                    Logger.Warning?.Print(LogClass.Application, $"Please use the MiiEdit inside File/Open Applet");
-                    return new DummyApplet(system);
+                    id = 0x0100000000001009;
+                    break;
                 case AppletId.Cabinet:
-                    return new CabinetApplet(system);
+                    id = 0x0100000000001002;
+                    break;
             }
+            if (id == 0)
+            {
+                Logger.Warning?.Print(LogClass.Application, $"Applet {applet} not implemented!");
+                return new DummyApplet(system);
+            }
+            string contentPath = system.ContentManager.GetInstalledContentPath((ulong)id, LibHac.Ncm.StorageId.BuiltInSystem, LibHac.Tools.FsSystem.NcaUtils.NcaContentType.Program);
+            AppDataManager.contentPath = contentPath;
+            AppDataManager.id = id;
+            AppDataManager.applet = applet.ToString();
 
-            Logger.Warning?.Print(LogClass.Application, $"Applet {applet} not implemented!");
-            return new DummyApplet(system);
+            return new RealApplet(system);
         }
     }
 }

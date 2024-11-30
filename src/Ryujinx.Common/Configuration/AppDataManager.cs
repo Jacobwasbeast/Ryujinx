@@ -1,6 +1,7 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.Versioning;
 
@@ -36,12 +37,19 @@ namespace Ryujinx.Common.Configuration
         public const string DefaultNandDir = "bis";
         public const string DefaultSdcardDir = "sdcard";
         private const string DefaultModsDir = "mods";
+        public static object normalSession;
+        public static object interactiveSession;
+        public static string contentPath;
+        public static string applet;
 
         public static string CustomModsPath { get; set; }
         public static string CustomSdModsPath { get; set; }
         public static string CustomNandPath { get; set; } // TODO: Actually implement this into VFS
         public static string CustomSdCardPath { get; set; } // TODO: Actually implement this into VFS
         public static string LastScannedAmiiboId { get; set; }
+        public static bool isAppletDone { get; set; }
+        public static long id { get; set; }
+        public static ConcurrentQueue<byte[]> inputData { get; set; }
 
         static AppDataManager()
         {

@@ -1456,6 +1456,19 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             AppHost?.DisposeContext();
         }
+        private void InitializeGame2(AppHost newHost, RendererHost RendererHostControl2)
+        {
+            RendererHostControl2.WindowCreated += RendererHost_Created;
+
+            newHost.StatusUpdatedEvent += Update_StatusBar;
+            newHost.AppExit += AppHost_AppExit;
+
+            _rendererWaitEvent.WaitOne();
+
+            newHost?.Start();
+
+            newHost?.DisposeContext();
+        }
 
         private async Task HandleRelaunch()
         {
@@ -1960,6 +1973,49 @@ namespace Ryujinx.Ava.UI.ViewModels
             Thread gameThread = new(InitializeGame) { Name = "GUI.WindowThread" };
             gameThread.Start();
         }
+        public async Task LoadAppletApplication(ApplicationData application, bool startFullscreen = false)
+        {
+            RendererHost RendererHostControl2 = new RendererHost();
+
+            PrepareLoadScreen();
+
+            AppHost newHost = new AppHost(
+                RendererHostControl2,
+                InputManager,
+                application.Path,
+                application.Id,
+                VirtualFileSystem,
+                ContentManager,
+                AccountManager,
+                UserChannelPersistence,
+                this,
+                TopLevel);
+
+            if (!await newHost.LoadGuestApplication())
+            {
+                newHost.DisposeContext();
+                newHost = null;
+
+                return;
+            }
+
+            CanUpdate = false;
+
+            LoadHeading = application.Name;
+
+            if (string.IsNullOrWhiteSpace(application.Name))
+            {
+                LoadHeading = LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.LoadingHeading, newHost.Device.Processes.ActiveApplication.Name);
+                application.Name = newHost.Device.Processes.ActiveApplication.Name;
+            }
+
+            SwitchToRenderer2(startFullscreen, RendererHostControl2);
+
+            _currentApplicationData = application;
+
+            Thread gameThread = new Thread(() => InitializeGame2(newHost, RendererHostControl2)) { Name = "GUI.WindowThread" };
+            gameThread.Start();
+        }
 
         public void SwitchToRenderer(bool startFullscreen) =>
             Dispatcher.UIThread.Post(() =>
@@ -1970,6 +2026,16 @@ namespace Ryujinx.Ava.UI.ViewModels
 
                 RendererHostControl.Focus();
             });
+
+        public void SwitchToRenderer2(bool startFullscreen, RendererHost control) =>
+           Dispatcher.UIThread.Post(() =>
+           {
+               SwitchToGameControl(startFullscreen);
+
+               SetMainContent(control);
+
+               control.Focus();
+           });
 
         public static void UpdateGameMetadata(string titleId)
             => ApplicationLibrary.LoadAndSaveMetaData(titleId, appMetadata => appMetadata.UpdatePostGame());

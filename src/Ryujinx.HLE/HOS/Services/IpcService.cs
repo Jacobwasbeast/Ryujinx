@@ -122,8 +122,15 @@ namespace Ryujinx.HLE.HOS.Services
                 if (serviceExists)
                 {
                     Logger.Trace?.Print(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Name}");
-
-                    result = (ResultCode)processRequest.Invoke(service, new object[] { context });
+                    try
+                    {
+                        result = (ResultCode)processRequest.Invoke(service, new object[] { context });
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error?.Print(LogClass.KernelIpc, $"{service.GetType().Name}: {processRequest.Name} threw an exception: {ex}");
+                        result = ResultCode.Success;
+                    }
                 }
                 else
                 {
@@ -155,7 +162,7 @@ namespace Ryujinx.HLE.HOS.Services
             else
             {
                 string dbgMessage = $"{service.GetType().FullName}: {commandId}";
-
+                Console.WriteLine(dbgMessage);
                 throw new ServiceNotImplementedException(service, context, dbgMessage);
             }
         }
