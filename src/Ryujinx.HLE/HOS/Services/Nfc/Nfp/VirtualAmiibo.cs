@@ -63,7 +63,12 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 Reserved = new Array52<byte>(),
             };
         }
-
+        public static void UpdateNickName(string amiiboId, string newNickName)
+        {
+            VirtualAmiiboFile virtualAmiiboFile = LoadAmiiboFile(amiiboId);
+            virtualAmiiboFile.NickName = newNickName;
+            SaveAmiiboFile(virtualAmiiboFile);
+        }
         public static RegisterInfo GetRegisterInfo(ITickSource tickSource, string amiiboId, string userName)
         {
             VirtualAmiiboFile amiiboFile = LoadAmiiboFile(amiiboId);

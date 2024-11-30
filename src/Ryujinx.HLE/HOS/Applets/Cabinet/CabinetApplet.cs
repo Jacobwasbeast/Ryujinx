@@ -14,13 +14,20 @@ using static LibHac.FsSrv.Impl.AccessControlBits;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.Common.Configuration;
 using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.HLE.HOS.Services.Hid.HidServer;
+using System.Threading.Tasks;
+using System.Threading;
+using Ryujinx.HLE.HOS.Services.Nfc.Nfp;
 namespace Ryujinx.HLE.HOS.Applets.Cabinet
 {
     internal class CabinetApplet : IApplet
     {
         private readonly Horizon _system;
         private AppletSession _normalSession;
+        private AppletSession _interactiveSession;
         public event EventHandler AppletStateChanged;
+        public StartParamForAmiiboSettings result;
+        public string amiiboId;
         public CabinetApplet(Horizon system)
         {
             _system = system;
@@ -28,17 +35,52 @@ namespace Ryujinx.HLE.HOS.Applets.Cabinet
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
         {
             _normalSession = normalSession;
+            _interactiveSession = interactiveSession;
             byte[] launchParams = _normalSession.Pop();
             byte[] startParam = _normalSession.Pop();
-            string contentPath = _system.ContentManager.GetInstalledContentPath(0x0100000000001002, StorageId.BuiltInSystem, NcaContentType.Program);
-            NfpDevice nfpDevice = new NfpDevice();
-            nfpDevice.AmiiboId = AppDataManager.LastScannedAmiiboId;
-            nfpDevice.UseRandomUuid = false;
-            nfpDevice.State = NfpDeviceState.Initialized;
-            nfpDevice.Handle = PlayerIndex.Player1;
-            _system.NfpDevices.Add(nfpDevice);
+            NfpDevice devicePlayer1 = new()
+            {
+                NpadIdType = NpadIdType.Player1,
+                Handle = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
+                State = NfpDeviceState.Initialized,
+            };
 
+            _system.Device.System.NfpDevices.Add(devicePlayer1);
+            Thread.Sleep(100);
+            for (int i = 0; i < _system.Device.System.NfpDevices.Count; i++)
+            {
+                if (_system.Device.System.NfpDevices[i].Handle == HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1))
+                {
+                    _system.Device.System.NfpDevices[i].State = NfpDeviceState.SearchingForTag;
 
+                    break;
+                }
+            }
+            var _cancelTokenSource = new CancellationTokenSource();
+            while (true)
+            {
+                if (_cancelTokenSource.Token.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                for (int i = 0; i < _system.Device.System.NfpDevices.Count; i++)
+                {
+                    if (_system.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
+                    {
+                        Thread.Sleep(125); // NOTE: Simulate amiibo scanning delay.
+                        Console.WriteLine("Tag Found");
+                        _cancelTokenSource.Cancel();
+                    }
+                }
+            }
+            for (int i = 0; i < _system.Device.System.NfpDevices.Count; i++)
+            {
+                if (_system.Device.System.NfpDevices[i].State == NfpDeviceState.TagFound)
+                {
+                    amiiboId = _system.Device.System.NfpDevices[i].AmiiboId;
+                }
+            }
             Console.WriteLine("CabinetApplet Start");
             Console.WriteLine($"LaunchParams: {BitConverter.ToString(launchParams)}");
             Console.WriteLine($"StartParam: {BitConverter.ToString(startParam)}");
@@ -58,12 +100,15 @@ namespace Ryujinx.HLE.HOS.Applets.Cabinet
                     Logger.Error?.Print(LogClass.ServiceAm, $"Unknown AmiiboSettings type: {startParamForAmiiboSettings.Type}");
                     break;
             }
-            _normalSession.Push(BuildResponse(startParamForAmiiboSettings));
-            AppletStateChanged?.Invoke(this, null);
+            result = startParamForAmiiboSettings;
 
+            _normalSession.Push(BuildResponse(result));
+            AppletStateChanged?.Invoke(this, null);
             _system.ReturnFocus();
+            
             return ResultCode.Success;
         }
+
         public void StartFormatter(StartParamForAmiiboSettings startParamForAmiibo)
         {
             startParamForAmiibo.RegisterInfo = new RegisterInfo();
@@ -71,10 +116,16 @@ namespace Ryujinx.HLE.HOS.Applets.Cabinet
         public void StartNicknameAndOwnerSettings(StartParamForAmiiboSettings startParamForAmiibo)
         {
             RegisterInfo registerInfo = startParamForAmiibo.RegisterInfo;
-            string newName = "Big Chungus";
+            Array41<byte> array41 = new Array41<byte>();
+            registerInfo.Nickname = array41;
+            string newName = "Chungus";
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(newName);
             bytes.CopyTo(registerInfo.Nickname.AsSpan());
             startParamForAmiibo.RegisterInfo = registerInfo;
+            byte[] nickNameBytes = startParamForAmiibo.RegisterInfo.Nickname.AsSpan().ToArray();
+            string nickName = System.Text.Encoding.UTF8.GetString(nickNameBytes);
+            Console.WriteLine($"New Nickname: {nickName}");
+            //VirtualAmiibo.UpdateNickName(amiiboId, newName);
         }
         private static T ReadStruct<T>(byte[] data) where T : struct
         {
@@ -85,7 +136,7 @@ namespace Ryujinx.HLE.HOS.Applets.Cabinet
             ReturnValueForAmiiboSettings returnValue = new ReturnValueForAmiiboSettings
             {
                 ReturnFlag = (byte)AmiiboSettingsReturnFlag.HasRegisterInfo,
-                DeviceHandle = (int)PlayerIndex.Player1,
+                DeviceHandle = (ulong)HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
                 RegisterInfo = startParamForAmiibo.RegisterInfo,
                 TagInfo = new TagInfo(),
                 IgnoredBySdk = new byte[0x24],

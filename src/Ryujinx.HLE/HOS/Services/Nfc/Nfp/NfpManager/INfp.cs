@@ -61,7 +61,7 @@ namespace Ryujinx.HLE.HOS.Services.Nfc.Nfp
                 Handle = HidUtils.GetIndexFromNpadIdType(NpadIdType.Player1),
                 State = NfpDeviceState.Initialized,
             };
-
+            Console.WriteLine($"NFP devices {context.Device.System.NfpDevices.Count}.");
             context.Device.System.NfpDevices.Add(devicePlayer1);
 
             // TODO: It mounts 0x8000000000000020 save data and stores a random generate value inside. Usage of the data needs to be determined.
