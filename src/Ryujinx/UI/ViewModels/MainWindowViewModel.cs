@@ -2054,7 +2054,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 {
                     ShowAll = window.ViewModel.ShowAllAmiibo;
                     LastScannedAmiiboId = window.ScannedAmiibo.GetId();
-
+                    AppDataManager.LastScannedAmiiboId = LastScannedAmiiboId;
                     AppHost.Device.System.ScanAmiibo(deviceId, LastScannedAmiiboId, window.ViewModel.UseRandomUuid);
                 }
             }
