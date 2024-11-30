@@ -58,11 +58,10 @@ namespace Ryujinx.HLE.HOS.Applets.Cabinet
                     Logger.Error?.Print(LogClass.ServiceAm, $"Unknown AmiiboSettings type: {startParamForAmiiboSettings.Type}");
                     break;
             }
-            
-            _system.ReturnFocus();
             _normalSession.Push(BuildResponse(startParamForAmiiboSettings));
-            interactiveSession.Push(BuildResponse(startParamForAmiiboSettings));
             AppletStateChanged?.Invoke(this, null);
+
+            _system.ReturnFocus();
             return ResultCode.Success;
         }
         public void StartFormatter(StartParamForAmiiboSettings startParamForAmiibo)
