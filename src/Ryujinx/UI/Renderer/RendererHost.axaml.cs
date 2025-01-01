@@ -72,12 +72,20 @@ namespace Ryujinx.Ava.UI.Renderer
         }
         
         
-        private void Initialize()
+        public void Initialize()
         {
             EmbeddedWindow.WindowCreated += CurrentWindow_WindowCreated;
             EmbeddedWindow.BoundsChanged += CurrentWindow_BoundsChanged;
 
             Content = EmbeddedWindow;
+        }
+
+        public void UnInitialize()
+        {
+            EmbeddedWindow.WindowCreated -= CurrentWindow_WindowCreated;
+            EmbeddedWindow.BoundsChanged -= CurrentWindow_BoundsChanged;
+            
+            Content = null;
         }
 
         public void Dispose()

@@ -119,7 +119,7 @@ namespace Ryujinx.Ava
         private readonly ManualResetEvent _gpuDoneEvent;
 
         private IRenderer _renderer;
-        private readonly Thread _renderingThread;
+        private Thread _renderingThread;
         private readonly CancellationTokenSource _gpuCancellationTokenSource;
         private WindowsMultimediaTimerResolution _windowsMultimediaTimerResolution;
 
@@ -136,6 +136,8 @@ namespace Ryujinx.Ava
         public NpadManager NpadManager { get; }
         public TouchScreenManager TouchScreenManager { get; }
         public HLE.Switch Device { get; set; }
+        
+        public bool _isApplet = false;
 
         public int Width { get; private set; }
         public int Height { get; private set; }
@@ -222,6 +224,59 @@ namespace Ryujinx.Ava
 
             _gpuCancellationTokenSource = new CancellationTokenSource();
             _gpuDoneEvent = new ManualResetEvent(false);
+        }
+        public AppHost(
+            RendererHost renderer,
+            InputManager inputManager,
+            string applicationPath,
+            ulong applicationId,
+            VirtualFileSystem virtualFileSystem,
+            ContentManager contentManager,
+            AccountManager accountManager,
+            UserChannelPersistence userChannelPersistence,
+            MainWindowViewModel viewmodel,
+            TopLevel topLevel, AppHost Main)
+        {
+            _viewModel = viewmodel;
+            _inputManager = Main._inputManager;
+            _accountManager = Main._accountManager;
+            _userChannelPersistence = Main._userChannelPersistence;
+            _renderingThread = new Thread(RenderLoop) { Name = "GUI.RenderThread" };
+            _lastCursorMoveTime = Stopwatch.GetTimestamp();
+            _glLogLevel = ConfigurationState.Instance.Logger.GraphicsDebugLevel;
+            _topLevel = Main._topLevel;
+
+            _keyboardInterface = Main._keyboardInterface;
+
+            NpadManager = Main.NpadManager;
+            TouchScreenManager = Main.TouchScreenManager;
+            ApplicationPath = applicationPath;
+            ApplicationId = applicationId;
+            VirtualFileSystem = Main.VirtualFileSystem;
+            ContentManager = Main.ContentManager;
+
+            RendererHost = renderer;
+
+            _chrono = new Stopwatch();
+            _ticksPerFrame = Stopwatch.Frequency / TargetFps;
+
+            if (ApplicationPath.StartsWith("@SystemContent"))
+            {
+                ApplicationPath = VirtualFileSystem.SwitchPathToSystemPath(ApplicationPath);
+
+                _isFirmwareTitle = true;
+            }
+            
+
+            if (OperatingSystem.IsWindows())
+            {
+                _invisibleCursorWin = CreateEmptyCursor();
+                _defaultCursorWin = CreateArrowCursor();
+            }
+
+            _gpuCancellationTokenSource = new CancellationTokenSource();
+            _gpuDoneEvent = new ManualResetEvent(false);
+            _isApplet = true;
         }
 
         private void TopLevel_PointerEnteredOrMoved(object sender, PointerEventArgs e)
@@ -499,7 +554,7 @@ namespace Ryujinx.Ava
             RendererHost.BoundsChanged += Window_BoundsChanged;
 
             _isActive = true;
-
+    
             _renderingThread.Start();
 
             _viewModel.Volume = ConfigurationState.Instance.System.AudioVolume.Value;
@@ -508,7 +563,15 @@ namespace Ryujinx.Ava
 
             Exit();
         }
-
+        
+        public void ReaddApplet()
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                _viewModel.SetUiProgressHandlers(Device);
+                RendererHost.BoundsChanged += Window_BoundsChanged;
+            });
+        }
         private void UpdateIgnoreMissingServicesState(object sender, ReactiveEventArgs<bool> args)
         {
             if (Device != null)
@@ -582,6 +645,10 @@ namespace Ryujinx.Ava
 
         private void Exit()
         {
+            if (_isApplet)
+            {
+                Stop();
+            }
             (_keyboardInterface as AvaloniaKeyboard)?.Clear();
 
             if (_isStopped)
@@ -591,6 +658,28 @@ namespace Ryujinx.Ava
 
             _isStopped = true;
             Stop();
+        }
+
+        public void DisposeContextApplet()
+        {
+            DisposeApplet();
+
+            _isActive = false;
+
+            // NOTE: The render loop is allowed to stay alive until the renderer itself is disposed, as it may handle resource dispose.
+            // We only need to wait for all commands submitted during the main gpu loop to be processed.
+            _gpuDoneEvent.WaitOne();
+            _gpuDoneEvent.Dispose();
+
+            DisplaySleep.Restore();
+
+            NpadManager.Dispose();
+            TouchScreenManager.Dispose();
+            Device.DisposeApplet();
+
+            DisposeGpu();
+
+            AppExit?.Invoke(this, EventArgs.Empty);
         }
 
         public void DisposeContext()
@@ -633,6 +722,22 @@ namespace Ryujinx.Ava
             _topLevel.PointerMoved -= TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerEntered -= TopLevel_PointerEnteredOrMoved;
             _topLevel.PointerExited -= TopLevel_PointerExited;
+
+            _gpuCancellationTokenSource.Cancel();
+            _gpuCancellationTokenSource.Dispose();
+
+            _chrono.Stop();
+        }
+        private void DisposeApplet()
+        {
+            ConfigurationState.Instance.System.IgnoreMissingServices.Event -= UpdateIgnoreMissingServicesState;
+            ConfigurationState.Instance.Graphics.AspectRatio.Event -= UpdateAspectRatioState;
+            ConfigurationState.Instance.System.EnableDockedMode.Event -= UpdateDockedModeState;
+            ConfigurationState.Instance.System.AudioVolume.Event -= UpdateAudioVolumeState;
+            ConfigurationState.Instance.Graphics.ScalingFilter.Event -= UpdateScalingFilter;
+            ConfigurationState.Instance.Graphics.ScalingFilterLevel.Event -= UpdateScalingFilterLevel;
+            ConfigurationState.Instance.Graphics.AntiAliasing.Event -= UpdateAntiAliasing;
+            ConfigurationState.Instance.Graphics.EnableColorSpacePassthrough.Event -= UpdateColorSpacePassthrough;
 
             _gpuCancellationTokenSource.Cancel();
             _gpuCancellationTokenSource.Dispose();
@@ -920,7 +1025,46 @@ namespace Ryujinx.Ava
 
             // Initialize Configuration.
             var memoryConfiguration = ConfigurationState.Instance.System.DramSize.Value;
-
+            if (_isApplet)
+            {
+                Device = new Switch(MainWindowViewModel.AppHostMain.Device, new HLEConfiguration(
+                    VirtualFileSystem,
+                    _viewModel.LibHacHorizonManager,
+                    ContentManager,
+                    _accountManager,
+                    _userChannelPersistence,
+                    renderer,
+                    InitializeAudio(),
+                    memoryConfiguration,
+                    _viewModel.UiHandler,
+                    (SystemLanguage)ConfigurationState.Instance.System.Language.Value,
+                    (RegionCode)ConfigurationState.Instance.System.Region.Value,
+                    ConfigurationState.Instance.Graphics.VSyncMode,
+                    ConfigurationState.Instance.System.EnableDockedMode,
+                    ConfigurationState.Instance.System.EnablePtc,
+                    ConfigurationState.Instance.System.EnableInternetAccess,
+                    ConfigurationState.Instance.System.EnableFsIntegrityChecks
+                        ? IntegrityCheckLevel.ErrorOnInvalid
+                        : IntegrityCheckLevel.None,
+                    ConfigurationState.Instance.System.FsGlobalAccessLogMode,
+                    ConfigurationState.Instance.System.SystemTimeOffset,
+                    ConfigurationState.Instance.System.TimeZone,
+                    ConfigurationState.Instance.System.MemoryManagerMode,
+                    ConfigurationState.Instance.System.IgnoreMissingServices,
+                    ConfigurationState.Instance.Graphics.AspectRatio,
+                    ConfigurationState.Instance.System.AudioVolume,
+                    ConfigurationState.Instance.System.UseHypervisor,
+                    ConfigurationState.Instance.Multiplayer.LanInterfaceId.Value,
+                    ConfigurationState.Instance.Multiplayer.Mode,
+                    ConfigurationState.Instance.Multiplayer.DisableP2p,
+                    ConfigurationState.Instance.Multiplayer.LdnPassphrase,
+                    ConfigurationState.Instance.Multiplayer.LdnServer,
+                    ConfigurationState.Instance.Graphics.CustomVSyncInterval.Value,
+                    ConfigurationState.Instance.Hacks.ShowDirtyHacks
+                        ? ConfigurationState.Instance.Hacks.EnabledHacks
+                        : null));
+                return;
+            }
             Device = new Switch(new HLEConfiguration(
                 VirtualFileSystem,
                 _viewModel.LibHacHorizonManager,
@@ -1047,11 +1191,10 @@ namespace Ryujinx.Ava
                     _viewModel.ShowMenuAndStatusBar = false;
                 }
             });
-
+        
             _renderer = Device.Gpu.Renderer is ThreadedRenderer tr ? tr.BaseRenderer : Device.Gpu.Renderer;
-
+        
             _renderer.ScreenCaptured += Renderer_ScreenCaptured;
-
             (RendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.InitializeBackgroundContext(_renderer);
 
             Device.Gpu.Renderer.Initialize(_glLogLevel);
@@ -1114,7 +1257,6 @@ namespace Ryujinx.Ava
 
                 _gpuDoneEvent.Set();
             });
-
             (RendererHost.EmbeddedWindow as EmbeddedWindowOpenGL)?.MakeCurrent(true);
         }
 
@@ -1201,7 +1343,7 @@ namespace Ryujinx.Ava
             {
                 return false;
             }
-
+            
             NpadManager.Update(ConfigurationState.Instance.Graphics.AspectRatio.Value.ToFloat());
 
             if (_viewModel.IsActive)
@@ -1391,5 +1533,21 @@ namespace Ryujinx.Ava
 
             return state;
         }
+        
+        public void DisposeCurrentRenderer()
+        {
+            // Stop the render loop
+            _isActive = false;
+
+            // Detach event handlers
+            if (_renderer != null)
+            {
+                _renderer.ScreenCaptured -= Renderer_ScreenCaptured;
+            }
+            // Reset references
+            _renderer = null;
+        }
     }
+    
+    
 }

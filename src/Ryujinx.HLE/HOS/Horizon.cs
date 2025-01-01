@@ -469,7 +469,17 @@ namespace Ryujinx.HLE.HOS
                 KernelContext.Dispose();
             }
         }
-
+        public void ToggleRoughPauseEmulation(bool pause)
+        {
+            foreach (KProcess process in KernelContext.Processes.Values)
+            {
+                if (process.IsApplication)
+                {
+                    // Only game process should be paused.
+                    process.SetActivity(pause);
+                }
+            }
+        }
         public void TogglePauseEmulation(bool pause)
         {
             lock (KernelContext.Processes)

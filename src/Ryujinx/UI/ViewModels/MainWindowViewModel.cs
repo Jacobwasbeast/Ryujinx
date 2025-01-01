@@ -114,6 +114,7 @@ namespace Ryujinx.Ava.UI.ViewModels
         private string _title;
         private ApplicationData _currentApplicationData;
         private readonly AutoResetEvent _rendererWaitEvent;
+        private readonly AutoResetEvent _rendererWaitEventApplet;
         private WindowState _windowState;
         private double _windowWidth;
         private double _windowHeight;
@@ -137,7 +138,33 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public MainWindow Window { get; init; }
 
-        internal AppHost AppHost { get; set; }
+        internal AppHost AppHost
+        {
+            get
+            {
+                if (AppHostApplet != null)
+                {
+                    return AppHostApplet;
+                }
+                else
+                {
+                    return AppHostMain;
+                }
+            }
+            set
+            {
+                if (AppHostApplet != null)
+                {
+                    AppHostApplet = value;
+                }
+                else
+                {
+                    AppHostMain = value;
+                }
+            }
+        }
+        internal static AppHost AppHostApplet { get; set; }
+        internal static AppHost AppHostMain { get; set; }
 
         public MainWindowViewModel()
         {
@@ -150,6 +177,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 .AsObservableList();
 
             _rendererWaitEvent = new AutoResetEvent(false);
+            _rendererWaitEventApplet = new AutoResetEvent(false);
 
             if (Program.PreviewerDetached)
             {
@@ -1107,7 +1135,28 @@ namespace Ryujinx.Ava.UI.ViewModels
         public Action<bool> SwitchToGameControl { get; private set; }
         public Action<Control> SetMainContent { get; private set; }
         public TopLevel TopLevel { get; private set; }
-        public RendererHost RendererHostControl { get; private set; }
+
+        public RendererHost RendererHostControl
+        {
+            get
+            {
+                if (AppHostApplet != null)
+                {
+                    return RendererHostControlApplet;
+                }
+                else
+                {
+                    return RendererHostControlMain;
+                }
+            }
+            set
+            {
+                RendererHostControlMain = value;
+            }
+        }
+
+        public RendererHost RendererHostControlMain { get; private set; }
+        public RendererHost RendererHostControlApplet { get; private set; }
         public bool IsClosing { get; set; }
         public LibHacHorizonManager LibHacHorizonManager { get; internal set; }
         public IHostUIHandler UiHandler { get; internal set; }
@@ -1461,7 +1510,6 @@ namespace Ryujinx.Ava.UI.ViewModels
             ProgressBarForegroundColor = new SolidColorBrush(progressFgColor);
             ProgressBarBackgroundColor = new SolidColorBrush(progressBgColor);
         }
-
         private void InitializeGame()
         {
             RendererHostControl.WindowCreated += RendererHost_Created;
@@ -1476,6 +1524,50 @@ namespace Ryujinx.Ava.UI.ViewModels
             AppHost?.DisposeContext();
         }
 
+        private void DeInitializeGame()
+        {
+            RendererHostControlMain.WindowCreated -= RendererHost_Created;
+
+            AppHost.StatusUpdatedEvent -= Update_StatusBar;
+        }
+        public void ReInitializeGame()
+        {
+            RendererHostControl.WindowCreated -= RendererHostApplet_Created;
+            AppHost.StatusUpdatedEvent -= Update_StatusBar;
+            AppHostApplet = null;
+            RendererHostControl.WindowCreated += RendererHost_Created;
+            AppHost.StatusUpdatedEvent += Update_StatusBar;
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                SetMainContent(RendererHostControl);
+            });
+        }
+
+        private void InitializeApplet()
+        {
+            System.Console.WriteLine("InitializeApplet");
+            RendererHostControl.WindowCreated += RendererHostApplet_Created;
+
+            AppHostApplet.StatusUpdatedEvent += Update_StatusBar;
+            Console.WriteLine("Waiting for renderer to be created");
+            _rendererWaitEventApplet.WaitOne();
+            Console.WriteLine("Renderer created");
+            AppHostApplet?.Start();
+            // AppHostApplet?.DisposeContextApplet();
+            // AppHostApplet?.DisposeCurrentRenderer();
+            // Console.WriteLine("AppHost Ending");
+            // ReInitializeGame();
+            // AppHost.ReaddApplet();
+            AppHostApplet = null;
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                SwitchToGameControl(false);
+
+                SetMainContent(RendererHostControlMain);
+
+                RendererHostControlMain.Focus();
+            });
+        }
         private async Task HandleRelaunch()
         {
             if (UserChannelPersistence.PreviousIndex != -1 && UserChannelPersistence.ShouldRestart)
@@ -1532,6 +1624,14 @@ namespace Ryujinx.Ava.UI.ViewModels
             _rendererWaitEvent.Set();
         }
 
+        private void RendererHostApplet_Created(object sender, EventArgs e)
+        {
+            ShowLoading(false);
+
+            _rendererWaitEventApplet.Set();
+        }
+
+        
         private async Task LoadContentFromFolder(LocaleKeys localeMessageAddedKey, LocaleKeys localeMessageRemovedKey, LoadContentFromFolderDelegate onDirsSelected)
         {
             var result = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
@@ -1940,7 +2040,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             PrepareLoadScreen();
 
-            RendererHostControl = new RendererHost(application.Id.ToString("X16"));
+            RendererHostControlMain = new RendererHost(application.Id.ToString("X16"));
+            RendererHostControlApplet = new RendererHost(application.Id.ToString("X16"));
 
             AppHost = new AppHost(
                 RendererHostControl,
@@ -1978,6 +2079,43 @@ namespace Ryujinx.Ava.UI.ViewModels
 
             Thread gameThread = new(InitializeGame) { Name = "GUI.WindowThread" };
             gameThread.Start();
+        }
+         public async Task LoadApplicationApplet(ApplicationData application, bool startFullscreen = false, BlitStruct<ApplicationControlProperty>? customNacpData = null)
+        {
+            AppHost.Device.System.ToggleRoughPauseEmulation(true);
+            DeInitializeGame();
+            Console.WriteLine("LoadApplicationApplet");
+            AppHostApplet = new AppHost(
+                RendererHostControlApplet,
+                InputManager,
+                application.Path,
+                application.Id,
+                VirtualFileSystem,
+                ContentManager,
+                AccountManager,
+                UserChannelPersistence,
+                this,
+                TopLevel,AppHostMain);
+            
+            Console.WriteLine("LoadApplicationApplet 2");
+            if (!await AppHostApplet.LoadGuestApplication(customNacpData))
+            {
+                AppHostApplet.DisposeContext();
+                AppHostApplet = null;
+
+                return;
+            }
+
+            CanUpdate = false;
+
+            LoadHeading = application.Name;
+
+            SwitchToRenderer(startFullscreen);
+
+            _currentApplicationData = application;
+            Thread gameThread = new(InitializeApplet) { Name = "GUI.WindowThread" };
+            gameThread.Start();
+            Console.WriteLine("LoadApplicationApplet 3");
         }
 
         public void SwitchToRenderer(bool startFullscreen) =>
@@ -2268,5 +2406,15 @@ namespace Ryujinx.Ava.UI.ViewModels
         }
 
         #endregion
+
+        internal static bool CanProgress(AppHost appHost)
+        {
+          if (AppHostApplet == null)
+          {
+              return true;
+          }
+          if (appHost!=AppHostApplet) return false;
+          return true;
+        }
     }
 }

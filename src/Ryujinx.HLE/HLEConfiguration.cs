@@ -194,6 +194,40 @@ namespace Ryujinx.HLE
         /// </summary>
         public EnabledDirtyHack[] Hacks { internal get; set; }
 
+        public HLEConfiguration(HLEConfiguration config, IRenderer renderer)
+        {
+            VirtualFileSystem = config.VirtualFileSystem;
+            LibHacHorizonManager = config.LibHacHorizonManager;
+            AccountManager = config.AccountManager;
+            ContentManager = config.ContentManager;
+            UserChannelPersistence = config.UserChannelPersistence;
+            GpuRenderer = renderer;
+            AudioDeviceDriver = config.AudioDeviceDriver;
+            MemoryConfiguration = config.MemoryConfiguration;
+            HostUIHandler = config.HostUIHandler;
+            SystemLanguage = config.SystemLanguage;
+            Region = config.Region;
+            VSyncMode = config.VSyncMode;
+            CustomVSyncInterval = config.CustomVSyncInterval;
+            EnableDockedMode = config.EnableDockedMode;
+            EnablePtc = config.EnablePtc;
+            EnableInternetAccess = config.EnableInternetAccess;
+            FsIntegrityCheckLevel = config.FsIntegrityCheckLevel;
+            FsGlobalAccessLogMode = config.FsGlobalAccessLogMode;
+            SystemTimeOffset = config.SystemTimeOffset;
+            TimeZone = config.TimeZone;
+            MemoryManagerMode = config.MemoryManagerMode;
+            IgnoreMissingServices = config.IgnoreMissingServices;
+            AspectRatio = config.AspectRatio;
+            AudioVolume = config.AudioVolume;
+            UseHypervisor = config.UseHypervisor;
+            MultiplayerLanInterfaceId = config.MultiplayerLanInterfaceId;
+            MultiplayerMode = config.MultiplayerMode;
+            MultiplayerDisableP2p = config.MultiplayerDisableP2p;
+            MultiplayerLdnPassphrase = config.MultiplayerLdnPassphrase;
+            MultiplayerLdnServer = config.MultiplayerLdnServer;
+            Hacks = config.Hacks;
+        }
         public HLEConfiguration(VirtualFileSystem virtualFileSystem,
                                 LibHacHorizonManager libHacHorizonManager,
                                 ContentManager contentManager,

@@ -35,6 +35,11 @@ namespace Ryujinx.Ava.UI.Helpers
 
         public bool IsEnabled(AvaLogLevel level, string area)
         {
+            
+            if (level == AvaLogLevel.Verbose)
+            {
+                return false;
+            }
             return GetLog(level, area) != null;
         }
 

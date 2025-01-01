@@ -1,5 +1,6 @@
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
+using System;
 
 namespace Ryujinx.HLE.UI
 {
@@ -23,6 +24,7 @@ namespace Ryujinx.HLE.UI
         /// </summary>
         /// <returns>True when OK is pressed, False otherwise.</returns>
         bool DisplayMessageDialog(ControllerAppletUIArgs args);
+        bool IsAppletRunning();
 
         /// <summary>
         /// Displays an Input Dialog box to the user so they can enter the Amiibo's new name
@@ -59,5 +61,8 @@ namespace Ryujinx.HLE.UI
         /// Gets fonts and colors used by the host.
         /// </summary>
         IHostUITheme HostUITheme { get; }
+
+        void StartApplet(Int32 appletId, string appletName);
+        void StopApplet();
     }
 }

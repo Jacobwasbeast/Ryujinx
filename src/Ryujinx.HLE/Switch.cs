@@ -4,6 +4,7 @@ using Ryujinx.Audio.Backends.CompatLayer;
 using Ryujinx.Audio.Integration;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
+using Ryujinx.Graphics.GAL;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS;
@@ -13,6 +14,7 @@ using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.HLE.UI;
 using Ryujinx.Memory;
 using System;
+using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE
 {
@@ -41,7 +43,8 @@ namespace Ryujinx.HLE
         public bool IsFrameAvailable => Gpu.Window.IsFrameAvailable;
 
         public DirtyHackCollection DirtyHacks { get; }
-
+        public readonly ConcurrentQueue<byte[]> _normalDataQueue = new();
+        public readonly ConcurrentQueue<byte[]> _interactiveDataQueue = new();
         public Switch(HLEConfiguration configuration)
         {
             ArgumentNullException.ThrowIfNull(configuration.GpuRenderer);
@@ -66,6 +69,44 @@ namespace Ryujinx.HLE
             Hid               = new Hid(this, System.HidStorage);
             Processes         = new ProcessLoader(this);
             TamperMachine     = new TamperMachine();
+
+            System.InitializeServices();
+            System.State.SetLanguage(Configuration.SystemLanguage);
+            System.State.SetRegion(Configuration.Region);
+
+            VSyncMode                               = Configuration.VSyncMode;
+            CustomVSyncInterval                     = Configuration.CustomVSyncInterval;
+            System.State.DockedMode                 = Configuration.EnableDockedMode;
+            System.PerformanceState.PerformanceMode = System.State.DockedMode ? PerformanceMode.Boost : PerformanceMode.Default;
+            System.EnablePtc                        = Configuration.EnablePtc;
+            System.FsIntegrityCheckLevel            = Configuration.FsIntegrityCheckLevel;
+            System.GlobalAccessLogMode              = Configuration.FsGlobalAccessLogMode;
+            
+            UpdateVSyncInterval();
+#pragma warning restore IDE0055
+
+            Shared = this;
+        }
+        public Switch(Switch Main, HLEConfiguration configuration)
+        {
+            Configuration = configuration;
+            FileSystem = Main.FileSystem;
+            UIHandler = Main.UIHandler;
+
+            MemoryAllocationFlags memoryAllocationFlags = Configuration.MemoryManagerMode == MemoryManagerMode.SoftwarePageTable
+                ? MemoryAllocationFlags.Reserve
+                : MemoryAllocationFlags.Reserve | MemoryAllocationFlags.Mirrorable;
+
+
+            DirtyHacks = Main.DirtyHacks;
+            AudioDeviceDriver = Main.AudioDeviceDriver;
+            Memory = new MemoryBlock(Configuration.MemoryConfiguration.ToDramSize(), memoryAllocationFlags);
+            Gpu = Main.Gpu;
+            System = new HOS.Horizon(this);
+            Statistics = new PerformanceStatistics();
+            Hid = new Hid(this, System.HidStorage);
+            Processes = new ProcessLoader(this);
+            TamperMachine = new TamperMachine();
 
             System.InitializeServices();
             System.State.SetLanguage(Configuration.SystemLanguage);
@@ -142,6 +183,11 @@ namespace Ryujinx.HLE
             GC.SuppressFinalize(this);
             Dispose(true);
         }
+        public void DisposeApplet()
+        {
+            GC.SuppressFinalize(this);
+            DisposeApplet(true);
+        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -152,6 +198,15 @@ namespace Ryujinx.HLE
                 FileSystem.Dispose();
                 Memory.Dispose();
 
+                TitleIDs.CurrentApplication.Value = null;
+                Shared = null;
+            }
+        }
+        protected virtual void DisposeApplet(bool disposing)
+        {
+            if (disposing)
+            {
+                System.Dispose();
                 TitleIDs.CurrentApplication.Value = null;
                 Shared = null;
             }

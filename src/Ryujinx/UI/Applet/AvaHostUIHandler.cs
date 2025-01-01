@@ -1,10 +1,15 @@
 using Avalonia.Controls;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
+using LibHac.Ncm;
+using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.UI.Controls;
 using Ryujinx.Ava.UI.Helpers;
+using Ryujinx.Ava.UI.ViewModels;
 using Ryujinx.Ava.UI.Windows;
+using Ryujinx.Ava.Utilities;
+using Ryujinx.Ava.Utilities.AppLibrary;
 using Ryujinx.Ava.Utilities.Configuration;
 using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
@@ -21,6 +26,143 @@ namespace Ryujinx.Ava.UI.Applet
         private readonly MainWindow _parent;
 
         public IHostUITheme HostUITheme { get; }
+        public void StartApplet(int appletIdInt, string appletName)
+        {
+            ulong appletId = 0;
+            switch (appletIdInt)
+            {
+                // 0x02  010000000000100C  OverlayApplet (overlayDisp)
+                case 0x02:
+                    appletId = 0x010000000000100C;
+                    break;
+
+                // 0x03  0100000000001000  SystemAppletMenu (qlaunch)
+                case 0x03:
+                    appletName = "qlaunch";
+                    appletId = 0x0100000000001000;
+                    break;
+
+                // 0x04  0100000000001012  SystemApplication (starter)
+                case 0x04:
+                    appletName = "starter";
+                    appletId = 0x0100000000001012;
+                    break;
+
+                // 0x0A  0100000000001001  LibraryAppletAuth (auth)
+                case 0x0A:
+                    appletId = 0x0100000000001001;
+                    break;
+
+                // 0x0B  0100000000001002  LibraryAppletCabinet (cabinet)
+                case 0x0B:
+                    appletName = "cabinet";
+                    appletId = 0x0100000000001002;
+                    break;
+
+                // 0x0C  0100000000001003  LibraryAppletController (controller)
+                case 0x0C:
+                    appletName = "controller";
+                    appletId = 0x0100000000001003;
+                    break;
+
+                // 0x0D  0100000000001004  LibraryAppletDataErase (dataErase)
+                case 0x0D:
+                    appletId = 0x0100000000001004;
+                    break;
+
+                // 0x0E  0100000000001005  LibraryAppletError (error)
+                case 0x0E:
+                    appletId = 0x0100000000001005;
+                    break;
+
+                // 0x0F  0100000000001006  LibraryAppletNetConnect (netConnect)
+                case 0x0F:
+                    appletId = 0x0100000000001006;
+                    break;
+
+                // 0x10  0100000000001007  LibraryAppletPlayerSelect (playerSelect)
+                case 0x10:
+                    appletId = 0x0100000000001007;
+                    break;
+
+                // 0x11  0100000000001008  LibraryAppletSwkbd (swkbd)
+                case 0x11:
+                    appletId = 0x0100000000001008;
+                    break;
+
+                // 0x12  0100000000001009  LibraryAppletMiiEdit (miiEdit)
+                case 0x12:
+                    appletName = "miiEdit";
+                    appletId = 0x0100000000001009;
+                    break;
+
+                // 0x13  010000000000100A  LibraryAppletWeb (web)
+                case 0x13:
+                    appletName = "web";
+                    appletId = 0x010000000000100A;
+                    break;
+
+                // 0x14  010000000000100B  LibraryAppletShop (shop)
+                case 0x14:
+                    appletName = "shop";
+                    appletId = 0x010000000000100B;
+                    break;
+
+                // 0x15  010000000000100D  LibraryAppletPhotoViewer (photoViewer)
+                case 0x15:
+                    appletId = 0x010000000000100D;
+                    break;
+
+                // 0x16  010000000000100E  LibraryAppletSet (set)
+                case 0x16:
+                    appletId = 0x010000000000100E;
+                    break;
+
+                // 0x17  010000000000100F  LibraryAppletOfflineWeb (offlineWeb)
+                case 0x17:
+                    appletId = 0x010000000000100F;
+                    break;
+
+                // 0x18  0100000000001010  LibraryAppletLoginShare (loginShare)
+                case 0x18:
+                    appletId = 0x0100000000001010;
+                    break;
+
+                // 0x19  0100000000001011  LibraryAppletWifiWebAuth (wifiWebAuth)
+                case 0x19:
+                    appletId = 0x0100000000001011;
+                    break;
+
+                // 0x1A  0100000000001013  LibraryAppletMyPage (myPage)
+                case 0x1A:
+                    appletId = 0x0100000000001013;
+                    break;
+
+                // 0x1B  010000000000101A  LibraryAppletGift (gift)
+                case 0x1B:
+                    appletId = 0x010000000000101A;
+                    break;
+
+                // 0x1C  010000000000101C  LibraryAppletUserMigration (userMigration)
+                case 0x1C:
+                    appletId = 0x010000000000101C;
+                    break;
+
+                // Default case to handle unexpected applet IDs
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(appletIdInt), $"Unhandled appletIdInt: {appletIdInt}");
+            }
+            AppletMetadata Applet = new(appletName, appletId);
+            Console.WriteLine($"Starting applet {appletName} with ID {appletId}");
+            if (Applet.CanStart(_parent.ContentManager, out var appData, out var nacpData)) {
+                _parent.ViewModel.LoadApplicationApplet(appData, _parent.ViewModel.IsFullScreen || _parent.ViewModel.StartGamesInFullscreen, nacpData);
+            }
+        }
+
+        public void StopApplet()
+        {
+            _parent.ViewModel.AppHost?.Stop();
+        }
 
         public AvaHostUIHandler(MainWindow parent)
         {
@@ -52,6 +194,11 @@ namespace Ryujinx.Ava.UI.Applet
             dialogCloseEvent.WaitOne();
 
             return okPressed;
+        }
+
+        public bool IsAppletRunning()
+        {
+            return MainWindowViewModel.AppHostApplet != null;
         }
 
         public bool DisplayMessageDialog(string title, string message)

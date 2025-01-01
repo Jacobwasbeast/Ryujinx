@@ -58,6 +58,16 @@ namespace Ryujinx.Headless
         protected nint WindowHandle { get; set; }
 
         public IHostUITheme HostUITheme { get; }
+        public void StartApplet(int appletId, string appletName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void StopApplet()
+        {
+            throw new NotImplementedException();
+        }
+
         public int Width { get; private set; }
         public int Height { get; private set; }
         public int DisplayId { get; set; }
@@ -485,6 +495,11 @@ namespace Ryujinx.Headless
             SDL_ShowSimpleMessageBox(SDL_MessageBoxFlags.SDL_MESSAGEBOX_INFORMATION, title, message, WindowHandle);
 
             return true;
+        }
+
+        public bool IsAppletRunning()
+        {
+            return false;
         }
 
         public bool DisplayCabinetDialog(out string userText)

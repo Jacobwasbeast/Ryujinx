@@ -9,7 +9,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
         public ILibraryAppletSelfAccessor(ServiceCtx context)
         {
-            if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
+            /*if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
             {
                 // Create MiiEdit data.
                 _appletStandalone = new AppletStandalone()
@@ -25,7 +25,45 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             }
             else
             {
-                throw new NotImplementedException($"{context.Device.Processes.ActiveApplication.ProgramId} applet is not implemented.");
+                
+            }*/
+            ulong id = context.Device.Processes.ActiveApplication.ProgramId;
+            AppletId name = AppletId.Application;
+            switch (id)
+            {
+                case (0x0100000000001009) :
+                    name = AppletId.MiiEdit;
+                    break;
+            }
+            _appletStandalone = new AppletStandalone()
+            {
+                AppletId = name,
+                LibraryAppletMode = LibraryAppletMode.AllForeground,
+            };
+            if (!context.Device._normalDataQueue.IsEmpty)
+            {
+                foreach (byte[] data in context.Device._normalDataQueue)
+                {
+                    _appletStandalone.InputData.Enqueue(data);
+                    Console.WriteLine($"Added data to input queue: {data}");
+                }
+            }
+            else
+            {
+                if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
+                {
+                    // Create MiiEdit data.
+                    _appletStandalone = new AppletStandalone()
+                    {
+                        AppletId = AppletId.MiiEdit,
+                        LibraryAppletMode = LibraryAppletMode.AllForeground,
+                    };
+
+                    byte[] miiEditInputData = new byte[0x100];
+                    miiEditInputData[0] = 0x03; // Hardcoded unknown value.
+
+                    _appletStandalone.InputData.Enqueue(miiEditInputData);
+                }
             }
         }
 
@@ -44,7 +82,24 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(1)]
+        // IsCompleted() ->  returns an output u8 bool. 
+        public ResultCode IsCompleted(ServiceCtx context)
+        {
+            context.ResponseData.Write(1);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(10)]
+        // Start()
+        public ResultCode Start(ServiceCtx context)
+        {
+            context.Device.UIHandler.StopApplet();
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(11)]
         // GetLibraryAppletInfo() -> nn::am::service::LibraryAppletInfo
         public ResultCode GetLibraryAppletInfo(ServiceCtx context)
