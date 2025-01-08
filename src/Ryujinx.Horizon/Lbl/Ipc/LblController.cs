@@ -8,7 +8,16 @@ namespace Ryujinx.Horizon.Lbl.Ipc
     {
         private bool _vrModeEnabled;
         private float _currentBrightnessSettingForVrMode;
-
+        
+        [CmifCommand(1)]
+        // LoadCurrentSetting() -> 
+        public Result LoadCurrentSetting()
+        {
+            // NOTE: Stubbed in system module.
+            
+            return Result.Success;
+        }
+        
         [CmifCommand(17)]
         public Result SetBrightnessReflectionDelayLevel(float unknown0, float unknown1)
         {

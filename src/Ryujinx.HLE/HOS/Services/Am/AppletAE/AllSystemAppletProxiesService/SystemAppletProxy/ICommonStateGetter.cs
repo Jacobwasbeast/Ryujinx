@@ -147,6 +147,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_acquiredSleepLockEventHandle);
+            _acquiredSleepLockEvent.ReadableEvent.Signal();
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
