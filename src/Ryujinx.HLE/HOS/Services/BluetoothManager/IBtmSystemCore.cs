@@ -37,7 +37,9 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
                     return (ResultCode)resultCode.ErrorCode;
                 }
             }
-
+            // AcquireRadioEvent also returns a u8, which is probably the status of the radio event.
+            context.ResponseData.Write(true);
+            
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_radioEventHandle);
 
             Logger.Stub?.PrintStub(LogClass.Service);

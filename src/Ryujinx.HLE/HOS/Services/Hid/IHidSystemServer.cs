@@ -1,13 +1,31 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Hid.HidServer;
 using Ryujinx.HLE.HOS.Services.Hid.Types;
+using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Hid
 {
     [Service("hid:sys")]
     class IHidSystemServer : IpcService
     {
-        public IHidSystemServer(ServiceCtx context) { }
+        KEvent _connectionTriggerTimeoutEvent;
+        int _connectionTriggerTimeoutEventHandle;
+        KEvent _deviceRegisteredEventForControllerSupport;
+        int _deviceRegisteredEventForControllerSupportHandle;
+        KEvent _joyDetachOnBluetoothOffEvent;
+        int _joyDetachOnBluetoothOffEventHandle;
+
+        public IHidSystemServer(ServiceCtx context)
+        {
+            _connectionTriggerTimeoutEvent = new KEvent(context.Device.System.KernelContext);
+            _connectionTriggerTimeoutEventHandle = -1;
+            _deviceRegisteredEventForControllerSupport = new KEvent(context.Device.System.KernelContext);
+            _deviceRegisteredEventForControllerSupportHandle = -1;
+            _joyDetachOnBluetoothOffEvent = new KEvent(context.Device.System.KernelContext);
+            _joyDetachOnBluetoothOffEventHandle = -1;
+        }
 
         [CommandCmif(303)]
         // ApplyNpadSystemCommonPolicy(u64)
@@ -27,12 +45,108 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             // TODO: RequestData seems to have garbage data, reading an extra uint seems to fix the issue.
             context.RequestData.ReadUInt32();
 
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out AppletFooterUiType appletFooterUiType);
+            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
 
-            context.ResponseData.Write((byte)appletFooterUiType);
+            context.ResponseData.Write((byte)id);
             context.ResponseData.Write((byte)0);
 
             return resultCode;
+        }
+        
+        [CommandCmif(544)]
+        // AcquireConnectionTriggerTimeoutEvent() -> handle<copy>
+        public ResultCode AcquireConnectionTriggerTimeoutEvent(ServiceCtx context)
+        {
+            if (_connectionTriggerTimeoutEventHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_connectionTriggerTimeoutEvent.ReadableEvent, out _connectionTriggerTimeoutEventHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_connectionTriggerTimeoutEventHandle);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(546)]
+        // AcquireDeviceRegisteredEventForControllerSupport() -> handle<copy>
+        public ResultCode AcquireDeviceRegisteredEventForControllerSupport(ServiceCtx context)
+        {
+            if (_deviceRegisteredEventForControllerSupportHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_deviceRegisteredEventForControllerSupport.ReadableEvent, out _deviceRegisteredEventForControllerSupportHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_deviceRegisteredEventForControllerSupportHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(751)]
+        // AcquireJoyDetachOnBluetoothOffEventHandle(u32) -> handle<copy>
+        public ResultCode AcquireJoyDetachOnBluetoothOffEventHandle(ServiceCtx context)
+        {
+            if (_joyDetachOnBluetoothOffEventHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_joyDetachOnBluetoothOffEvent.ReadableEvent, out _joyDetachOnBluetoothOffEventHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_joyDetachOnBluetoothOffEventHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(850)]
+        // IsUsbFullKeyControllerEnabled() -> b8
+        public ResultCode IsUsbFullKeyControllerEnabled(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1000)]
+        // InitializeFirmwareUpdate() -> b8
+        public ResultCode InitializeFirmwareUpdate(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1135)]
+        // InitializeUsbFirmwareUpdateWithoutMemory() -> b8
+        public ResultCode InitializeUsbFirmwareUpdateWithoutMemory(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1153)]
+        // GetTouchScreenDefaultConfiguration() -> 0
+        public ResultCode GetTouchScreenDefaultConfiguration(ServiceCtx context)
+        {
+            // NOTE: This is a dummy implementation, the return value is not used.
+            Logger.Info?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
         }
 
         [CommandCmif(307)]
@@ -56,20 +170,20 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetAppletFooterUiType(u32) -> u8
         public ResultCode GetAppletFooterUiType(ServiceCtx context)
         {
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out AppletFooterUiType appletFooterUiType);
+            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
 
             context.ResponseData.Write((byte)appletFooterUiType);
 
             return resultCode;
         }
 
-        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context, out AppletFooterUiType appletFooterUiType)
+        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context,out NpadIdType id, out AppletFooterUiType appletFooterUiType)
         {
             NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
             PlayerIndex playerIndex = HidUtils.GetIndexFromNpadIdType(npadIdType);
 
             appletFooterUiType = context.Device.Hid.SharedMemory.Npads[(int)playerIndex].InternalState.AppletFooterUiType;
-
+            id = npadIdType;
             return ResultCode.Success;
         }
     }

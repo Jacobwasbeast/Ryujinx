@@ -27,5 +27,13 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
             Logger.Info?.PrintStub(LogClass.ServiceLdn);
             return ResultCode.Success;
         }
+        
+        [CommandCmif(288)]
+        // ???() -> 0
+        public ResultCode Unknown288(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceLdn);
+            return ResultCode.Success;
+        }
     }
 }

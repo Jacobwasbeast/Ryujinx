@@ -1,5 +1,8 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Arp;
+using Ryujinx.Horizon.Common;
 using System;
 using static LibHac.Ns.ApplicationControlProperty;
 
@@ -21,7 +24,13 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private readonly bool _stereoVisionRestrictionConfigurable = true;
         private bool _stereoVisionRestriction = false;
 #pragma warning restore IDE0052, CS0414
-
+        
+        KEvent _synchronizationEvent;
+        int _synchronizationEventHandle;
+        KEvent _playTimerEventToRequestSuspension;
+        int _playTimerEventToRequestSuspensionHandle;
+        KEvent _unlinkedEvent;
+        int _unlinkedEventHandle;
         public IParentalControlService(ServiceCtx context, ulong pid, bool withInitialize, int permissionFlag)
         {
             _pid = pid;
@@ -31,6 +40,11 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             {
                 Initialize(context);
             }
+            _synchronizationEvent = new KEvent(context.Device.System.KernelContext);
+            _synchronizationEventHandle = -1;
+            
+            _playTimerEventToRequestSuspension = new KEvent(context.Device.System.KernelContext);
+            _playTimerEventToRequestSuspensionHandle = -1;
         }
 
         [CommandCmif(1)] // 4.0.0+
@@ -96,6 +110,20 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(1006)]
+        // IsRestrictionTemporaryUnlocked() -> b8
+        public ResultCode IsRestrictionTemporaryUnlocked(ServiceCtx context)
+        {
+            if ((_permissionFlag & 0x100) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            context.ResponseData.Write(false);
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(1017)] // 10.0.0+
         // EndFreeCommunication()
@@ -140,6 +168,42 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             }
 
             context.ResponseData.Write(_restrictionEnabled);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1032)]
+        // GetSafetyLevel() -> u32
+        public ResultCode GetSafetyLevel(ServiceCtx context)
+        {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            context.ResponseData.Write(0);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(1035)]
+        // GetCurrentSettings() -> 0
+        public ResultCode GetCurrentSettings(ServiceCtx context)
+        {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1039)]
+        // GetFreeCommunicationApplicationListCount() -> u32
+        public ResultCode GetFreeCommunicationApplicationListCount(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
 
             return ResultCode.Success;
         }
@@ -255,6 +319,95 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             {
                 return ResultCode.Success;
             }
+        }
+
+        [CommandCmif(1403)]
+        // IsPairingActive() -> b8
+        public ResultCode IsPairingActive(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
+            context.ResponseData.Write(false);
+            
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(1432)]
+        // GetSynchronizationEvent() -> handle<copy>
+        public ResultCode GetSynchronizationEvent(ServiceCtx context)
+        {
+            if (_synchronizationEventHandle == -1)
+            {
+                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
+                if (resultCode == Result.Success)
+                {
+                    _synchronizationEventHandle = rEventHandle;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_synchronizationEventHandle);
+
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(1456)]
+        // GetPlayTimerSettings() -> ?
+        public ResultCode GetPlayTimerSettings(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
+            // TODO: Implement this.
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1457)]
+        // GetPlayTimerEventToRequestSuspension() -> handle<copy>
+        public ResultCode GetPlayTimerEventToRequestSuspension(ServiceCtx context)
+        {
+            if (_playTimerEventToRequestSuspensionHandle == -1)
+            {
+                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
+                if (resultCode == Result.Success)
+                {
+                    _playTimerEventToRequestSuspensionHandle = rEventHandle;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_playTimerEventToRequestSuspensionHandle);
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1458)]
+        // IsPlayTimerAlarmDisabled() -> b8
+        public ResultCode IsPlayTimerAlarmDisabled(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
+
+            context.ResponseData.Write(true);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(1473)]
+        // GetUnlinkedEvent() -> handle<copy>
+        public ResultCode GetUnlinkedEvent(ServiceCtx context)
+        {
+            if (_unlinkedEventHandle == -1)
+            {
+                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
+                if (resultCode == Result.Success)
+                {
+                    _unlinkedEventHandle = rEventHandle;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_unlinkedEventHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+
+            return ResultCode.Success;
         }
     }
 }

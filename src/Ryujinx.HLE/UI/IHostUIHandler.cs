@@ -1,5 +1,8 @@
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
+using Ryujinx.HLE.HOS.Services.Ns;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Ryujinx.HLE.UI
 {
@@ -59,5 +62,7 @@ namespace Ryujinx.HLE.UI
         /// Gets fonts and colors used by the host.
         /// </summary>
         IHostUITheme HostUITheme { get; }
+
+        Dictionary<ApplicationRecord, ulong> GetApplications();
     }
 }

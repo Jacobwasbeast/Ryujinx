@@ -21,7 +21,7 @@ namespace Ryujinx.HLE.HOS.Services.Am
         // GetGlobalStateController() -> object<nn::am::service::IGlobalStateController>
         public ResultCode GetGlobalStateController(ServiceCtx context)
         {
-            MakeObject(context, new IGlobalStateController());
+            MakeObject(context, new IGlobalStateController(context));
 
             return ResultCode.Success;
         }
