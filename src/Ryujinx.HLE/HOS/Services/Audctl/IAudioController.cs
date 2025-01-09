@@ -1,4 +1,6 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
 
 namespace Ryujinx.HLE.HOS.Services.Audctl
@@ -6,17 +8,31 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
     [Service("audctl")]
     class IAudioController : IpcService
     {
-        public IAudioController(ServiceCtx context) { }
+        private KEvent _notificationEvent;
+        private int _notificationEventHandle;
+        public IAudioController(ServiceCtx context)
+        {
+            _notificationEvent = new KEvent(context.Device.System.KernelContext);
+            _notificationEventHandle = -1;
+        }
 
         [CommandCmif(34)]
         // AcquireTargetNotification() -> handle<copy>
         public ResultCode AcquireTargetNotification(ServiceCtx context)
         {
-            Result code = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
-            if (code == Result.Success)
+            if (_notificationEventHandle == -1)
             {
-                context.Response.HandleDesc = IpcHandleDesc.MakeCopy(wEventHandle);
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_notificationEvent.ReadableEvent, out _notificationEventHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
             }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_notificationEventHandle);
+
+            Logger.Stub?.PrintStub(LogClass.Audio);
 
             return ResultCode.Success;
         }

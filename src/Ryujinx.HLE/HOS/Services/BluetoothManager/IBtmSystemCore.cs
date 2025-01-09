@@ -7,7 +7,13 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
 {
     class IBtmSystemCore : IpcService
     {
-        public IBtmSystemCore(ServiceCtx context) { }
+        private KEvent _radioEvent;
+        private int _radioEventHandle;
+        public IBtmSystemCore(ServiceCtx context)
+        {
+            _radioEvent = new KEvent(context.Device.System.KernelContext);
+            _radioEventHandle = -1;
+        }
         
         [CommandCmif(6)]
         // IsRadioEnabled() -> bool
@@ -22,12 +28,19 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         // AcquireRadioEvent() -> u8, handle<copy>
         public ResultCode AcquireRadioEvent(ServiceCtx context)
         {
-            Result code = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
-            context.ResponseData.Write(true);
-            if (code == Result.Success)
+            if (_radioEventHandle == -1)
             {
-                context.Response.HandleDesc = IpcHandleDesc.MakeCopy(wEventHandle);
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_radioEvent.ReadableEvent, out _radioEventHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
             }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_radioEventHandle);
+
+            Logger.Stub?.PrintStub(LogClass.Service);
             
             return ResultCode.Success;
         }
