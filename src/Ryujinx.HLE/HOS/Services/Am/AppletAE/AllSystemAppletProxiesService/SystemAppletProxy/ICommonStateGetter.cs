@@ -153,6 +153,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(32)]
+        // GetWriterLockAccessorEx(u32) -> object<nn::am::service::IWriterLockAccessor>
+        public ResultCode GetWriterLockAccessorEx(ServiceCtx context)
+        {
+            MakeObject(context, new ILockAccessor(context));
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(50)] // 3.0.0+
         // IsVrModeEnabled() -> b8

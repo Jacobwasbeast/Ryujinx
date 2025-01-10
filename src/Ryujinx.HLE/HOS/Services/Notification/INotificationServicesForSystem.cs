@@ -108,11 +108,11 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         }
         
         [CommandCmif(1510)]
-        // GetNotificationPresentationSetting() -> u8
+        // GetNotificationPresentationSetting() -> nn::ns::detail::NotificationPresentationSetting
         public ResultCode GetNotificationPresentationSetting(ServiceCtx context)
         {
             context.ResponseData.WriteStruct(new NotificationPresentationSetting());
-            Logger.Info?.PrintStub(LogClass.ServiceSet, "Stubbed.");
+            Logger.Stub?.PrintStub(LogClass.ServiceSet, "Stubbed.");
             
             return ResultCode.Success;
         }
