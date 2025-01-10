@@ -99,6 +99,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // AcquireJoyDetachOnBluetoothOffEventHandle(u32) -> handle<copy>
         public ResultCode AcquireJoyDetachOnBluetoothOffEventHandle(ServiceCtx context)
         {
+            uint joyIndex = context.RequestData.ReadUInt32();
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { joyIndex });
             if (_joyDetachOnBluetoothOffEventHandle == -1)
             {
                 Result resultCode = context.Process.HandleTable.GenerateHandle(_joyDetachOnBluetoothOffEvent.ReadableEvent, out _joyDetachOnBluetoothOffEventHandle);

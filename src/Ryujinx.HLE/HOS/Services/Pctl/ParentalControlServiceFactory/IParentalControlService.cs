@@ -218,7 +218,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetFreeCommunicationApplicationListCount() -> u32
         public ResultCode GetFreeCommunicationApplicationListCount(ServiceCtx context)
         {
-            context.ResponseData.Write(4);
+            context.ResponseData.Write((uint)4);
 
             return ResultCode.Success;
         }
@@ -367,13 +367,19 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         }
 
         [CommandCmif(1456)]
-        // GetPlayTimerSettings() -> ?
+        // GetPlayTimerSettings() -> nn::pctl::PlayTimerSettings
         public ResultCode GetPlayTimerSettings(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
-            // TODO: Implement this.
+            context.ResponseData.WriteStruct(new PlayTimerSettings());
 
             return ResultCode.Success;
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
+        unsafe struct PlayTimerSettings
+        {
+            public fixed uint settings[13]; // Fixed-size array of 13 uint elements
         }
         
         [CommandCmif(1457)]

@@ -90,7 +90,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
 
         [CommandCmif(17)]
-        // GetAccountSettings() -> AccountSettings
+        // GetAccountSettings() -> nn::settings::system::AccountSettings
         public ResultCode GetAccountSettings(ServiceCtx context)
         {
             AccountSettings accountSettings = new AccountSettings
@@ -109,7 +109,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
         
         [CommandCmif(21)]
-        // GetEulaVersions(buffer type-0x6>) -> (s32)
+        // GetEulaVersions() -> (u32, buffer<nn::settings::system::EulaVersion, 6>)
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
@@ -160,7 +160,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
         
         [CommandCmif(29)]
-        // GetNotificationSettings() -> NotificationSettings
+        // GetNotificationSettings() -> nn::settings::system::NotificationSettings
         public ResultCode GetNotificationSettings(ServiceCtx context)
         {
             NotificationSettings notificationSettings = new NotificationSettings
@@ -186,9 +186,16 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
         
         [CommandCmif(31)]
-        // GetAccountNotificationSettings() -> AccountNotificationSettings
+        // GetAccountNotificationSettings() -> (u32, buffer<nn::settings::system::AccountNotificationSettings, 6>)
         public ResultCode GetAccountNotificationSettings(ServiceCtx context)
         {
+            var bufferPosition = context.Request.ReceiveBuff[0].Position;
+            var bufferSize = context.Request.ReceiveBuff[0].Size;
+            if (bufferSize < 0x18)
+            {
+                throw new InvalidOperationException("Buffer is too small");
+            }
+            
             AccountNotificationSettings accountNotificationSettings = new AccountNotificationSettings
             {
                 Uid = new Uid(0, 0),
@@ -199,8 +206,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 Reserved2 = 0
             };
 
-            context.ResponseData.WriteStruct(accountNotificationSettings);
-
+            context.ResponseData.Write(1);
+            context.Memory.Write(bufferPosition, MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref accountNotificationSettings, 1)).ToArray());
             return ResultCode.Success;
         }
         
@@ -335,7 +342,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
 
         [CommandCmif(39)]
-        // GetTvSettings() -> TvSettings
+        // GetTvSettings() -> nn::settings::system::TvSettings
         public ResultCode GetTvSettings(ServiceCtx context)
         {
             TvSettings tvSettings = new TvSettings

@@ -9,7 +9,7 @@
         public ResultCode Count(ServiceCtx context)
         {
             // TODO: Implement news database count
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((uint)0);
             return ResultCode.Success;
         }
         
