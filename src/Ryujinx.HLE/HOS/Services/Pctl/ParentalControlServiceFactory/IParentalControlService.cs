@@ -1,9 +1,11 @@
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Arp;
 using Ryujinx.Horizon.Common;
 using System;
+using System.Runtime.InteropServices;
 using static LibHac.Ns.ApplicationControlProperty;
 
 namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
@@ -194,16 +196,29 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             {
                 return ResultCode.PermissionDenied;
             }
+            
+            RestrictionSettings settings = new RestrictionSettings
+            {
+                RatingAge = (byte)_ratingAge[0]
+            };
 
+            context.ResponseData.WriteStruct(settings);
+            
             Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
             return ResultCode.Success;
         }
-        
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct RestrictionSettings
+        {
+            public byte RatingAge;
+        }
+
         [CommandCmif(1039)]
         // GetFreeCommunicationApplicationListCount() -> u32
         public ResultCode GetFreeCommunicationApplicationListCount(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            context.ResponseData.Write(4);
 
             return ResultCode.Success;
         }

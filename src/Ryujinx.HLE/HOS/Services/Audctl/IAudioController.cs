@@ -20,16 +20,30 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
         // GetOutputModeSetting() -> u32
         public ResultCode GetOutputModeSetting(ServiceCtx context)
         {
-            context.ResponseData.Write(1);
+            context.ResponseData.Write((uint)AudioOutputModeTarget.Speaker);
             return ResultCode.Success;
+        }
+        
+        public enum AudioOutputModeTarget : uint
+        {
+            None = 0,
+            Hdmi = 1,
+            Speaker = 2,
+            Headphone = 3
         }
         
         [CommandCmif(18)]
         // GetHeadphoneOutputLevelMode() -> u32
         public ResultCode GetHeadphoneOutputLevelMode(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((int)HeadphoneOutputLevelMode.Normal);
             return ResultCode.Success;
+        }
+        
+        public enum HeadphoneOutputLevelMode
+        {
+            Normal = 0,
+            HighPower = 1
         }
         
         [CommandCmif(31)]

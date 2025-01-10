@@ -113,9 +113,30 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            ulong size = context.Request.ReceiveBuff[0].Size;
+            byte[] data = new byte[size];
+            EulaVersion eulaVersion = new EulaVersion
+            {
+                Version =  0x10000,
+                RegionCode = (byte)context.Device.Configuration.Region,
+                ClockType = 0x29580,
+                Padding = 0
+            };
+            byte[] eulaVersionBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref eulaVersion, 1)).ToArray();
+            // Write the EulaVersion struct to the buffer
+            context.Memory.Write(position, eulaVersionBuffer);
             context.ResponseData.Write(1);
-
             return ResultCode.Success;
+        }
+        
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        struct EulaVersion
+        {
+            public uint Version;
+            public uint RegionCode;
+            public uint ClockType;
+            public int Padding;
         }
         
         [CommandCmif(23)]
@@ -572,7 +593,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetAutoUpdateEnableFlag() -> bool
         public ResultCode GetAutoUpdateEnableFlag(ServiceCtx context)
         {
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(false);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

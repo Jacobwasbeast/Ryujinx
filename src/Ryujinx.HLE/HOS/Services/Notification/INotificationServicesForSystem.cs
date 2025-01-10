@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Notification
@@ -12,14 +13,19 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         // ListAlarmSettings(buffer  type-0x6) -> s32, span<nn::ns::detail::AlarmSetting>
         public ResultCode ListAlarmSettings(ServiceCtx context)
         {
-            var alarmSettings = context.Request.ReceiveBuff[0];
-            var alarmSettingsCount = alarmSettings.Size;
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
             
             // Initialize the buffer with default values
             context.ResponseData.Write(1);
             
-            Logger.Info?.PrintStub(LogClass.ServiceSet, "Stubbed.", alarmSettings);
+            // Write the AlarmSetting struct to the output buffer
+            AlarmSetting alarmSetting = AlarmSetting.InitializeDefault();
+            // convert the struct to bytes
+            byte[] alarmSettingBytes = alarmSetting.ToBytes();
             
+            // Write the AlarmSetting struct to the output buffer
+            context.Memory.Write(bufferPosition, alarmSettingBytes);
             return ResultCode.Success;
         }
         
@@ -36,11 +42,9 @@ namespace Ryujinx.HLE.HOS.Services.Notification
             public byte Muted;
 
             // 0x04: Padding (0x04 bytes)
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
             public byte[] Padding;
 
             // 0x08: UID (0x10 bytes)
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x10)]
             public byte[] UID;
 
             // 0x18: ApplicationId (0x08 bytes)
@@ -70,6 +74,25 @@ namespace Ryujinx.HLE.HOS.Services.Notification
                 }
 
                 return setting;
+            }
+            
+            public byte[] ToBytes()
+            {
+                int size = Marshal.SizeOf(this);
+                byte[] bytes = new byte[size];
+
+                IntPtr ptr = Marshal.AllocHGlobal(size);
+                try
+                {
+                    Marshal.StructureToPtr(this, ptr, false);
+                    Marshal.Copy(ptr, bytes, 0, size);
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(ptr);
+                }
+
+                return bytes;
             }
         }
 
