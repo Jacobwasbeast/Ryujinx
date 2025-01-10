@@ -18,7 +18,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         // IsRadioEnabled() -> bool
         public ResultCode IsRadioEnabled(ServiceCtx context)
         {
-            context.ResponseData.Write(false);
+            context.ResponseData.Write(true);
 
             return ResultCode.Success;
         }

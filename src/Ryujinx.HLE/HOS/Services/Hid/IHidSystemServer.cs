@@ -120,31 +120,30 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // IsUsbFullKeyControllerEnabled() -> b8
         public ResultCode IsUsbFullKeyControllerEnabled(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            context.ResponseData.Write(false);
             return ResultCode.Success;
         }
         
         [CommandCmif(1000)]
-        // InitializeFirmwareUpdate() -> b8
+        // InitializeFirmwareUpdate()
         public ResultCode InitializeFirmwareUpdate(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            Logger.Info?.PrintStub(LogClass.ServiceHid);
             return ResultCode.Success;
         }
         
         [CommandCmif(1135)]
-        // InitializeUsbFirmwareUpdateWithoutMemory() -> b8
+        // InitializeUsbFirmwareUpdateWithoutMemory()
         public ResultCode InitializeUsbFirmwareUpdateWithoutMemory(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
             return ResultCode.Success;
         }
         
         [CommandCmif(1153)]
-        // GetTouchScreenDefaultConfiguration() -> 0
+        // GetTouchScreenDefaultConfiguration()
         public ResultCode GetTouchScreenDefaultConfiguration(ServiceCtx context)
         {
-            // NOTE: This is a dummy implementation, the return value is not used.
+            // TODO: Implement touch screen default configuration.
             Logger.Info?.PrintStub(LogClass.ServiceHid);
             return ResultCode.Success;
         }

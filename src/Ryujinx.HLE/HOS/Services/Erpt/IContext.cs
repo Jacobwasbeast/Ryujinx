@@ -1,3 +1,5 @@
+using Ryujinx.Common.Logging;
+
 namespace Ryujinx.HLE.HOS.Services.Erpt
 {
     [Service("erpt:c")]
@@ -9,7 +11,8 @@ namespace Ryujinx.HLE.HOS.Services.Erpt
         // SubmitContext Takes two type-0x5 input buffers #ContextEntry and FieldList. No output. 
         public ResultCode SubmitContext(ServiceCtx context)
         {
-            // TODO: Figure out what this command does
+            Logger.Info?.PrintStub(LogClass.Service, $"ContextEntry size: {context.Request.SendBuff[0].Size}");
+            Logger.Info?.PrintStub(LogClass.Service, $"FieldList size: {context.Request.SendBuff[1].Size}");
             return ResultCode.Success;
         }
     }

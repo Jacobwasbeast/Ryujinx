@@ -1,4 +1,6 @@
+using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using System;
 using System.Runtime.InteropServices;
 
@@ -109,10 +111,23 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         // GetNotificationPresentationSetting() -> u8
         public ResultCode GetNotificationPresentationSetting(ServiceCtx context)
         {
-            context.ResponseData.Write(0);
+            context.ResponseData.WriteStruct(new NotificationPresentationSetting());
             Logger.Info?.PrintStub(LogClass.ServiceSet, "Stubbed.");
             
             return ResultCode.Success;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct NotificationPresentationSetting
+        {
+            // 16 bytes of padding
+            public Array10<byte> Padding;
+
+            // Constructor to initialize the padding if needed
+            public NotificationPresentationSetting()
+            {
+                Padding = new Array10<byte>();
+            }
         }
     }
 }

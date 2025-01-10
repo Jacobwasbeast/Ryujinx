@@ -171,9 +171,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 TailTime = 0x0
             };
 
-            byte[] notificationSettingsBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref notificationSettings, 1)).ToArray();
-
-            context.ResponseData.Write(notificationSettingsBuffer);
+            context.ResponseData.WriteStruct(notificationSettings);
 
             return ResultCode.Success;
         }

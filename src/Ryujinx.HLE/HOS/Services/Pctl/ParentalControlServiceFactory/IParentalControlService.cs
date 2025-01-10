@@ -183,13 +183,13 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                 return ResultCode.PermissionDenied;
             }
 
-            context.ResponseData.Write(0);
+            context.ResponseData.Write((uint)0);
 
             return ResultCode.Success;
         }
 
         [CommandCmif(1035)]
-        // GetCurrentSettings() -> 0
+        // GetCurrentSettings() -> nn::pctl::RestrictionSettings
         public ResultCode GetCurrentSettings(ServiceCtx context)
         {
             if ((_permissionFlag & 0x140) == 0)
