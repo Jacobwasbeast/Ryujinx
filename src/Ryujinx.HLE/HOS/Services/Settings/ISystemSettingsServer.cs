@@ -125,8 +125,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             };
             byte[] eulaVersionBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref eulaVersion, 1)).ToArray();
             // Write the EulaVersion struct to the buffer
-            context.Memory.Write(position, eulaVersionBuffer);
             context.ResponseData.Write(1);
+            context.Memory.Write(position, eulaVersionBuffer);
             return ResultCode.Success;
         }
         
@@ -382,7 +382,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetQuestFlag(ServiceCtx context)
         {
             // NOTE: Gets a flag determining whether the console is a kiosk unit (codenamed "Quest"). Used by qlaunch to determine whether to launch Retail Interactive Display Menu. 
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(false);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

@@ -130,7 +130,7 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
         
            
         [CommandCmif(17)]
-        // IsWirelessCommunicationEnabled() -> bool
+        // IsWirelessCommunicationEnabled() -> b8
         public ResultCode IsWirelessCommunicationEnabled(ServiceCtx context)
         {
             context.ResponseData.Write(false);

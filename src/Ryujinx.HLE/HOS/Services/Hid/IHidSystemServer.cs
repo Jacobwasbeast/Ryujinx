@@ -96,11 +96,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
         
         [CommandCmif(751)]
-        // AcquireJoyDetachOnBluetoothOffEventHandle(u32) -> handle<copy>
+        // AcquireJoyDetachOnBluetoothOffEventHandle(nn::applet::AppletResourceUserId, pid) -> handle<copy>
         public ResultCode AcquireJoyDetachOnBluetoothOffEventHandle(ServiceCtx context)
         {
-            uint joyIndex = context.RequestData.ReadUInt32();
-            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { joyIndex });
+            var appletResourceUserId = context.RequestData.ReadUInt32();
+            var pid = context.RequestData.ReadUInt32();
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, pid });
             if (_joyDetachOnBluetoothOffEventHandle == -1)
             {
                 Result resultCode = context.Process.HandleTable.GenerateHandle(_joyDetachOnBluetoothOffEvent.ReadableEvent, out _joyDetachOnBluetoothOffEventHandle);

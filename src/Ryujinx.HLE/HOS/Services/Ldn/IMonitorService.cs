@@ -20,7 +20,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         }
         
         [CommandCmif(100)]
-        // InitializeMonitor() -> 0
+        // InitializeMonitor()
         public ResultCode InitializeMonitor(ServiceCtx context)
         {
             // Note: This is used immediately after object creation. Official sw will Abort if this fails.
@@ -29,7 +29,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         }
         
         [CommandCmif(288)]
-        // ???() -> 0
+        // ???()
         public ResultCode Unknown288(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceLdn);

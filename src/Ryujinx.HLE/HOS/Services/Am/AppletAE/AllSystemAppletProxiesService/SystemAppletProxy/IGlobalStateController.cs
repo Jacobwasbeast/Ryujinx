@@ -15,6 +15,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _hdcpAuthenticationFailedEventHandle = -1;
         }
         
+        [CommandCmif(14)]
+        // ShouldSleepOnBoot() -> u8
+        public ResultCode ShouldSleepOnBoot(ServiceCtx context)
+        {
+            context.ResponseData.Write(false);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(15)]
         // GetHdcpAuthenticationFailedEvent() -> handle<copy>
         public ResultCode GetHdcpAuthenticationFailedEvent(ServiceCtx context)
@@ -31,7 +39,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_hdcpAuthenticationFailedEventHandle);
             
-            Logger.Info?.PrintStub(LogClass.ServiceAm);
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
     }

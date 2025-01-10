@@ -8,7 +8,8 @@
         // GetSubscriptionStatus() -> u32
         public ResultCode GetSubscriptionStatus(ServiceCtx context)
         {
-            // TODO: Implement news service.
+            // TODO: Implement this properly
+            context.ResponseData.Write((uint)0);
             return ResultCode.Success;
         }
         

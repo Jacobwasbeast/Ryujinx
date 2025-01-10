@@ -6,10 +6,9 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         public IAlbumAccessorService(ServiceCtx context) { }
         
         [CommandCmif(18)]
-        // GetAppletProgramIdTable Takes a type-70 buffer and returns a bool. If the buffer is sufficient it writes two application ID's to the buffer (0x100000000001000 and 0x100000000001fff) and returns true. This is used by photoViewer to group all screenshots of applets. 
+        // GetAppletProgramIdTable(buffer<nn::caps::ProgramIdTable>) -> bool
         public ResultCode GetAppletProgramIdTable(ServiceCtx context)
         {
-            // TODO: Implement this properly.
             context.ResponseData.Write(false);
 
             return ResultCode.Success;

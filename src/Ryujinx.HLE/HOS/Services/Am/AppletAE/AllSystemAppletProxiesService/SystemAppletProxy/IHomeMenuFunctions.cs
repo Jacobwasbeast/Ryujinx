@@ -25,6 +25,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(11)]
+        // LockForeground()
+        public ResultCode LockForeground(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(21)]
         // GetPopFromGeneralChannelEvent() -> handle<copy>

@@ -2,11 +2,10 @@
 {
     class ITransferTaskListController : IpcService
     {
-        // TODO: Implement this service properly I believe they share the same instances of INativeHandleHolder.
         public ITransferTaskListController() { }
         
         [CommandCmif(5)]
-        // GetTransferTaskEndEventNativeHandleHolder() -> INativeHandleHolder
+        // GetTransferTaskEndEventNativeHandleHolder() -> nn::olsc::INativeHandleHolder
         public ResultCode GetTransferTaskEndEventNativeHandleHolder(ServiceCtx context)
         {
             MakeObject(context, new INativeHandleHolder(context));
@@ -15,7 +14,7 @@
         }
         
         [CommandCmif(9)]
-        // GetTransferTaskStartEventNativeHandleHolder() -> INativeHandleHolder
+        // GetTransferTaskStartEventNativeHandleHolder() -> nn::olsc::INativeHandleHolder
         public ResultCode GetTransferTaskStartEventNativeHandleHolder(ServiceCtx context)
         {
             MakeObject(context, new INativeHandleHolder(context));

@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         }
         
         [CommandCmif(6)]
-        // IsRadioEnabled() -> bool
+        // IsRadioEnabled() -> b8
         public ResultCode IsRadioEnabled(ServiceCtx context)
         {
             context.ResponseData.Write(true);
@@ -37,7 +37,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
                     return (ResultCode)resultCode.ErrorCode;
                 }
             }
-            // AcquireRadioEvent also returns a u8, which is probably the status of the radio event.
+            // AcquireRadioEvent also returns a u8
             context.ResponseData.Write(true);
             
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_radioEventHandle);

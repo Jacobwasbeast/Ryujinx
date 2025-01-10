@@ -36,7 +36,7 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
         // GetHeadphoneOutputLevelMode() -> u32
         public ResultCode GetHeadphoneOutputLevelMode(ServiceCtx context)
         {
-            context.ResponseData.Write((int)HeadphoneOutputLevelMode.Normal);
+            context.ResponseData.Write((uint)HeadphoneOutputLevelMode.Normal);
             return ResultCode.Success;
         }
         
@@ -47,7 +47,7 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
         }
         
         [CommandCmif(31)]
-        // IsSpeakerAutoMuteEnabled() -> bool
+        // IsSpeakerAutoMuteEnabled() -> b8
         public ResultCode IsSpeakerAutoMuteEnabled(ServiceCtx context)
         {
             context.ResponseData.Write(true);

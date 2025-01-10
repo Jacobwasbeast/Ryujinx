@@ -6,8 +6,8 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         public IBtmSystem(ServiceCtx context) { }
         
         [CommandCmif(0)]
-        // GetCore() -> IBtmSystemCore
-        public ResultCode GetCore(ServiceCtx context)
+        // GetCoreImpl() -> object<nn::btm::IBtmSystemCore>
+        public ResultCode GetCoreImpl(ServiceCtx context)
         {
             MakeObject(context, new IBtmSystemCore(context));
 
@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         }
         
         [CommandCmif(6)]
-        // IsRadioEnabled() -> bool
+        // IsRadioEnabled() -> b8
         public ResultCode IsRadioEnabled(ServiceCtx context)
         {
             context.ResponseData.Write(true);
