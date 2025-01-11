@@ -16,6 +16,14 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
             _notificationEventHandle = -1;
         }
 
+        [CommandCmif(12)]
+        // GetForceMutePolicy() -> u32
+        public ResultCode GetForceMutePolicy(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(13)]
         // GetOutputModeSetting() -> u32
         public ResultCode GetOutputModeSetting(ServiceCtx context)

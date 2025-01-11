@@ -117,11 +117,6 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // IsRestrictionTemporaryUnlocked() -> b8
         public ResultCode IsRestrictionTemporaryUnlocked(ServiceCtx context)
         {
-            if ((_permissionFlag & 0x100) == 0)
-            {
-                return ResultCode.PermissionDenied;
-            }
-
             context.ResponseData.Write(false);
 
             return ResultCode.Success;
@@ -164,11 +159,6 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // IsRestrictionEnabled() -> b8
         public ResultCode IsRestrictionEnabled(ServiceCtx context)
         {
-            if ((_permissionFlag & 0x140) == 0)
-            {
-                return ResultCode.PermissionDenied;
-            }
-
             context.ResponseData.Write(_restrictionEnabled);
 
             return ResultCode.Success;
@@ -178,11 +168,6 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetSafetyLevel() -> u32
         public ResultCode GetSafetyLevel(ServiceCtx context)
         {
-            if ((_permissionFlag & 0x140) == 0)
-            {
-                return ResultCode.PermissionDenied;
-            }
-
             context.ResponseData.Write((uint)0);
 
             return ResultCode.Success;
@@ -192,11 +177,6 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetCurrentSettings() -> nn::pctl::RestrictionSettings
         public ResultCode GetCurrentSettings(ServiceCtx context)
         {
-            if ((_permissionFlag & 0x140) == 0)
-            {
-                return ResultCode.PermissionDenied;
-            }
-            
             RestrictionSettings settings = new RestrictionSettings
             {
                 RatingAge = (byte)_ratingAge[0]
@@ -218,7 +198,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetFreeCommunicationApplicationListCount() -> u32
         public ResultCode GetFreeCommunicationApplicationListCount(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)4);
+            context.ResponseData.Write((uint)0);
 
             return ResultCode.Success;
         }

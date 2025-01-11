@@ -12,21 +12,14 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         public INotificationServicesForSystem(ServiceCtx context) { }
 
         [CommandCmif(520)]
-        // ListAlarmSettings(buffer  type-0x6) -> s32, span<nn::ns::detail::AlarmSetting>
+        // ListAlarmSettings() -> s32, span<nn::ns::detail::AlarmSetting>
         public ResultCode ListAlarmSettings(ServiceCtx context)
         {
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
-            
-            // Initialize the buffer with default values
-            context.ResponseData.Write(1);
-            
-            // Write the AlarmSetting struct to the output buffer
             AlarmSetting alarmSetting = AlarmSetting.InitializeDefault();
             Span<AlarmSetting> alarmSettings = MemoryMarshal.CreateSpan(ref alarmSetting, 1);
-            // Convert alarmSettings to bytes
             ReadOnlySpan<byte> alarmSettingBytes = MemoryMarshal.AsBytes(alarmSettings);
-            // Write the AlarmSetting struct to the output buffer
+            context.ResponseData.Write(alarmSettings.Length);
             context.Memory.Write(bufferPosition, alarmSettingBytes);
             return ResultCode.Success;
         }

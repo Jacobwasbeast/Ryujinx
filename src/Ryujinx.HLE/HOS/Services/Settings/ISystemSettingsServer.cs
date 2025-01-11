@@ -114,9 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
-            context.Response.PtrBuff[0] =  context.Response.PtrBuff[0].WithSize(0x20);
-            ulong position = context.Response.PtrBuff[0].Position;
-            ulong size = context.Response.PtrBuff[0].Size;
+            ulong position = context.Response.ReceiveBuff[0].Position;
             EulaVersion eulaVersion = new EulaVersion
             {
                 Version =  0x10000,
@@ -356,9 +354,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 ContrastRatio = 0x1
             };
 
-            byte[] tvSettingsBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref tvSettings, 1)).ToArray();
-
-            context.ResponseData.Write(tvSettingsBuffer);
+            context.ResponseData.WriteStruct(tvSettings);
 
             return ResultCode.Success;
         }
@@ -412,10 +408,10 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
         
         [CommandCmif(63)]
-        // GetPrimaryAlbumStorage() -> PrimaryAlbumStorage
+        // GetPrimaryAlbumStorage() -> s32
         public ResultCode GetPrimaryAlbumStorage(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)PrimaryAlbumStorage.SdCard);
+            context.ResponseData.Write((byte)PrimaryAlbumStorage.Nand);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
