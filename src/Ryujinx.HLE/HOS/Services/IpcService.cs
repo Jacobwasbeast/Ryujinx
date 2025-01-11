@@ -312,18 +312,5 @@ namespace Ryujinx.HLE.HOS.Services
 
             context.Memory.Write(ipcBuff.Position, rawData);
         }
-        
-        public Span<T> ExpandSpan<T>(ServiceCtx context, Span<T> span, int additionalElements) where T : unmanaged
-        {
-            int newLength = span.Length + additionalElements;
-
-            byte[] rawData = new byte[Marshal.SizeOf<T>() * newLength];
-
-            Span<T> newSpan = MemoryMarshal.Cast<byte, T>(rawData);
-
-            span.CopyTo(newSpan);
-
-            return newSpan;
-        }
     }
 }
