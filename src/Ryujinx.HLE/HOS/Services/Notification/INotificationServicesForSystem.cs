@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
+using Ryujinx.HLE.HOS.Ipc;
 using System;
 using System.Runtime.InteropServices;
 
@@ -15,12 +16,14 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         // ListAlarmSettings() -> s32, span<nn::ns::detail::AlarmSetting>
         public ResultCode ListAlarmSettings(ServiceCtx context)
         {
-            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            var buffer = context.Request.ReceiveBuff[0];
             AlarmSetting alarmSetting = AlarmSetting.InitializeDefault();
-            Span<AlarmSetting> alarmSettings = MemoryMarshal.CreateSpan(ref alarmSetting, 1);
-            ReadOnlySpan<byte> alarmSettingBytes = MemoryMarshal.AsBytes(alarmSettings);
-            context.ResponseData.Write(alarmSettings.Length);
-            context.Memory.Write(bufferPosition, alarmSettingBytes);
+            Span<AlarmSetting> alarmSettings = CreateSpanFromBuffer<AlarmSetting>(context,buffer,true);
+            alarmSettings[0] = alarmSetting;
+            int alarmSettingsCount = alarmSettings.Length;
+            Logger.Info?.PrintStub(LogClass.Service, $"AlarmSettingsCount: {alarmSettingsCount}");
+            WriteSpanToBuffer(context, buffer, alarmSettings);
+            context.ResponseData.Write(1);
             return ResultCode.Success;
         }
         

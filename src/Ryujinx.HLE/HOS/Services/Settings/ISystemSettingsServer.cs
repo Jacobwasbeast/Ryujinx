@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
-            ulong position = context.Response.ReceiveBuff[0].Position;
+            ulong position = context.Request.ReceiveBuff[0].Position;
             EulaVersion eulaVersion = new EulaVersion
             {
                 Version =  0x10000,
@@ -186,25 +186,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetAccountNotificationSettings() -> (u32, buffer<nn::settings::system::AccountNotificationSettings, 6>)
         public ResultCode GetAccountNotificationSettings(ServiceCtx context)
         {
-            var bufferPosition = context.Request.ReceiveBuff[0].Position;
-            var bufferSize = context.Request.ReceiveBuff[0].Size;
-            if (bufferSize < 0x18)
-            {
-                throw new InvalidOperationException("Buffer is too small");
-            }
+            var buffer = context.Request.ReceiveBuff[0];
+             
+            Span<AccountNotificationSettings> elementsSpan = CreateSpanFromBuffer<AccountNotificationSettings>(context,buffer,true);
             
-            AccountNotificationSettings accountNotificationSettings = new AccountNotificationSettings
-            {
-                Uid = new Array16<byte>(),
-                Flags = 0x1F,
-                FriendPresenceOverlayPermission = 0x1,
-                FriendInvitationOverlayPermission = 0x1,
-                Reserved1 = 0,
-                Reserved2 = 0
-            };
-
-            context.ResponseData.Write(1);
-            context.Memory.Write(bufferPosition, accountNotificationSettings);
+            int count = elementsSpan.Length;
+            Logger.Info?.PrintStub(LogClass.ServiceSet, $"AccountNotificationSettings: {count} settings found");
+            context.ResponseData.Write(count);
+            WriteSpanToBuffer(context, buffer, elementsSpan);
             return ResultCode.Success;
         }
         

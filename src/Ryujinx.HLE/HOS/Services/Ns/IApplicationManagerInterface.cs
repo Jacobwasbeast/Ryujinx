@@ -44,8 +44,6 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Entry offset {entryOffset}");
 
             var outputBuffer = context.Request.ReceiveBuff[0];
-            ulong bufferCapacity = outputBuffer.Size / 0x18;
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Output buffer capacity {bufferCapacity}");
 
             // Simulate fetching installed games (replace with actual data retrieval logic)
             var installedGames = context.Device.UIHandler.GetApplications();
@@ -54,11 +52,12 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             int recordCount = 0;
             int index = 0;
             int ii = 24;
-
-            // Populate the output buffer with ApplicationRecords
+            Span<ApplicationRecord> records = CreateSpanFromBuffer<ApplicationRecord>(context, outputBuffer, true);
+            int maxCount = records.Length;
+            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Output buffer size {maxCount}");
             foreach (var game in installedGames)
             {
-                if ((ulong)recordCount >= bufferCapacity)
+                if (recordCount >= maxCount)
                 {
                     Logger.Info?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
                     break;
@@ -78,16 +77,13 @@ namespace Ryujinx.HLE.HOS.Services.Ns
                     Unknown1 = 0, // Placeholder
                     Unknown3 = (byte)ii++
                 };
-                // TODO: Populate with actual data
-                var positon = outputBuffer.Position + (ulong)recordCount * 0x18;
-                context.Memory.Write(positon, SpanHelpers.AsByteSpan(ref record).ToArray());
                 
+                records[recordCount] = record;
                 recordCount++;
             }
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {recordCount} records written");
-
-            // Write the output entry count
             context.ResponseData.Write(recordCount);
+            WriteSpanToBuffer(context,outputBuffer, records);
+            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {recordCount} records written");
             return ResultCode.Success;
         }
 
@@ -188,6 +184,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
+        
+        [CommandCmif(3002)]
+        // Unknown3002()
+        public ResultCode Unknown3002(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
     }
     
     [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 1)]

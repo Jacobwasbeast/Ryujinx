@@ -25,6 +25,9 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         private bool _freeCommunicationEnabled = false;
         private readonly bool _stereoVisionRestrictionConfigurable = true;
         private bool _stereoVisionRestriction = false;
+        private bool _restrictionUnlocked = false;
+        private bool _pairingActive = false;
+        private bool _alarmDisabled = false;
 #pragma warning restore IDE0052, CS0414
         
         KEvent _synchronizationEvent;
@@ -117,7 +120,12 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // IsRestrictionTemporaryUnlocked() -> b8
         public ResultCode IsRestrictionTemporaryUnlocked(ServiceCtx context)
         {
-            context.ResponseData.Write(false);
+            if ((_permissionFlag & 0x100) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
+            context.ResponseData.Write(_restrictionUnlocked);
 
             return ResultCode.Success;
         }
@@ -159,6 +167,11 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // IsRestrictionEnabled() -> b8
         public ResultCode IsRestrictionEnabled(ServiceCtx context)
         {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
             context.ResponseData.Write(_restrictionEnabled);
 
             return ResultCode.Success;
@@ -168,6 +181,11 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetSafetyLevel() -> u32
         public ResultCode GetSafetyLevel(ServiceCtx context)
         {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+
             context.ResponseData.Write((uint)0);
 
             return ResultCode.Success;
@@ -177,6 +195,11 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetCurrentSettings() -> nn::pctl::RestrictionSettings
         public ResultCode GetCurrentSettings(ServiceCtx context)
         {
+            if ((_permissionFlag & 0x140) == 0)
+            {
+                return ResultCode.PermissionDenied;
+            }
+            
             RestrictionSettings settings = new RestrictionSettings
             {
                 RatingAge = (byte)_ratingAge[0]
@@ -198,7 +221,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         // GetFreeCommunicationApplicationListCount() -> u32
         public ResultCode GetFreeCommunicationApplicationListCount(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)0);
+            context.ResponseData.Write((uint)4);
 
             return ResultCode.Success;
         }
@@ -263,6 +286,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                     _stereoVisionRestriction = stereoVisionRestriction;
 
                     // TODO: It signals an internal event of service. We have to determine where this event is used.
+                    _synchronizationEvent.ReadableEvent.Signal();
                 }
             }
 
@@ -321,7 +345,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         public ResultCode IsPairingActive(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
-            context.ResponseData.Write(false);
+            context.ResponseData.Write(_pairingActive);
             
             return ResultCode.Success;
         }
@@ -351,6 +375,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         public ResultCode GetPlayTimerSettings(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
+            
             context.ResponseData.WriteStruct(new PlayTimerSettings());
 
             return ResultCode.Success;
@@ -386,7 +411,7 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         {
             Logger.Stub?.PrintStub(LogClass.ServicePctl, new { _pid });
 
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(_alarmDisabled);
 
             return ResultCode.Success;
         }

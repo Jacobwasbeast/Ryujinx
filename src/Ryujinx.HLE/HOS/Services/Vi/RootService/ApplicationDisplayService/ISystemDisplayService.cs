@@ -48,7 +48,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         {
             ulong displayId = context.RequestData.ReadUInt64();
             int outCount = 1;
-            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            var buffer = context.Request.ReceiveBuff[0];
             DisplayMode displayMode = new DisplayMode
             {
                 Width = 1280,
@@ -56,8 +56,15 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
                 RefreshRate = 60.0f,
                 Unknown = 0
             };
-            context.ResponseData.Write(outCount);
-            context.Memory.Write(bufferPosition, displayMode);
+            
+            Span<DisplayMode> records = CreateSpanFromBuffer<DisplayMode>(context, buffer, true);
+            
+            records[0] = displayMode;
+            
+            context.ResponseData.Write(1);
+            
+            WriteSpanToBuffer(context, buffer, records);
+            
             Logger.Stub?.PrintStub(LogClass.ServiceVi);
             return ResultCode.Success;
         }
