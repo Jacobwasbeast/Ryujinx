@@ -49,19 +49,15 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
             ulong displayId = context.RequestData.ReadUInt64();
             int outCount = 1;
             ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
-            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
-            DisplayMode[] displayModes = new DisplayMode[outCount];
-            displayModes[0] = new DisplayMode
+            DisplayMode displayMode = new DisplayMode
             {
                 Width = 1280,
                 Height = 720,
                 RefreshRate = 60.0f,
                 Unknown = 0
             };
-            byte[] displayModeBytes = new byte[outCount * 0x10];
-            MemoryMarshal.Cast<DisplayMode, byte>(displayModes).CopyTo(displayModeBytes);
-            context.Memory.Write(bufferPosition, displayModeBytes);
             context.ResponseData.Write(outCount);
+            context.Memory.Write(bufferPosition, displayMode);
             Logger.Stub?.PrintStub(LogClass.ServiceVi);
             return ResultCode.Success;
         }

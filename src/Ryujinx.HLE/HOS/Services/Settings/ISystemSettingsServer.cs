@@ -8,6 +8,7 @@ using LibHac.Ncm;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
@@ -113,9 +114,9 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
-            ulong position = context.Request.ReceiveBuff[0].Position;
-            ulong size = context.Request.ReceiveBuff[0].Size;
-            byte[] data = new byte[size];
+            context.Response.PtrBuff[0] =  context.Response.PtrBuff[0].WithSize(0x20);
+            ulong position = context.Response.PtrBuff[0].Position;
+            ulong size = context.Response.PtrBuff[0].Size;
             EulaVersion eulaVersion = new EulaVersion
             {
                 Version =  0x10000,
@@ -123,10 +124,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 ClockType = 0x29580,
                 Padding = 0
             };
-            byte[] eulaVersionBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref eulaVersion, 1)).ToArray();
-            // Write the EulaVersion struct to the buffer
             context.ResponseData.Write(1);
-            context.Memory.Write(position, eulaVersionBuffer);
+            context.Memory.Write(position, eulaVersion);
             return ResultCode.Success;
         }
         
@@ -198,7 +197,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             
             AccountNotificationSettings accountNotificationSettings = new AccountNotificationSettings
             {
-                Uid = new Uid(0, 0),
+                Uid = new Array16<byte>(),
                 Flags = 0x1F,
                 FriendPresenceOverlayPermission = 0x1,
                 FriendInvitationOverlayPermission = 0x1,
@@ -207,14 +206,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             };
 
             context.ResponseData.Write(1);
-            context.Memory.Write(bufferPosition, MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref accountNotificationSettings, 1)).ToArray());
+            context.Memory.Write(bufferPosition, accountNotificationSettings);
             return ResultCode.Success;
         }
         
         [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 1)]
         public struct AccountNotificationSettings
         {
-            public Uid Uid;                             // 0x0 - 0x10: Unique ID (16 bytes)
+            public Array16<byte> Uid;                             // 0x0 - 0x10: Unique ID (16 bytes)
 
             public uint Flags;                             // 0x10 - 0x4: Notification Flags
 
@@ -440,9 +439,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
                 ConsoleSleepPlan = 0x1
             };
 
-            byte[] sleepSettingsBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref sleepSettings, 1)).ToArray();
-
-            context.ResponseData.Write(sleepSettingsBuffer);
+            context.ResponseData.WriteStruct(sleepSettings);
 
             return ResultCode.Success;
         }
@@ -463,15 +460,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             {
                 Flags = new InitialLaunchFlag
                 {
-                    InitialLaunchCompletionFlag = true,
+                    InitialLaunchCompletionFlag = false,
                     InitialLaunchUserAdditionFlag = false,
-                    InitialLaunchTimestampFlag = true
+                    InitialLaunchTimestampFlag = false
                 }.Raw,
                 TimeStamp = SteadyClockTimePoint.GetRandom()
             };
-            byte[] launchSettingsBuffer = MemoryMarshal.AsBytes(MemoryMarshal.CreateSpan(ref launchSettings, 1)).ToArray();
             
-            context.ResponseData.Write(launchSettingsBuffer);
+            context.ResponseData.WriteStruct(launchSettings);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
@@ -575,7 +571,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetProductModel() -> s32
         public ResultCode GetProductModel(ServiceCtx context)
         {
-            context.ResponseData.Write(1);
+            context.ResponseData.Write("HAC-001");
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
@@ -654,7 +650,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetChineseTraditionalInputMethod() -> s32
         public ResultCode GetChineseTraditionalInputMethod(ServiceCtx context)
         {
-            context.ResponseData.Write(1);
+            context.ResponseData.Write(0);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

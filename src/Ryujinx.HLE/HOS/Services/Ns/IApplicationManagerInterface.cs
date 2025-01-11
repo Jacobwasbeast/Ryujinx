@@ -58,11 +58,11 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             // Populate the output buffer with ApplicationRecords
             foreach (var game in installedGames)
             {
-                // if (recordCount >= bufferCapacity)
-                // {
-                //     Logger.Info?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
-                //     break;
-                // }
+                if ((ulong)recordCount >= bufferCapacity)
+                {
+                    Logger.Info?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
+                    break;
+                }
                 
                 if (index < entryOffset)
                 {
@@ -70,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
                     index++;
                     continue;
                 }
-
+            
                 ApplicationRecord record = new ApplicationRecord
                 {
                     ApplicationId = game.Value,

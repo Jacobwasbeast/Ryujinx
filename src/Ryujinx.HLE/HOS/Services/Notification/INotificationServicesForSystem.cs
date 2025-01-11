@@ -23,9 +23,9 @@ namespace Ryujinx.HLE.HOS.Services.Notification
             
             // Write the AlarmSetting struct to the output buffer
             AlarmSetting alarmSetting = AlarmSetting.InitializeDefault();
-            // convert the struct to bytes
-            byte[] alarmSettingBytes = alarmSetting.ToBytes();
-            
+            Span<AlarmSetting> alarmSettings = MemoryMarshal.CreateSpan(ref alarmSetting, 1);
+            // Convert alarmSettings to bytes
+            ReadOnlySpan<byte> alarmSettingBytes = MemoryMarshal.AsBytes(alarmSettings);
             // Write the AlarmSetting struct to the output buffer
             context.Memory.Write(bufferPosition, alarmSettingBytes);
             return ResultCode.Success;
@@ -44,10 +44,10 @@ namespace Ryujinx.HLE.HOS.Services.Notification
             public byte Muted;
 
             // 0x04: Padding (0x04 bytes)
-            public byte[] Padding;
+            public Array4<byte> Padding; 
 
             // 0x08: UID (0x10 bytes)
-            public byte[] UID;
+            public Array16<byte> UID;
 
             // 0x18: ApplicationId (0x08 bytes)
             public ulong ApplicationId;
@@ -56,17 +56,16 @@ namespace Ryujinx.HLE.HOS.Services.Notification
             public ulong NotSet;
 
             // 0x28: Alarm schedule (0x18 bytes) - WeeklyScheduleAlarmSetting
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 0x18)]
-            public byte[] Schedule; // This will store the alarm schedule
+            public Array24<byte> Schedule;
 
             // Helper method to initialize the struct to default values
             public static AlarmSetting InitializeDefault()
             {
                 var setting = new AlarmSetting
                 {
-                    Padding = new byte[4],
-                    UID = new byte[0x10],
-                    Schedule = new byte[0x18] // Initialized to 0xFF by default in the last 0xE bytes
+                    Padding = new Ryujinx.Common.Memory.Array4<byte>(),
+                    UID = new Ryujinx.Common.Memory.Array16<byte>(),
+                    Schedule = new Ryujinx.Common.Memory.Array24<byte>()
                 };
 
                 // Set the last 0xE bytes of the Schedule to 0xFF
@@ -76,25 +75,6 @@ namespace Ryujinx.HLE.HOS.Services.Notification
                 }
 
                 return setting;
-            }
-            
-            public byte[] ToBytes()
-            {
-                int size = Marshal.SizeOf(this);
-                byte[] bytes = new byte[size];
-
-                IntPtr ptr = Marshal.AllocHGlobal(size);
-                try
-                {
-                    Marshal.StructureToPtr(this, ptr, false);
-                    Marshal.Copy(ptr, bytes, 0, size);
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(ptr);
-                }
-
-                return bytes;
             }
         }
 
