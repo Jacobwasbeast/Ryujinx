@@ -10,7 +10,7 @@ namespace Ryujinx.Horizon.Lbl.Ipc
         private float _currentBrightnessSettingForVrMode;
         
         [CmifCommand(1)]
-        // LoadCurrentSetting() -> 
+        // LoadCurrentSetting()
         public Result LoadCurrentSetting()
         {
             // NOTE: Stubbed in system module.

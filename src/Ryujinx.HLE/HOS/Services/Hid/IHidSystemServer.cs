@@ -123,6 +123,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // IsUsbFullKeyControllerEnabled() -> b8
         public ResultCode IsUsbFullKeyControllerEnabled(ServiceCtx context)
         {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
             context.ResponseData.Write(false);
             return ResultCode.Success;
         }
@@ -139,6 +140,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // InitializeUsbFirmwareUpdateWithoutMemory()
         public ResultCode InitializeUsbFirmwareUpdateWithoutMemory(ServiceCtx context)
         {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
             return ResultCode.Success;
         }
         

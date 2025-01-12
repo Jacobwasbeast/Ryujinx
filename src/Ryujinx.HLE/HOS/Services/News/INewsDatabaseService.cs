@@ -1,4 +1,7 @@
-﻿namespace Ryujinx.HLE.HOS.Services.News
+﻿using Ryujinx.Common.Logging;
+using System;
+
+namespace Ryujinx.HLE.HOS.Services.News
 {
     class INewsDatabaseService : IpcService
     {
@@ -9,7 +12,8 @@
         public ResultCode Count(ServiceCtx context)
         {
             // TODO: Implement news database count
-            context.ResponseData.Write((uint)0);
+            context.ResponseData.Write(0);
+            Logger.Stub?.PrintStub(LogClass.Service, new { Method = "Count" });
             return ResultCode.Success;
         }
         

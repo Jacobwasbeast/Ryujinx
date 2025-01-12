@@ -286,7 +286,6 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
                     _stereoVisionRestriction = stereoVisionRestriction;
 
                     // TODO: It signals an internal event of service. We have to determine where this event is used.
-                    _synchronizationEvent.ReadableEvent.Signal();
                 }
             }
 

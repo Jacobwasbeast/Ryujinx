@@ -189,10 +189,18 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             var buffer = context.Request.ReceiveBuff[0];
              
             Span<AccountNotificationSettings> elementsSpan = CreateSpanFromBuffer<AccountNotificationSettings>(context,buffer,true);
-            
+            elementsSpan[0] = new AccountNotificationSettings
+            {
+                Uid = new Array16<byte>(),
+                Flags = 0x1F,
+                FriendPresenceOverlayPermission = 0x1,
+                FriendInvitationOverlayPermission = 0x1,
+                Reserved1 = 0,
+                Reserved2 = 0
+            };
             int count = elementsSpan.Length;
             Logger.Info?.PrintStub(LogClass.ServiceSet, $"AccountNotificationSettings: {count} settings found");
-            context.ResponseData.Write(count);
+            context.ResponseData.Write(1);
             WriteSpanToBuffer(context, buffer, elementsSpan);
             return ResultCode.Success;
         }
