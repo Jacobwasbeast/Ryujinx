@@ -41,31 +41,31 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             // Read entry_offset from the input data
             int entryOffset = context.RequestData.ReadInt32();
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Entry offset {entryOffset}");
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Entry offset {entryOffset}");
 
             var outputBuffer = context.Request.ReceiveBuff[0];
 
             // Simulate fetching installed games (replace with actual data retrieval logic)
             var installedGames = context.Device.UIHandler.GetApplications();
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {installedGames.Count} installed games found");
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {installedGames.Count} installed games found");
 
             int recordCount = 0;
             int index = 0;
             int ii = 24;
             Span<ApplicationRecord> records = CreateSpanFromBuffer<ApplicationRecord>(context, outputBuffer, true);
             int maxCount = records.Length;
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Output buffer size {maxCount}");
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Output buffer size {maxCount}");
             foreach (var game in installedGames)
             {
                 if (recordCount >= maxCount)
                 {
-                    Logger.Info?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
+                    Logger.Stub?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
                     break;
                 }
                 
                 if (index < entryOffset)
                 {
-                    Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Skipping record {index}");
+                    Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Skipping record {index}");
                     index++;
                     continue;
                 }
@@ -83,7 +83,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             }
             context.ResponseData.Write(recordCount);
             WriteSpanToBuffer(context,outputBuffer, records);
-            Logger.Info?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {recordCount} records written");
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {recordCount} records written");
             return ResultCode.Success;
         }
 

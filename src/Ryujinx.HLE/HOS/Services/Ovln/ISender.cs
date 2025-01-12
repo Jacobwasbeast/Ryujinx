@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
 namespace Ryujinx.HLE.HOS.Services.Ovln
@@ -15,6 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ovln
         // GetUnreceivedMessageCount() -> u32
         public ResultCode GetUnreceivedMessageCount(ServiceCtx context)
         {
+            Logger.Stub?.PrintStub(LogClass.Service);
             context.ResponseData.Write(0);
             return ResultCode.Success;
         }

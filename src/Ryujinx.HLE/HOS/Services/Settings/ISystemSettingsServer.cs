@@ -446,7 +446,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         }
         
         [CommandCmif(75)]
-        // GetInitialLaunchSettings() -> InitialLaunchSettings
+        // GetInitialLaunchSettings() -> nn::settings::system::InitialLaunchSettings
         public ResultCode GetInitialLaunchSettings(ServiceCtx context)
         {
             InitialLaunchSettings launchSettings = new InitialLaunchSettings

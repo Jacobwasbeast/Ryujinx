@@ -149,7 +149,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public ResultCode GetTouchScreenDefaultConfiguration(ServiceCtx context)
         {
             // TODO: Implement touch screen default configuration.
-            Logger.Info?.PrintStub(LogClass.ServiceHid);
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
             return ResultCode.Success;
         }
 

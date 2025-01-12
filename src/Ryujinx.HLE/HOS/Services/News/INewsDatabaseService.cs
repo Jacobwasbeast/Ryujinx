@@ -13,7 +13,7 @@ namespace Ryujinx.HLE.HOS.Services.News
         {
             // TODO: Implement news database count
             context.ResponseData.Write(0);
-            Logger.Stub?.PrintStub(LogClass.Service, new { Method = "Count" });
+            Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
         

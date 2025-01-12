@@ -22,8 +22,8 @@ namespace Ryujinx.HLE.HOS.Services.Notification
             alarmSettings[0] = alarmSetting;
             int alarmSettingsCount = alarmSettings.Length;
             Logger.Info?.PrintStub(LogClass.Service, $"AlarmSettingsCount: {alarmSettingsCount}");
-            WriteSpanToBuffer(context, buffer, alarmSettings);
             context.ResponseData.Write(1);
+            WriteSpanToBuffer(context, buffer, alarmSettings);
             return ResultCode.Success;
         }
         
@@ -88,7 +88,7 @@ namespace Ryujinx.HLE.HOS.Services.Notification
         public ResultCode GetNotificationPresentationSetting(ServiceCtx context)
         {
             context.ResponseData.WriteStruct(new NotificationPresentationSetting());
-            Logger.Stub?.PrintStub(LogClass.ServiceSet, "Stubbed.");
+            Logger.Stub?.PrintStub(LogClass.Service);
             
             return ResultCode.Success;
         }

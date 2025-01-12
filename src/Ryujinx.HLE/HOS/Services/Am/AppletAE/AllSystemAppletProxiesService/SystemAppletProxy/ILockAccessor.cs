@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Ipc;
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
 
@@ -36,6 +37,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 }
             }
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_lockChangedEventHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
         
@@ -60,6 +63,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 }
             }
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_lockChangedEventHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
         

@@ -1,3 +1,5 @@
+using Ryujinx.Common.Logging;
+
 namespace Ryujinx.HLE.HOS.Services.Caps
 {
     [Service("caps:a")]
@@ -9,6 +11,8 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         // GetAppletProgramIdTable(buffer<nn::caps::ProgramIdTable>) -> bool
         public ResultCode GetAppletProgramIdTable(ServiceCtx context)
         {
+            // TODO: Implement this properly.
+            Logger.Stub?.PrintStub(LogClass.ServiceCaps);
             context.ResponseData.Write(false);
 
             return ResultCode.Success;

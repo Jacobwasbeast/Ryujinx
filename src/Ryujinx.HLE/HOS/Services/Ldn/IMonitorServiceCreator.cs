@@ -11,7 +11,6 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         // CreateMonitorService() -> object<nn::ldn::detail::IMonitorService>
         public ResultCode CreateMonitorService(ServiceCtx context)
         {
-            Logger.Info?.PrintStub(LogClass.ServiceLdn, "Stubbed.");
             MakeObject(context, new IMonitorService());
 
             return ResultCode.Success;

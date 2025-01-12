@@ -60,8 +60,6 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
         {
             context.ResponseData.Write(true);
 
-            Logger.Stub?.PrintStub(LogClass.ServiceAm);
-
             return ResultCode.Success;
         }
         

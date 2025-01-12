@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Sdk.Lbl;
 using Ryujinx.Horizon.Sdk.Sf;
@@ -13,7 +14,7 @@ namespace Ryujinx.Horizon.Lbl.Ipc
         // LoadCurrentSetting()
         public Result LoadCurrentSetting()
         {
-            // NOTE: Stubbed in system module.
+            Logger.Stub?.PrintStub(LogClass.Service);
             
             return Result.Success;
         }
