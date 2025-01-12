@@ -38,7 +38,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             ChangeLanguageMenuItem.ItemsSource = GenerateLanguageMenuItems();
 
             MiiAppletMenuItem.Command = new AsyncRelayCommand(OpenMiiApplet);
-            QLaunchAppletMenuItem.Command = new AsyncRelayCommand(OpeSystemApplet);
+            QLaunchAppletMenuItem.Command = new AsyncRelayCommand(OpenSystemApplet);
             CloseRyujinxMenuItem.Command = new RelayCommand(CloseWindow);
             OpenSettingsMenuItem.Command = new AsyncRelayCommand(OpenSettings);
             PauseEmulationMenuItem.Command = new RelayCommand(() => ViewModel.AppHost?.Pause());
@@ -149,7 +149,7 @@ namespace Ryujinx.Ava.UI.Views.Main
         }
         
         public static readonly AppletMetadata SystemAppletMenu = new("qlaunch", 0x0100000000001000);
-        public async Task OpeSystemApplet()
+        public async Task OpenSystemApplet()
         {
             if (SystemAppletMenu.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
             {
