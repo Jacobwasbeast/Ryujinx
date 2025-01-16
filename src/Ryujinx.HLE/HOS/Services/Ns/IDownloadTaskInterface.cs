@@ -1,4 +1,6 @@
-﻿namespace Ryujinx.HLE.HOS.Services.Ns
+﻿using Ryujinx.Common.Logging;
+
+namespace Ryujinx.HLE.HOS.Services.Ns
 {
     class IDownloadTaskInterface : IpcService
     {
@@ -8,6 +10,15 @@
         // EnableAutoCommit()
         public ResultCode EnableAutoCommit(ServiceCtx context)
         {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(708)]
+        // DisableAutoCommit()
+        public ResultCode DisableAutoCommit(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
     }

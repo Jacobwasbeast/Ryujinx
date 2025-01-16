@@ -95,6 +95,16 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
         
+        [CommandCmif(703)]
+        // GetUniquePadIds() -> (u64, buffer<nn::hid::system::UniquePadId, 0xa>)
+        public ResultCode GetUniquePadIds(ServiceCtx context)
+        {
+            // Todo: This is probably wrong and shFAcquireRadioEvent:ould be a list of UniquePadIds instead.
+            context.ResponseData.Write(0); // Number of unique pad ids.
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(751)]
         // AcquireJoyDetachOnBluetoothOffEventHandle(nn::applet::AppletResourceUserId, pid) -> handle<copy>
         public ResultCode AcquireJoyDetachOnBluetoothOffEventHandle(ServiceCtx context)

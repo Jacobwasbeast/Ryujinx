@@ -17,6 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.News
             return ResultCode.Success;
         }
         
+        [CommandCmif(30900)]
         [CommandCmif(1)]
         // CreateNewlyArrivedEventHolder() -> object<nn::news::detail::ipc::INewlyArrivedEventHolder>
         public ResultCode CreateNewlyArrivedEventHolder(ServiceCtx context)

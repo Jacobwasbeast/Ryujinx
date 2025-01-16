@@ -17,6 +17,22 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             _systemUpdateEventHandle = -1;
         }
         
+        [CommandCmif(0)]
+        // GetBackgroundNetworkUpdateState() -> u32
+        public ResultCode GetBackgroundNetworkUpdateState(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            context.ResponseData.Write((byte)BackgroundNetworkUpdateState.None);
+            return ResultCode.Success;
+        }
+        
+        public enum BackgroundNetworkUpdateState
+        {
+            None,
+            InProgress,
+            Ready
+        }
+        
         [CommandCmif(9)]
         // GetSystemUpdateNotificationEventForContentDelivery() -> handle<copy>
         public ResultCode GetSystemUpdateNotificationEventForContentDelivery(ServiceCtx context)

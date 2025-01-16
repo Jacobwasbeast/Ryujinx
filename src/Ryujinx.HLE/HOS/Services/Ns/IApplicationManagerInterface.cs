@@ -107,7 +107,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
-
+        
         [CommandCmif(44)]
         // GetSdCardMountStatusChangedEvent() -> handle<copy>
         public ResultCode GetSdCardMountStatusChangedEvent(ServiceCtx context)
@@ -125,6 +125,30 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_sdCardMountStatusChangedEventHandle);
             
             Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        const long storageFreeAndTotalSpaceSize = 6999999999999L;
+        [CommandCmif(47)]
+        // GetTotalSpaceSize(u8 storage_id) -> u64
+        public ResultCode GetTotalSpaceSize(ServiceCtx context)
+        {
+            long storageId = context.RequestData.ReadByte();
+            
+            
+            context.ResponseData.Write(storageFreeAndTotalSpaceSize);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(48)]
+        // GetFreeSpaceSize(u8 storage_id) -> u64
+        public ResultCode GetFreeSpaceSize(ServiceCtx context)
+        {
+            long storageId = context.RequestData.ReadByte();
+
+            context.ResponseData.Write(storageFreeAndTotalSpaceSize);
+
             return ResultCode.Success;
         }
         
@@ -211,6 +235,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
         
+        
+        [CommandCmif(403)]
+        // GetMaxApplicationControlCacheCount() -> u32
+        public ResultCode GetMaxApplicationControlCacheCount(ServiceCtx context)
+        {
+            // TODO: Implement this method properly.
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
         
         [CommandCmif(505)]
         // GetGameCarudMontFailureEvent() -> handle<copy>

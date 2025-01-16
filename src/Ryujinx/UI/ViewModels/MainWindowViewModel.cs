@@ -1594,7 +1594,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             {
                 LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.StatusBarSystemVersion, version.VersionString);
 
-                hasApplet = version.Major > 3;
+                hasApplet = version.Major > 0;
             }
             else
             {
