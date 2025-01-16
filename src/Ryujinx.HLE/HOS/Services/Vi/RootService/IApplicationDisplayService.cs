@@ -129,7 +129,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             ulong displayCount = 1;
             
             // qLaunch needs at least two displays.
-            if (context.Device.Processes.ActiveApplication.ProcessId == 127)
+            if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001000)
             {
                 displayCount++;
             }
