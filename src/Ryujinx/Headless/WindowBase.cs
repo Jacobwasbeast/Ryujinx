@@ -574,7 +574,7 @@ namespace Ryujinx.Headless
             }
         }
         
-        public Dictionary<ApplicationRecord, ulong> GetApplications()
+        public Dictionary<ApplicationRecordData, ulong> GetApplications()
         {
             throw new NotImplementedException();
         }

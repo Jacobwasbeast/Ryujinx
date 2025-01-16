@@ -176,7 +176,35 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             ulong position = context.Request.ReceiveBuff[0].Position;
 
-            ApplicationControlProperty nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
+            ApplicationControlProperty nacp;
+            if (titleId == context.Device.Processes.ActiveApplication.ProgramId)
+            {
+                nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
+            }
+            else
+            {
+                var apps = context.Device.UIHandler.GetApplications();
+                nacp = new ApplicationControlProperty();
+                foreach(var app in apps)
+                {
+                    if (app.Value == titleId)
+                    {
+                        Logger.Stub?.PrintStub(LogClass.Service, "Application control property found");
+                        var nameBytes = System.Text.Encoding.UTF8.GetBytes(app.Key.Name);
+                        var publisherBytes = System.Text.Encoding.UTF8.GetBytes(app.Key.Publisher);
+                        var version = app.Key.Version;
+                        ref var title = ref nacp.Title[0];
+                        
+                        nameBytes.CopyTo(title.Name.Items);
+                        
+                        publisherBytes.CopyTo(title.Publisher.Items);
+                        
+                        byte[] versionBytes = System.Text.Encoding.ASCII.GetBytes(version);
+                        
+                        versionBytes.CopyTo(nacp.DisplayVersion.Items);
+                    }
+                }
+            }
 
             context.Memory.Write(position, SpanHelpers.AsByteSpan(ref nacp).ToArray());
 
@@ -279,5 +307,13 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     public enum ApplicationRecordType
     {
         Installed = 0x3,
+    }
+
+    public class ApplicationRecordData()
+    {
+        public string Name;
+        public string Version;
+        public string Publisher;
+        public ulong TitleId;
     }
 }

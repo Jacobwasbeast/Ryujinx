@@ -256,17 +256,17 @@ namespace Ryujinx.Ava.UI.Applet
 
         public IDynamicTextInputHandler CreateDynamicTextInputHandler() => new AvaloniaDynamicTextInputHandler(_parent);
         
-        public Dictionary<ApplicationRecord, ulong> GetApplications()
+        public Dictionary<ApplicationRecordData, ulong> GetApplications()
         {
-            Dictionary<ApplicationRecord, ulong> applications = new();
+            Dictionary<ApplicationRecordData, ulong> applications = new();
             foreach (var app in _parent.ViewModel.ApplicationLibrary.Applications.KeyValues)
             {
-                var record = new ApplicationRecord()
+                var record = new ApplicationRecordData()
                 {
-                    ApplicationId = app.Value.Id,
-                    Type = (byte)ApplicationRecordType.Installed,
-                    Unknown1 = 0,
-                    Unknown3 = 0
+                    Name = app.Value.Name,
+                    Publisher = app.Value.Developer,
+                    Version = app.Value.Version,
+                    TitleId = app.Value.Id
                 };
                 applications.Add(record, app.Key);
             }

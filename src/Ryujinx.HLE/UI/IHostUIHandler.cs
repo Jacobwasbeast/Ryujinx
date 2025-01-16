@@ -63,6 +63,6 @@ namespace Ryujinx.HLE.UI
         /// </summary>
         IHostUITheme HostUITheme { get; }
 
-        Dictionary<ApplicationRecord, ulong> GetApplications();
+        Dictionary<ApplicationRecordData, ulong> GetApplications();
     }
 }
