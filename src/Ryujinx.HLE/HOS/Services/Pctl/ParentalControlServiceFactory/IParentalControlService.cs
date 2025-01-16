@@ -50,6 +50,9 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
             
             _playTimerEventToRequestSuspension = new KEvent(context.Device.System.KernelContext);
             _playTimerEventToRequestSuspensionHandle = -1;
+            
+            _unlinkedEvent = new KEvent(context.Device.System.KernelContext);
+            _unlinkedEventHandle = -1;
         }
 
         [CommandCmif(1)] // 4.0.0+
@@ -355,10 +358,11 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         {
             if (_synchronizationEventHandle == -1)
             {
-                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
-                if (resultCode == Result.Success)
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_synchronizationEvent.ReadableEvent, out _synchronizationEventHandle);
+
+                if (resultCode != Result.Success)
                 {
-                    _synchronizationEventHandle = rEventHandle;
+                    return (ResultCode)resultCode.ErrorCode;
                 }
             }
             
@@ -392,10 +396,10 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         {
             if (_playTimerEventToRequestSuspensionHandle == -1)
             {
-                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
-                if (resultCode == Result.Success)
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_playTimerEventToRequestSuspension.ReadableEvent, out _playTimerEventToRequestSuspensionHandle);
+                if (resultCode != Result.Success)
                 {
-                    _playTimerEventToRequestSuspensionHandle = rEventHandle;
+                    return (ResultCode)resultCode.ErrorCode;
                 }
             }
             
@@ -421,10 +425,10 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
         {
             if (_unlinkedEventHandle == -1)
             {
-                Result resultCode = context.Device.System.KernelContext.Syscall.CreateEvent(out int wEventHandle, out int rEventHandle);
-                if (resultCode == Result.Success)
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_unlinkedEvent.ReadableEvent, out _unlinkedEventHandle);
+                if (resultCode != Result.Success)
                 {
-                    _unlinkedEventHandle = rEventHandle;
+                    return (ResultCode)resultCode.ErrorCode;
                 }
             }
             

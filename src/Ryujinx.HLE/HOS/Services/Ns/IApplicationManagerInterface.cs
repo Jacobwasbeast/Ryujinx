@@ -1,5 +1,6 @@
 using LibHac.Ns;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -147,6 +148,23 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
         
+        [CommandCmif(55)]
+        // GetApplicationDesiredLanguage()
+        public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
+        {
+            // TODO: Implement this method properly.
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(70)]
+        // ResumeAll()
+        public ResultCode ResumeAll(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(400)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
         public ResultCode GetApplicationControlData(ServiceCtx context)
@@ -164,6 +182,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             return ResultCode.Success;
         }
+        
         
         [CommandCmif(505)]
         // GetGameCarudMontFailureEvent() -> handle<copy>
@@ -183,6 +202,27 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             
             Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
+        }
+        
+        [CommandCmif(1701)]
+        // GetApplicationView(buffer(ApplicationView), buffer(ApplicationIds)
+        public ResultCode GetApplicationView(ServiceCtx context)
+        {
+            // TODO: Implement this method properly.
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct ApplicationView
+        {
+            public ulong ApplicationId;
+            
+            public uint Unknown1;
+            
+            public uint Flags;
+            
+            public Array64<byte> Unknown2;
         }
         
         [CommandCmif(3002)]

@@ -453,8 +453,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             {
                 Flags = new InitialLaunchFlag
                 {
-                    InitialLaunchCompletionFlag = false,
-                    InitialLaunchUserAdditionFlag = false,
+                    InitialLaunchCompletionFlag = true,
+                    InitialLaunchUserAdditionFlag = true,
                     InitialLaunchTimestampFlag = false
                 }.Raw,
                 TimeStamp = SteadyClockTimePoint.GetRandom()
