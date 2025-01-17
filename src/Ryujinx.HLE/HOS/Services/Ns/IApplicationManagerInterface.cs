@@ -108,6 +108,35 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
         
+        [CommandCmif(3)]
+        // GetApplicationView(buffer<unknown, 5>) -> buffer<unknown, 6>
+        public ResultCode GetApplicationViewDeprecated(ServiceCtx context)
+        {
+            var buff1 = context.Request.ReceiveBuff[0];
+            
+            Span<ApplicationView> records = CreateSpanFromBuffer<ApplicationView>(context, buff1, true);
+            List<ulong> ids = new List<ulong>();
+            if (context.Device.Processes.ActiveApplication.ProgramId != 0x0100000000001000)
+            {
+                ids.Add(context.Device.Processes.ActiveApplication.ProgramId);
+            }
+
+            records = CreateSpanFromBuffer<ApplicationView>(context, buff1, false);
+            for(int i=0; i<ids.Count;i++)
+            {
+                if (records.Length >= i)
+                {
+                    records[i].ApplicationId = ids[i];
+                    records[i].Unknown1 = 0x70000;
+                    records[i].Flags = 0x401f17;
+                }
+            }
+            
+            WriteSpanToBuffer(context,buff1,records);
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(44)]
         // GetSdCardMountStatusChangedEvent() -> handle<copy>
         public ResultCode GetSdCardMountStatusChangedEvent(ServiceCtx context)
@@ -348,5 +377,6 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         public string Version;
         public string Publisher;
         public ulong TitleId;
+        public string Path;
     }
 }

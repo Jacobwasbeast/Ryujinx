@@ -12,7 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Ldn
         // GetStateForMonitor() -> u32
         public ResultCode GetStateForMonitor(ServiceCtx context)
         {
-            State state = State.Initialized;
+            State state = State.NonInitialized;
             context.ResponseData.Write((uint)state);
             
             Logger.Stub?.PrintStub(LogClass.ServiceLdn);

@@ -496,5 +496,16 @@ namespace Ryujinx.HLE.HOS
             }
             IsPaused = pause;
         }
+
+        public void CreateNewAppletManager()
+        {
+            AppletState = new AppletStateMgr(this);
+            AppletState.SetFocus(true);
+        }
+        
+        internal void SetFromAppletStateMgr(AppletStateMgr state)
+        {
+            AppletState = state;
+        }
     }
 }

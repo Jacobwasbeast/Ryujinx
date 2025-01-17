@@ -266,7 +266,8 @@ namespace Ryujinx.Ava.UI.Applet
                     Name = app.Value.Name,
                     Publisher = app.Value.Developer,
                     Version = app.Value.Version,
-                    TitleId = app.Value.Id
+                    TitleId = app.Value.Id,
+                    Path = app.Value.Path
                 };
                 applications.Add(record, app.Key);
             }
