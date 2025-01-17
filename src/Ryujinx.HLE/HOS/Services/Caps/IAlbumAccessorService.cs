@@ -45,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             {
                 if (count+1 >= entries.Length)
                 {
-                    Logger.Warning?.Print(LogClass.ServiceCaps,"Too many screenshots. Limiting to 100.");
+                    Logger.Warning?.Print(LogClass.ServiceCaps,$"Too many screenshots. Limiting to {entries.Length}.");
                     break;
                 }
                 if (System.IO.Path.GetFileName(file).EndsWith(".png") || System.IO.Path.GetFileName(file).EndsWith(".jpg"))
