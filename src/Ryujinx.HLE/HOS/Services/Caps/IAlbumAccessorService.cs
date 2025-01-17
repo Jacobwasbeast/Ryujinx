@@ -17,7 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
     [Service("caps:a")]
     class IAlbumAccessorService : IpcService
     {
-        public Dictionary<int,string> AlbumFiles { get; set; }
+        public Dictionary<AlbumFileDateTime,string> AlbumFiles { get; set; }
         public IAlbumAccessorService(ServiceCtx context) { }
 
         public bool IsInitialized = false;
@@ -38,7 +38,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             int count = 0;
             var buffer = context.Request.ReceiveBuff[0];
             ulong position = buffer.Position;
-            AlbumFiles = new Dictionary<int, string>();
+            AlbumFiles = new Dictionary<AlbumFileDateTime, string>();
             Span<AlbumEntry> entries = new AlbumEntry[System.IO.Directory.GetFiles(path).Length];
             foreach (string file in System.IO.Directory.GetFiles(path))
             {
@@ -56,7 +56,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                     album_entry.FileId.Reserved = 0;
                     entries[count] = album_entry;
                     count++;
-                    AlbumFiles.Add(album_entry.FileId.Time.UniqueId, file);
+                    AlbumFiles.Add(album_entry.FileId.Time, file);
                 }
             }
             WriteSpanToBuffer(context, buffer, entries);
@@ -115,7 +115,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 }
             };
             
-            string imagePath = AlbumFiles[fileId.Time.UniqueId];
+            string imagePath = AlbumFiles[fileId.Time];
 
             ScaleBytes(width, height, imagePath,  out Span<byte> scaledBytes);
             
@@ -143,7 +143,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 }
             };
             
-            string imagePath = AlbumFiles[fileId.Time.UniqueId];
+            string imagePath = AlbumFiles[fileId.Time];
             
             ScaleBytes(width, height, imagePath,  out Span<byte> scaledBytes);
             
@@ -174,7 +174,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 }
             };
             
-            string imagePath = AlbumFiles[fileId.Time.UniqueId];
+            string imagePath = AlbumFiles[fileId.Time];
             
             ScaleBytes(width, height, imagePath, out Span<byte> scaledBytes);
             
@@ -264,7 +264,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
 
         public void GetWidthAndHeightFromInputBuffer(AlbumFileId id, out int width, out int height)
         {
-            string path = AlbumFiles[id.Time.UniqueId];
+            string path = AlbumFiles[id.Time];
             width = 0;
             height = 0;
             using (SKBitmap bitmap = SKBitmap.Decode(path))
