@@ -328,6 +328,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             // TODO: Check if this function is called in other places and implement it properly.
             context.ResponseData.Write(0);
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
 

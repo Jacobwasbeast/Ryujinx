@@ -33,8 +33,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 return ResultCode.Success;
             }
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
-            string path = AppDataManager.BaseDirPath;
-            path += "\\screenshots";
+            string path = Path.Combine(AppDataManager.BaseDirPath, "screenshots");
             int count = 0;
             var buffer = context.Request.ReceiveBuff[0];
             ulong position = buffer.Position;
