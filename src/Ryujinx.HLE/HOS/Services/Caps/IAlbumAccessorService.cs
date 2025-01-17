@@ -34,6 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             }
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
             string path = Path.Combine(AppDataManager.BaseDirPath, "screenshots");
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             int count = 0;
             var buffer = context.Request.ReceiveBuff[0];
             ulong position = buffer.Position;
