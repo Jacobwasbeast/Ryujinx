@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
 
         public bool IsInitialized = false;
         [CommandCmif(1)]
+        [CommandCmif(101)]
         // GetAlbumFileList() -> (unknown<8>, buffer<unknown, 6>)
         public ResultCode GetAlbumFileList(ServiceCtx context)
         {
