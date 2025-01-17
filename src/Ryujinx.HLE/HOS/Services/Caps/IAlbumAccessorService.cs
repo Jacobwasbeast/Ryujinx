@@ -39,9 +39,15 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             var buffer = context.Request.ReceiveBuff[0];
             ulong position = buffer.Position;
             AlbumFiles = new Dictionary<AlbumFileDateTime, string>();
-            Span<AlbumEntry> entries = new AlbumEntry[System.IO.Directory.GetFiles(path).Length];
+            Span<AlbumEntry> entries = CreateSpanFromBuffer<AlbumEntry>(context,buffer,true);
+            Logger.Info?.Print(LogClass.Application, $"Limitting to {entries.Length} photos.");
             foreach (string file in System.IO.Directory.GetFiles(path))
             {
+                if (count+1 >= entries.Length)
+                {
+                    Logger.Warning?.Print(LogClass.ServiceCaps,"Too many screenshots. Limiting to 100.");
+                    break;
+                }
                 if (System.IO.Path.GetFileName(file).EndsWith(".png") || System.IO.Path.GetFileName(file).EndsWith(".jpg"))
                 {
                     Logger.Stub?.Print(LogClass.Application, $"Adding screenshot {System.IO.Path.GetFileName(file)}");
