@@ -49,6 +49,18 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                     album_entry.FileId = new AlbumFileId();
                     album_entry.FileId.ApplicationId = 0x0;
                     album_entry.FileId.Time = FromDateTime(System.IO.File.GetLastWriteTimeUtc(file), (byte)count);
+                    int tries = 0;
+                    while (AlbumFiles.ContainsKey(album_entry.FileId.Time)&&tries < 10)
+                    {
+                        if (tries > 10)
+                        {
+                            Logger.Warning?.Print(LogClass.ServiceCaps,"Duplicate photo found. Skipping.");
+                            continue;
+                        }
+                        var date = System.IO.File.GetLastWriteTimeUtc(file);
+                        date=date.AddDays(1);
+                        album_entry.FileId.Time = FromDateTime(date, (byte)(count+1));
+                    }
                     album_entry.FileId.Storage = (byte)AlbumStorage.Sd;
                     album_entry.FileId.Contents = 0;
                     album_entry.FileId.Field19_0 = 0;
