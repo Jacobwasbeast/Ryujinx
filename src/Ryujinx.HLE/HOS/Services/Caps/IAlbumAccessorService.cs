@@ -44,6 +44,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             {
                 if (System.IO.Path.GetFileName(file).EndsWith(".png") || System.IO.Path.GetFileName(file).EndsWith(".jpg"))
                 {
+                    Logger.Stub?.Print(LogClass.Application, $"Adding screenshot {System.IO.Path.GetFileName(file)}");
                     AlbumEntry album_entry = new AlbumEntry();
                     album_entry.EntrySize = (ulong) System.IO.Path.GetFileName(file).Length;
                     album_entry.FileId = new AlbumFileId();
@@ -51,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                     album_entry.FileId.Time = FromDateTime(System.IO.File.GetLastWriteTimeUtc(file), (byte)count);
                     if (AlbumFiles.ContainsKey(album_entry.FileId.Time))
                     {
-                        Logger.Warning?.Print(LogClass.ServiceCaps,"Duplicate photo found. Skipping.");
+                        Logger.Warning?.Print(LogClass.ServiceCaps,$"Duplicate photo found {System.IO.Path.GetFileName(file)}. Skipping.");
                         continue;
                     }
                     album_entry.FileId.Storage = (byte)AlbumStorage.Sd;
@@ -65,7 +66,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                 }
             }
             WriteSpanToBuffer(context, buffer, entries);
-            Logger.Info?.Print(LogClass.ServiceCaps, "$GetAlbumFileCount(): returning " + count);
+            Logger.Info?.Print(LogClass.ServiceCaps, $"GetAlbumFileCount(): returning {count}");
             context.ResponseData.Write(count);
             return ResultCode.Success;
         }
