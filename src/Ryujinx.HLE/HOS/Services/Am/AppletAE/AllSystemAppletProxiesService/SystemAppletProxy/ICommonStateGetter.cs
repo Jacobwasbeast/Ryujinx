@@ -46,7 +46,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             if (_messageEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(messageEvent.ReadableEvent, out _messageEventHandle) != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(messageEvent.ReadableEvent, out _messageEventHandle) !=
+                    Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -140,7 +141,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             if (_acquiredSleepLockEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_acquiredSleepLockEvent.ReadableEvent, out _acquiredSleepLockEventHandle) != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(_acquiredSleepLockEvent.ReadableEvent,
+                        out _acquiredSleepLockEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -153,7 +155,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(20)]
         // PushToGeneralChannel Takes an input #IStorage, no output. 
         public ResultCode PushToGeneralChannel(ServiceCtx context)
@@ -170,7 +172,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             MakeObject(context, new ILockAccessor(context));
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(32)]
         // GetWriterLockAccessorEx(u32) -> object<nn::am::service::IWriterLockAccessor>
         public ResultCode GetWriterLockAccessorEx(ServiceCtx context)
@@ -276,7 +278,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             // NOTE: Original service calls IOperationModeManager::GetDefaultDisplayResolutionChangeEvent of omm service.
             if (_displayResolutionChangedEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(context.Device.System.DisplayResolutionChangeEvent.ReadableEvent, out _displayResolutionChangedEventHandle) != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(
+                        context.Device.System.DisplayResolutionChangeEvent.ReadableEvent,
+                        out _displayResolutionChangedEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }
@@ -315,6 +319,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             // TODO: It signals an internal event of ICommonStateGetter. We have to determine where this event is used.
 
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(68)]
+        // GetBuiltInDisplayType() -> s32
+        public ResultCode GetBuiltInDisplayType(ServiceCtx context)
+        {
+            // TODO: Check if this function is called in other places and implement it properly.
+            context.ResponseData.Write(0);
             return ResultCode.Success;
         }
 

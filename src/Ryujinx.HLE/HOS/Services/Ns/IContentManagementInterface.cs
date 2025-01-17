@@ -31,7 +31,6 @@
             long storageId = context.RequestData.ReadByte();
 
             context.ResponseData.Write(storageFreeAndTotalSpaceSize);
-
             return ResultCode.Success;
         }
         
