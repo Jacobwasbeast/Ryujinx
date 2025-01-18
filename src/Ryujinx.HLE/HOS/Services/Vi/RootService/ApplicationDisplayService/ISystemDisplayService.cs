@@ -1,4 +1,6 @@
 using Ryujinx.Common.Logging;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 {
@@ -39,7 +41,42 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
 
             return _applicationDisplayService.CreateStrayLayer(context);
         }
-
+        
+        [CommandCmif(3000)]
+        // ListDisplayModes(u64) -> (u64, buffer<nn::vi::DisplayModeInfo, 6>)
+        public ResultCode ListDisplayModes(ServiceCtx context)
+        {
+            ulong displayId = context.RequestData.ReadUInt64();
+            int outCount = 1;
+            var buffer = context.Request.ReceiveBuff[0];
+            DisplayMode displayMode = new DisplayMode
+            {
+                Width = 1280,
+                Height = 720,
+                RefreshRate = 60.0f,
+                Unknown = 0
+            };
+            
+            Span<DisplayMode> records = CreateSpanFromBuffer<DisplayMode>(context, buffer, true);
+            
+            records[0] = displayMode;
+            
+            context.ResponseData.Write(1);
+            
+            WriteSpanToBuffer(context, buffer, records);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceVi);
+            return ResultCode.Success;
+        }
+        
+        struct DisplayMode
+        {
+            public uint Width { get; set; }
+            public uint Height { get; set; }
+            public float RefreshRate { get; set; }
+            public uint Unknown { get; set; }
+        }
+        
         [CommandCmif(3200)]
         // GetDisplayMode(u64) -> nn::vi::DisplayModeInfo
         public ResultCode GetDisplayMode(ServiceCtx context)

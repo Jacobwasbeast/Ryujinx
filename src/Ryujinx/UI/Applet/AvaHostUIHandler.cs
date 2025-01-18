@@ -10,8 +10,10 @@ using Ryujinx.HLE;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Applets.SoftwareKeyboard;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
+using Ryujinx.HLE.HOS.Services.Ns;
 using Ryujinx.HLE.UI;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Ryujinx.Ava.UI.Applet
@@ -253,5 +255,23 @@ namespace Ryujinx.Ava.UI.Applet
         }
 
         public IDynamicTextInputHandler CreateDynamicTextInputHandler() => new AvaloniaDynamicTextInputHandler(_parent);
+        
+        public Dictionary<ApplicationRecordData, ulong> GetApplications()
+        {
+            Dictionary<ApplicationRecordData, ulong> applications = new();
+            foreach (var app in _parent.ViewModel.ApplicationLibrary.Applications.KeyValues)
+            {
+                var record = new ApplicationRecordData()
+                {
+                    Name = app.Value.Name,
+                    Publisher = app.Value.Developer,
+                    Version = app.Value.Version,
+                    TitleId = app.Value.Id,
+                    Path = app.Value.Path
+                };
+                applications.Add(record, app.Key);
+            }
+            return applications;
+        }
     }
 }

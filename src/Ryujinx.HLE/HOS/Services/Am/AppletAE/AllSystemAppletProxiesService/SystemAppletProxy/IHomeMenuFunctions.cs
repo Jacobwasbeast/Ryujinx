@@ -25,6 +25,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(11)]
+        // LockForeground()
+        public ResultCode LockForeground(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(21)]
         // GetPopFromGeneralChannelEvent() -> handle<copy>
@@ -42,6 +51,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(30)]
+        [CommandCmif(31)]
+        // GetWriterLockAccessorEx(u32) -> object<nn::am::service::ILockAccessor>
+        public ResultCode GetWriterLockAccessorEx(ServiceCtx context)
+        {
+            MakeObject(context, new ILockAccessor(context));
             return ResultCode.Success;
         }
     }

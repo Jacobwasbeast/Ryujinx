@@ -1,11 +1,13 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Services.Nv;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services
 {
@@ -279,6 +281,36 @@ namespace Ryujinx.HLE.HOS.Services
             }
 
             _domainObjects.Clear();
+        }
+        
+        public Span<byte> CreateByteSpanFromBuffer(ServiceCtx context, IpcBuffDesc ipcBuff, bool isOutput)
+        {
+            byte[] rawData;
+
+            if (isOutput)
+            {
+                rawData = new byte[ipcBuff.Size];
+            }
+            else
+            {
+                rawData = new byte[ipcBuff.Size];
+
+                context.Memory.Read(ipcBuff.Position, rawData);
+            }
+
+            return new Span<byte>(rawData);
+        }
+
+        public Span<T> CreateSpanFromBuffer<T>(ServiceCtx context, IpcBuffDesc ipcBuff, bool isOutput) where T : unmanaged
+        {
+            return MemoryMarshal.Cast<byte, T>(CreateByteSpanFromBuffer(context, ipcBuff, isOutput));
+        }
+
+        public void WriteSpanToBuffer<T>(ServiceCtx context, IpcBuffDesc ipcBuff, Span<T> span) where T : unmanaged
+        {
+            Span<byte> rawData = MemoryMarshal.Cast<T, byte>(span);
+
+            context.Memory.Write(ipcBuff.Position, rawData);
         }
     }
 }
