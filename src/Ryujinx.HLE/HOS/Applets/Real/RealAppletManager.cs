@@ -45,6 +45,7 @@ namespace Ryujinx.HLE.HOS.Applets.Real
                 case 0x0100000000001005: // Error    
                 case 0x0100000000001007: // PlayerSelect    
                 case 0x0100000000001008: // SoftwareKeyboard
+                case 0x010000000000100D: // PhotoViewer
                     return true;
                 default:
                     return false;    
