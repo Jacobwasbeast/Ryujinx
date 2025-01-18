@@ -1,3 +1,5 @@
+using Ryujinx.Common.Configuration;
+using Ryujinx.HLE.HOS.Applets.Real;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.LibraryAppletCreator;
 
@@ -11,7 +13,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // CreateLibraryApplet(u32, u32) -> object<nn::am::service::ILibraryAppletAccessor>
         public ResultCode CreateLibraryApplet(ServiceCtx context)
         {
-            AppletId appletId = (AppletId)context.RequestData.ReadInt32();
+            var appIndex = context.RequestData.ReadInt32();
+            ulong programId = AppletIndexMap.GetAppletProgramId(appIndex);
+           
+            if (context.Device.System.RealAppletManager.IsRealApplet(programId))
+            {
+                MakeObject(context, new ILibraryRealAppletAccessor(programId, context.Process.TitleId,context.Device.System));
+                return ResultCode.Success;
+            }
+
+            AppletId appletId = (AppletId)appIndex;
 #pragma warning disable IDE0059 // Remove unnecessary value assignment
             int libraryAppletMode = context.RequestData.ReadInt32();
 #pragma warning restore IDE0059

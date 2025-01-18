@@ -190,7 +190,127 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             return resultCode;
         }
+        
+        [CommandCmif(544)]
+        // AcquireConnectionTriggerTimeoutEvent() -> handle<copy>
+        public ResultCode AcquireConnectionTriggerTimeoutEvent(ServiceCtx context)
+        {
+            if (_connectionTriggerTimeoutEventHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_connectionTriggerTimeoutEvent.ReadableEvent, out _connectionTriggerTimeoutEventHandle);
 
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_connectionTriggerTimeoutEventHandle);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(546)]
+        // AcquireDeviceRegisteredEventForControllerSupport() -> handle<copy>
+        public ResultCode AcquireDeviceRegisteredEventForControllerSupport(ServiceCtx context)
+        {
+            if (_deviceRegisteredEventForControllerSupportHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_deviceRegisteredEventForControllerSupport.ReadableEvent, out _deviceRegisteredEventForControllerSupportHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_deviceRegisteredEventForControllerSupportHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(703)]
+        // GetUniquePadIds() -> (u64, buffer<nn::hid::system::UniquePadId, 0xa>)
+        public ResultCode GetUniquePadIds(ServiceCtx context)
+        {
+            // Todo: This is probably wrong and shFAcquireRadioEvent:ould be a list of UniquePadIds instead.
+            context.ResponseData.Write(0); // Number of unique pad ids.
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(751)]
+        // AcquireJoyDetachOnBluetoothOffEventHandle(nn::applet::AppletResourceUserId, pid) -> handle<copy>
+        public ResultCode AcquireJoyDetachOnBluetoothOffEventHandle(ServiceCtx context)
+        {
+            var appletResourceUserId = context.RequestData.ReadUInt32();
+            var pid = context.RequestData.ReadUInt32();
+            Logger.Stub?.PrintStub(LogClass.ServiceHid, new { appletResourceUserId, pid });
+            if (_joyDetachOnBluetoothOffEventHandle == -1)
+            {
+                Result resultCode = context.Process.HandleTable.GenerateHandle(_joyDetachOnBluetoothOffEvent.ReadableEvent, out _joyDetachOnBluetoothOffEventHandle);
+
+                if (resultCode != Result.Success)
+                {
+                    return (ResultCode)resultCode.ErrorCode;
+                }
+            }
+            
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_joyDetachOnBluetoothOffEventHandle);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(850)]
+        // IsUsbFullKeyControllerEnabled() -> b8
+        public ResultCode IsUsbFullKeyControllerEnabled(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            context.ResponseData.Write(false);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1000)]
+        // InitializeFirmwareUpdate()
+        public ResultCode InitializeFirmwareUpdate(ServiceCtx context)
+        {
+            Logger.Info?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1135)]
+        // InitializeUsbFirmwareUpdateWithoutMemory()
+        public ResultCode InitializeUsbFirmwareUpdateWithoutMemory(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1153)]
+        // GetTouchScreenDefaultConfiguration()
+        public ResultCode GetTouchScreenDefaultConfiguration(ServiceCtx context)
+        {
+            // TODO: Implement touch screen default configuration.
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+
+        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context,out NpadIdType id, out AppletFooterUiType appletFooterUiType)
+        {
+            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
+            PlayerIndex playerIndex = HidUtils.GetIndexFromNpadIdType(npadIdType);
+
+            appletFooterUiType = context.Device.Hid.SharedMemory.Npads[(int)playerIndex].InternalState.AppletFooterUiType;
+            id = npadIdType;
+            return ResultCode.Success;
+        }
+        
         private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context,out NpadIdType id, out AppletFooterUiType appletFooterUiType)
         {
             NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();

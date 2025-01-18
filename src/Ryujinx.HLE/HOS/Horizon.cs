@@ -4,8 +4,10 @@ using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.Tools.FsSystem;
+using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.HOS.Applets.Real;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Memory;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -112,6 +114,8 @@ namespace Ryujinx.HLE.HOS
         internal ServiceTable ServiceTable { get; private set; }
 
         public bool IsPaused { get; private set; }
+        
+        public RealAppletManager RealAppletManager { get; }
 
         public Horizon(Switch device)
         {
@@ -236,6 +240,8 @@ namespace Ryujinx.HLE.HOS
             HostSyncpoint = new NvHostSyncpt(device);
 
             SurfaceFlinger = new SurfaceFlinger(device);
+            
+            RealAppletManager = new RealAppletManager(this);
         }
 
         public void InitializeServices()
@@ -506,6 +512,22 @@ namespace Ryujinx.HLE.HOS
         internal void SetFromAppletStateMgr(AppletStateMgr state)
         {
             AppletState = state;
+            AppletState.SetFocus(true);
+        }
+
+        public void TerminateCurrentProcess(ulong currentID)
+        {
+            lock (KernelContext.Processes)
+            {
+                foreach (KProcess process in KernelContext.Processes.Values)
+                {
+                    if (process.TitleId == currentID)
+                    {
+                        process.Terminate();
+                        break;
+                    }
+                }
+            }
         }
     }
 }
