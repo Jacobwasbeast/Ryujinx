@@ -110,25 +110,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
         // GetGlobalStateController() -> object<nn::am::service::IGlobalStateController>
         public ResultCode GetGlobalStateController(ServiceCtx context)
         {
-            MakeObject(context, new IGlobalStateController());
-            return ResultCode.Success;
-        }
-
-        [CommandCmif(22)]
-        // GetHomeMenuFunctions() -> object<nn::am::service::IHomeMenuFunctions>
-        public ResultCode GetHomeMenuFunctions(ServiceCtx context)
-        {
-            MakeObject(context, new IHomeMenuFunctions(context.Device.System));
-            return ResultCode.Success;
-        }
-
-        [CommandCmif(23)]
-        // GetGlobalStateController() -> object<nn::am::service::IGlobalStateController>
-        public ResultCode GetGlobalStateController(ServiceCtx context)
-        {
             MakeObject(context, new IGlobalStateController(context));
             return ResultCode.Success;
         }
+        
 
         [CommandCmif(1000)]
         // GetDebugFunctions() -> object<nn::am::service::IDebugFunctions>
