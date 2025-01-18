@@ -13,7 +13,9 @@ using Ryujinx.HLE.Loaders.Executables;
 using Ryujinx.HLE.Loaders.Processes.Extensions;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Path = System.IO.Path;
 
 namespace Ryujinx.HLE.Loaders.Processes
@@ -264,6 +266,18 @@ namespace Ryujinx.HLE.Loaders.Processes
             }
 
             return false;
+        }
+
+        public void SetLatestPID(ulong TitleID)
+        {
+            foreach (KeyValuePair<ulong, ProcessResult> entry in _processesByPid)
+            {
+                if (entry.Value.ProgramId == TitleID)
+                {
+                    _latestPid = entry.Key;
+                    break;
+                }
+            }
         }
     }
 }
