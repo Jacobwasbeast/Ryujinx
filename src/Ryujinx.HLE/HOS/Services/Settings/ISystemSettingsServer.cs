@@ -287,7 +287,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetProductModel(ServiceCtx context)
         {
             // TODO: Implement this properly
-            context.ResponseData.Write(0);
+            context.ResponseData.Write(1);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

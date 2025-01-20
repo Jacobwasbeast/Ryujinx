@@ -16,7 +16,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // TODO: Implement proper storage space implementation.
         const long StorageSpace = 6999999999999L;
         [CommandCmif(47)]
-        // GetTotalSpaceSize(u8 storage_id) -> u64
+        // GetTotalSpaceSize(u8 storage_id) -> s64
         public ResultCode GetTotalSpaceSize(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.Service);
@@ -26,7 +26,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         }
         
         [CommandCmif(48)]
-        // GetFreeSpaceSize(u8 storage_id) -> u64
+        // GetFreeSpaceSize(u8 storage_id) -> s64
         public ResultCode GetFreeSpaceSize(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.Service);

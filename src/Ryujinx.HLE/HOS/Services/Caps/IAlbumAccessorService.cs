@@ -237,8 +237,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         {
             // TODO: Implement this properly.
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
-            context.ResponseData.Write(true);
-
+            context.ResponseData.Write(0);
             return ResultCode.Success;
         }
         
@@ -248,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         {
             // TODO: Implement this properly.
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(false);
             return ResultCode.Success;
         }
         
