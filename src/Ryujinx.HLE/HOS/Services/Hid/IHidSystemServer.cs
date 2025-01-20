@@ -39,16 +39,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         }
 
         [CommandCmif(306)]
-        // GetLastActiveNpad(u32) -> u8, u8
+        // GetLastActiveNpad() -> u32
         public ResultCode GetLastActiveNpad(ServiceCtx context)
         {
-            // TODO: RequestData seems to have garbage data, reading an extra uint seems to fix the issue.
-            context.RequestData.ReadUInt32();
+            ResultCode resultCode = GetAppletLastActiveNpadImpl(context, out NpadIdType id);
 
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
-
-            context.ResponseData.Write((byte)id);
-            context.ResponseData.Write((byte)0);
+            context.ResponseData.Write((int)id);
 
             return resultCode;
         }
@@ -74,7 +70,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetAppletFooterUiType(u32) -> u8
         public ResultCode GetAppletFooterUiType(ServiceCtx context)
         {
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
+            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out AppletFooterUiType appletFooterUiType);
 
             context.ResponseData.Write((byte)appletFooterUiType);
 
@@ -200,13 +196,19 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
         
-        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context,out NpadIdType id, out AppletFooterUiType appletFooterUiType)
+        private ResultCode GetAppletLastActiveNpadImpl(ServiceCtx context, out NpadIdType id)
         {
-            NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
-            PlayerIndex playerIndex = HidUtils.GetIndexFromNpadIdType(npadIdType);
+            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
+            {
+                if (!context.Device.Hid.Npads.Active)
+                {
+                    continue;
+                }
+                id = HidUtils.GetNpadIdTypeFromIndex(playerIndex);
+                return ResultCode.Success;
+            }
 
-            appletFooterUiType = context.Device.Hid.SharedMemory.Npads[(int)playerIndex].InternalState.AppletFooterUiType;
-            id = npadIdType;
+            id = NpadIdType.Handheld;
             return ResultCode.Success;
         }
     }
