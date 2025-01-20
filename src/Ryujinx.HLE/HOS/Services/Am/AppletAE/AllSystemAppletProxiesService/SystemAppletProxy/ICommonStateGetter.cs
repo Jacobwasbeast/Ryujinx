@@ -147,7 +147,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_acquiredSleepLockEventHandle);
-
+            // Note: We have to signal this event since many applets when booting get stuck waiting on it.
+            _acquiredSleepLockEvent.ReadableEvent.Signal();
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;

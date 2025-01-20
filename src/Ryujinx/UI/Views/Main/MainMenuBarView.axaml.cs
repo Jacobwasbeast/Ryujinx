@@ -38,6 +38,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             ChangeLanguageMenuItem.ItemsSource = GenerateLanguageMenuItems();
 
             MiiAppletMenuItem.Command = new AsyncRelayCommand(OpenMiiApplet);
+            PhotoViewerAppletMenuItem.Command = new AsyncRelayCommand(OpenPhotoViewerApplet);
             CloseRyujinxMenuItem.Command = new RelayCommand(CloseWindow);
             OpenSettingsMenuItem.Command = new AsyncRelayCommand(OpenSettings);
             PauseEmulationMenuItem.Command = new RelayCommand(() => ViewModel.AppHost?.Pause());
@@ -149,6 +150,16 @@ namespace Ryujinx.Ava.UI.Views.Main
         public async Task OpenMiiApplet()
         {
             if (MiiApplet.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
+            {
+                await ViewModel.LoadApplication(appData, ViewModel.IsFullScreen || ViewModel.StartGamesInFullscreen, nacpData);
+            }
+        }
+        
+        public static readonly AppletMetadata PhotoViewerApplet = new("photoViewer", 0x010000000000100D);
+
+        public async Task OpenPhotoViewerApplet()
+        {
+            if (PhotoViewerApplet.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
             {
                 await ViewModel.LoadApplication(appData, ViewModel.IsFullScreen || ViewModel.StartGamesInFullscreen, nacpData);
             }
