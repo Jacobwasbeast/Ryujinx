@@ -19,11 +19,10 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         }
         
         [CommandCmif(55)]
-        // GetApplicationDesiredLanguage()
+        // GetApplicationDesiredLanguage() -> u32
         public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
         {
-            // TODO: Implement this method properly.
-            Logger.Stub?.PrintStub(LogClass.Service);
+            context.ResponseData.Write((uint)context.Device.Configuration.Region);
             return ResultCode.Success;
         }
 
