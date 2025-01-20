@@ -17,6 +17,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(7998)]
+        // GetContentManagementInterface() -> object<nn::ns::detail::IContentManagementInterface>
+        public ResultCode GetContentManagementInterface(ServiceCtx context)
+        {
+            MakeObject(context, new IContentManagementInterface(context));
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(7989)]
         // GetReadOnlyApplicationControlDataInterface() -> object<nn::ns::detail::IReadOnlyApplicationControlDataInterface>

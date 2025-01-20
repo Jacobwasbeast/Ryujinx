@@ -1,4 +1,5 @@
 using LibHac.Ns;
+using Ryujinx.Common.Logging;
 using Ryujinx.Common.Utilities;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
@@ -7,6 +8,24 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     class IApplicationManagerInterface : IpcService
     {
         public IApplicationManagerInterface(ServiceCtx context) { }
+        
+         [CommandCmif(0)]
+        // ListApplicationRecord(unknown<4>) -> (unknown<4>, buffer<unknown, 6>)
+        public ResultCode ListApplicationRecord(ServiceCtx context)
+        {
+            // TODO: Implement this properly to display the application list in qlaunch.
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(55)]
+        // GetApplicationDesiredLanguage()
+        public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
+        {
+            // TODO: Implement this method properly.
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(400)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
