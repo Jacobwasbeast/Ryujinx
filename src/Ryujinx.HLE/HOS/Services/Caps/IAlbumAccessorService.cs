@@ -19,19 +19,20 @@ namespace Ryujinx.HLE.HOS.Services.Caps
     {
         public Dictionary<AlbumFileDateTime,string> AlbumFiles { get; set; }
         public IAlbumAccessorService(ServiceCtx context) { }
-
-        public bool IsInitialized = false;
+        
         [CommandCmif(1)]
         [CommandCmif(101)]
-        // GetAlbumFileList() -> (unknown<8>, buffer<unknown, 6>)
+        // GetAlbumFileList(unknown<u8>) -> (unknown<8>, buffer<unknown, 6>)
         public ResultCode GetAlbumFileList(ServiceCtx context)
         {
             // This gets called twice which causes duplicates of photos so we simply check if it's already initialized.
-            if (!IsInitialized)
+            int storageId = context.RequestData.ReadInt32();
+            // 0 = Nand or 1 = Sd Card
+            if (storageId == 1)
             {
-                IsInitialized = true;
                 return ResultCode.Success;
             }
+            Logger.Info?.Print(LogClass.ServiceCaps, $"Initializing album files with storage ID {storageId}.");
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
             string path = Path.Combine(AppDataManager.BaseDirPath, "screenshots");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
@@ -235,14 +236,19 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         // GetAppletProgramIdTable(buffer<nn::caps::ProgramIdTable>) -> bool
         public ResultCode GetAppletProgramIdTable(ServiceCtx context)
         {
-            // TODO: Implement this properly.
+            var buffer = context.Request.ReceiveBuff[0];
+            Span<ulong> appIds = stackalloc ulong[2];
+            appIds[0] = 0x100000000001000;
+            appIds[1] = 0x100000000001fff;
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
-            context.ResponseData.Write(0);
+            byte[] bytes = MemoryMarshal.Cast<ulong, byte>(appIds).ToArray();
+            context.Memory.Write(buffer.Position, bytes);
+            context.ResponseData.Write(true);
             return ResultCode.Success;
         }
         
         [CommandCmif(401)]
-        // GetAutoSavingStorage()
+        // GetAutoSavingStorage() -> bool
         public ResultCode GetAutoSavingStorage(ServiceCtx context)
         {
             // TODO: Implement this properly.

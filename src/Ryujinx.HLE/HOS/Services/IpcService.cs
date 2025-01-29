@@ -1,11 +1,15 @@
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.Exceptions;
 using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Services.Hid;
+using Ryujinx.HLE.HOS.Services.Nv;
+using Ryujinx.HLE.HOS.Services.SurfaceFlinger;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services
 {
@@ -112,6 +116,18 @@ namespace Ryujinx.HLE.HOS.Services
             int commandId = (int)context.RequestData.ReadInt64();
 
             bool serviceExists = service.CmifCommands.TryGetValue(commandId, out MethodInfo processRequest);
+            
+            bool shouldPrint = true;
+            
+            if (service is INvDrvServices || service is HOSBinderDriverServer)
+            {
+                shouldPrint = false;
+            }
+            if (shouldPrint)
+            {
+                var serviceName = (service is not DummyService dummyService) ? service.GetType().FullName : dummyService.ServiceName;
+                Logger.Info?.Print(LogClass.KernelIpc, $"{serviceName}: {commandId}");
+            }
 
             if (context.Device.Configuration.IgnoreMissingServices || serviceExists)
             {
@@ -279,6 +295,36 @@ namespace Ryujinx.HLE.HOS.Services
             }
 
             _domainObjects.Clear();
+        }
+        
+        public Span<byte> CreateByteSpanFromBuffer(ServiceCtx context, IpcBuffDesc ipcBuff, bool isOutput)
+        {
+            byte[] rawData;
+
+            if (isOutput)
+            {
+                rawData = new byte[ipcBuff.Size];
+            }
+            else
+            {
+                rawData = new byte[ipcBuff.Size];
+
+                context.Memory.Read(ipcBuff.Position, rawData);
+            }
+
+            return new Span<byte>(rawData);
+        }
+
+        public Span<T> CreateSpanFromBuffer<T>(ServiceCtx context, IpcBuffDesc ipcBuff, bool isOutput) where T : unmanaged
+        {
+            return MemoryMarshal.Cast<byte, T>(CreateByteSpanFromBuffer(context, ipcBuff, isOutput));
+        }
+
+        public void WriteSpanToBuffer<T>(ServiceCtx context, IpcBuffDesc ipcBuff, Span<T> span) where T : unmanaged
+        {
+            Span<byte> rawData = MemoryMarshal.Cast<T, byte>(span);
+
+            context.Memory.Write(ipcBuff.Position, rawData);
         }
     }
 }
