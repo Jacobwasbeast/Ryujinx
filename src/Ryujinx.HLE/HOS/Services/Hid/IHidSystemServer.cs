@@ -24,10 +24,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetLastActiveNpad() -> u32
         public ResultCode GetLastActiveNpad(ServiceCtx context)
         {
-            ResultCode resultCode = GetAppletLastActiveNpadImpl(context, out NpadIdType id);
-            context.ResponseData.Write((byte)id);
+            context.ResponseData.Write((byte)context.Device.Hid.Npads.GetLastActiveNpadId());
 
-            return resultCode;
+            return ResultCode.Success;
         }
 
         [CommandCmif(307)]
@@ -65,22 +64,6 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             appletFooterUiType = context.Device.Hid.SharedMemory.Npads[(int)playerIndex].InternalState.AppletFooterUiType;
 
-            return ResultCode.Success;
-        }
-        
-        private ResultCode GetAppletLastActiveNpadImpl(ServiceCtx context, out NpadIdType id)
-        {
-            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
-            {
-                if (!context.Device.Hid.Npads.Active)
-                {
-                    continue;
-                }
-                id = HidUtils.GetNpadIdTypeFromIndex(playerIndex);
-                return ResultCode.Success;
-            }
-
-            id = NpadIdType.Handheld;
             return ResultCode.Success;
         }
     }
