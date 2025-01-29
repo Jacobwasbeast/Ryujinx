@@ -313,5 +313,10 @@ namespace Ryujinx.Ava.UI.Applet
             }
             return profile;
         }
+
+        public void TakeScreenshot()
+        {
+            _parent.ViewModel.AppHost.ScreenshotRequested = true;
+        }
     }
 }
