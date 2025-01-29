@@ -554,6 +554,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                         ButtonZl = Key.Q,
                         ButtonSl = Key.Unbound,
                         ButtonSr = Key.Unbound,
+                        ButtonCapture = Key.Unbound,
                     },
                     LeftJoyconStick =
                         new JoyconConfigKeyboardStick<Key>
@@ -575,6 +576,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                         ButtonZr = Key.O,
                         ButtonSl = Key.Unbound,
                         ButtonSr = Key.Unbound,
+                        ButtonHome = Key.Unbound,
                     },
                     RightJoyconStick = new JoyconConfigKeyboardStick<Key>
                     {
@@ -614,6 +616,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                         ButtonZl = ConfigGamepadInputId.LeftTrigger,
                         ButtonSl = ConfigGamepadInputId.Unbound,
                         ButtonSr = ConfigGamepadInputId.Unbound,
+                        ButtonCapture = ConfigGamepadInputId.Unbound,
                     },
                     LeftJoyconStick = new JoyconConfigControllerStick<ConfigGamepadInputId, ConfigStickInputId>
                     {
@@ -633,6 +636,7 @@ namespace Ryujinx.Ava.UI.ViewModels.Input
                         ButtonZr = ConfigGamepadInputId.RightTrigger,
                         ButtonSl = ConfigGamepadInputId.Unbound,
                         ButtonSr = ConfigGamepadInputId.Unbound,
+                        ButtonHome = ConfigGamepadInputId.Unbound,
                     },
                     RightJoyconStick = new JoyconConfigControllerStick<ConfigGamepadInputId, ConfigStickInputId>
                     {

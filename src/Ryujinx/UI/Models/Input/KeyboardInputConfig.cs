@@ -318,6 +318,27 @@ namespace Ryujinx.Ava.UI.Models.Input
             }
         }
 
+        private Key _buttonCapture;
+        public Key ButtonCapture
+        {
+            get => _buttonCapture;
+            set
+            {
+                _buttonCapture = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        private Key _buttonHome;
+        public Key ButtonHome
+        {
+            get => _buttonHome;
+            set
+            {
+                _buttonHome = value;
+                OnPropertyChanged();
+            }
+        }
         public KeyboardInputConfig(InputConfig config)
         {
             if (config != null)
@@ -351,7 +372,9 @@ namespace Ryujinx.Ava.UI.Models.Input
                 ButtonMinus = keyboardConfig.LeftJoycon.ButtonMinus;
                 LeftButtonSl = keyboardConfig.LeftJoycon.ButtonSl;
                 LeftButtonSr = keyboardConfig.LeftJoycon.ButtonSr;
+                LeftButtonSr = keyboardConfig.LeftJoycon.ButtonSr;
                 ButtonZl = keyboardConfig.LeftJoycon.ButtonZl;
+                ButtonCapture = keyboardConfig.LeftJoycon.ButtonCapture;
 
                 ButtonA = keyboardConfig.RightJoycon.ButtonA;
                 ButtonB = keyboardConfig.RightJoycon.ButtonB;
@@ -362,6 +385,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                 RightButtonSl = keyboardConfig.RightJoycon.ButtonSl;
                 RightButtonSr = keyboardConfig.RightJoycon.ButtonSr;
                 ButtonZr = keyboardConfig.RightJoycon.ButtonZr;
+                ButtonHome = keyboardConfig.RightJoycon.ButtonHome;
             }
         }
 
