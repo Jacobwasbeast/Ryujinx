@@ -19,19 +19,20 @@ namespace Ryujinx.HLE.HOS.Services.Caps
     {
         public Dictionary<AlbumFileDateTime,string> AlbumFiles { get; set; }
         public IAlbumAccessorService(ServiceCtx context) { }
-
-        public bool IsInitialized = false;
+        
         [CommandCmif(1)]
         [CommandCmif(101)]
-        // GetAlbumFileList() -> (unknown<8>, buffer<unknown, 6>)
+        // GetAlbumFileList(unknown<u8>) -> (unknown<8>, buffer<unknown, 6>)
         public ResultCode GetAlbumFileList(ServiceCtx context)
         {
             // This gets called twice which causes duplicates of photos so we simply check if it's already initialized.
-            if (!IsInitialized)
+            int storageId = context.RequestData.ReadInt32();
+            // 0 = Nand or 1 = Sd Card
+            if (storageId == 1)
             {
-                IsInitialized = true;
                 return ResultCode.Success;
             }
+            Logger.Info?.Print(LogClass.ServiceCaps, $"Initializing album files with storage ID {storageId}.");
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
             string path = Path.Combine(AppDataManager.BaseDirPath, "screenshots");
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
@@ -39,7 +40,8 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             var buffer = context.Request.ReceiveBuff[0];
             ulong position = buffer.Position;
             AlbumFiles = new Dictionary<AlbumFileDateTime, string>();
-            Span<AlbumEntry> entries = CreateSpanFromBuffer<AlbumEntry>(context,buffer,true);
+            int limit = 10000;
+            Span<AlbumEntry> entries = stackalloc AlbumEntry[limit];
             Logger.Info?.Print(LogClass.Application, $"Limitting to {entries.Length} photos.");
             foreach (string file in System.IO.Directory.GetFiles(path))
             {
@@ -71,7 +73,8 @@ namespace Ryujinx.HLE.HOS.Services.Caps
                     AlbumFiles.Add(album_entry.FileId.Time, file);
                 }
             }
-            WriteSpanToBuffer(context, buffer, entries);
+            byte[] entryArray = MemoryMarshal.Cast<AlbumEntry, byte>(MemoryMarshal.CreateReadOnlySpan(ref entries[0], count)).ToArray();
+            context.Memory.Write(buffer.Position, entryArray);
             Logger.Info?.Print(LogClass.ServiceCaps, $"GetAlbumFileCount(): returning {count}");
             context.ResponseData.Write(count);
             return ResultCode.Success;
@@ -233,20 +236,24 @@ namespace Ryujinx.HLE.HOS.Services.Caps
         // GetAppletProgramIdTable(buffer<nn::caps::ProgramIdTable>) -> bool
         public ResultCode GetAppletProgramIdTable(ServiceCtx context)
         {
-            // TODO: Implement this properly.
+            var buffer = context.Request.ReceiveBuff[0];
+            Span<ulong> appIds = stackalloc ulong[2];
+            appIds[0] = 0x100000000001000;
+            appIds[1] = 0x100000000001fff;
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
+            byte[] bytes = MemoryMarshal.Cast<ulong, byte>(appIds).ToArray();
+            context.Memory.Write(buffer.Position, bytes);
             context.ResponseData.Write(true);
-
             return ResultCode.Success;
         }
         
         [CommandCmif(401)]
-        // GetAutoSavingStorage()
+        // GetAutoSavingStorage() -> bool
         public ResultCode GetAutoSavingStorage(ServiceCtx context)
         {
             // TODO: Implement this properly.
             Logger.Stub?.PrintStub(LogClass.ServiceCaps);
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(false);
             return ResultCode.Success;
         }
         
