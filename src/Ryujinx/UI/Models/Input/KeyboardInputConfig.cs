@@ -408,6 +408,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                     ButtonZl = ButtonZl,
                     ButtonSl = LeftButtonSl,
                     ButtonSr = LeftButtonSr,
+                    ButtonCapture = ButtonCapture,
                 },
                 RightJoycon = new RightJoyconCommonConfig<Key>
                 {
@@ -420,6 +421,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                     ButtonSr = RightButtonSr,
                     ButtonR = ButtonR,
                     ButtonZr = ButtonZr,
+                    ButtonHome = ButtonHome
                 },
                 LeftJoyconStick = new JoyconConfigKeyboardStick<Key>
                 {

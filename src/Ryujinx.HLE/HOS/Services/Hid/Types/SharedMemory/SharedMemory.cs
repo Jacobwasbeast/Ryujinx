@@ -48,6 +48,12 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory
         public RingLifo<ButtonState> HomeButton;
         
         /// <summary>
+        /// Sleep Button.
+        /// </summary>
+        [FieldOffset(0x4E00)]
+        public RingLifo<ButtonState> SleepButton;
+        
+        /// <summary>
         /// Capture Button.
         /// </summary>
         [FieldOffset(0x5000)]

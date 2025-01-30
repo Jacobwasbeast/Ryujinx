@@ -34,6 +34,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         public KeyboardDevice Keyboard;
         public NpadDevices Npads;
         public ButtonDevice HomeButton;
+        public ButtonDevice SleepButton;
         public ButtonDevice CaptureButton;
 
         private static void CheckTypeSizeOrThrow<T>(int expectedSize)
@@ -75,6 +76,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             Keyboard = new KeyboardDevice(_device, false);
             Npads = new NpadDevices(_device, true);
             HomeButton = new ButtonDevice(_device, true, ButtonDeviceType.HomeButton);
+            SleepButton = new ButtonDevice(_device, true, ButtonDeviceType.SleepButton);
             CaptureButton = new ButtonDevice(_device, true, ButtonDeviceType.CaptureButton);
         }
 

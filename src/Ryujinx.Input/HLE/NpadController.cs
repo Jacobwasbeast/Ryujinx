@@ -46,7 +46,7 @@ namespace Ryujinx.Input.HLE
             new(GamepadButtonInputId.Minus, ControllerKeys.Minus),
             new(GamepadButtonInputId.Plus, ControllerKeys.Plus),
             new(GamepadButtonInputId.Misc1, ControllerKeys.Capture),
-            new(GamepadButtonInputId.Misc1, ControllerKeys.Home),
+            new(GamepadButtonInputId.Guide, ControllerKeys.Home),
 
             new(GamepadButtonInputId.SingleLeftTrigger0, ControllerKeys.SlLeft),
             new(GamepadButtonInputId.SingleRightTrigger0, ControllerKeys.SrLeft),
@@ -558,6 +558,12 @@ namespace Ryujinx.Input.HLE
                         $"--> ({low}, {high})");
                 }
             }
+        }
+
+        public bool IsControllerKeyPressed(ControllerKeys key)
+        {
+            GamepadInput state = GetHLEInputState();
+            return (state.Buttons & key) != 0;
         }
     }
 }

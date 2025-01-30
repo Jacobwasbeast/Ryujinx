@@ -7,6 +7,7 @@ namespace Ryujinx.HLE.HOS.Services.Hid
     public enum ButtonDeviceType
     {
         HomeButton,
+        SleepButton,
         CaptureButton,
     }
     public class ButtonDevice : BaseDevice
@@ -28,6 +29,8 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             {
                 case ButtonDeviceType.HomeButton:
                     return ref _device.Hid.SharedMemory.HomeButton;
+                case ButtonDeviceType.SleepButton:
+                    return ref _device.Hid.SharedMemory.SleepButton;
                 default:
                     return ref _device.Hid.SharedMemory.CaptureButton;
             }
