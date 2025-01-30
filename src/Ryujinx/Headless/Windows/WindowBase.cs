@@ -1,4 +1,5 @@
 using Humanizer;
+using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Ava;
 using Ryujinx.Ava.UI.Models;

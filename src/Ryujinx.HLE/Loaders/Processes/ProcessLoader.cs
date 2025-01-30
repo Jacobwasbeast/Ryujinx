@@ -266,5 +266,11 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             return false;
         }
+
+        internal void SetActivePID(ulong pid)
+        {
+            _processesByPid.TryRemove(_latestPid, out _);
+            _latestPid = pid;
+        }
     }
 }

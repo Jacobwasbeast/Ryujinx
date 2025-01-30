@@ -4,6 +4,7 @@ using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.Tools.FsSystem;
+using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel;
@@ -61,7 +62,28 @@ namespace Ryujinx.HLE.HOS
 
         internal PerformanceState PerformanceState { get; private set; }
 
-        internal AppletStateMgr AppletState { get; private set; }
+        internal AppletStateMgr IntialAppletState { get; private set; }
+
+        internal AppletStateMgr AppletState
+        {
+            get
+            {
+                if (Device.Processes?.ActiveApplication?.RealAppletInstance != null)
+                {
+                    Logger.Info?.Print(LogClass.Application, "Real applet instance found");
+                    return Device.Processes.ActiveApplication.RealAppletInstance.AppletState;
+                }
+
+                return IntialAppletState;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    IntialAppletState = value;
+                }
+            }
+        }
 
         internal List<NfpDevice> NfpDevices { get; private set; }
 
@@ -92,6 +114,9 @@ namespace Ryujinx.HLE.HOS
         internal KEvent VsyncEvent { get; private set; }
 
         internal KEvent DisplayResolutionChangeEvent { get; private set; }
+        
+        internal KEvent GeneralChannelEvent { get; private set; }
+        internal Queue<byte[]> GeneralChannelData { get; private set; } = new();
 
         public KeySet KeySet => Device.FileSystem.KeySet;
 
@@ -179,6 +204,7 @@ namespace Ryujinx.HLE.HOS
             VsyncEvent = new KEvent(KernelContext);
 
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
+            GeneralChannelEvent = new KEvent(KernelContext);
 
             SharedFontManager = new SharedFontManager(device, fontStorage);
             AccountManager = device.Configuration.AccountManager;
@@ -336,8 +362,23 @@ namespace Ryujinx.HLE.HOS
         {
             AppletState.Messages.Enqueue(AppletMessage.Resume);
             AppletState.MessageEvent.ReadableEvent.Signal();
+
+            // 0x534D4153 0x00000001 0x00000002 0x00000001
+            PushToGeneralChannel(new byte[] {
+                0x53, 0x41, 0x4D, 0x53, 0x01, 0x00, 0x00, 0x00,
+                0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+            });
         }
 
+        public void PushToGeneralChannel(byte[] data)
+        {
+            if (data.Length > 0)
+            {
+                GeneralChannelData.Enqueue(data);
+                GeneralChannelEvent.ReadableEvent.Signal();
+            }
+        }
+        
         public void ScanAmiibo(int nfpDeviceId, string amiiboId, bool useRandomUuid)
         {
             if (VirtualAmiibo.ApplicationBytes.Length > 0)

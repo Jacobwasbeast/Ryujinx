@@ -1,5 +1,9 @@
 using Ryujinx.Common;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.Loaders.Processes;
 using System;
 using System.Runtime.InteropServices;
 
@@ -8,10 +12,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
     class ILibraryAppletSelfAccessor : IpcService
     {
         private readonly AppletStandalone _appletStandalone = new();
-
+ private RealApplet _realApplet;
         public ILibraryAppletSelfAccessor(ServiceCtx context)
         {
-            if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
+            if (context.Device.Processes.ActiveApplication.RealAppletInstance != null)
+            {
+                _realApplet = context.Device.Processes.ActiveApplication.RealAppletInstance;
+            }
+            else if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
             {
                 // Create MiiEdit data.
                 _appletStandalone = new AppletStandalone()
@@ -51,7 +59,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // PopInData() -> object<nn::am::service::IStorage>
         public ResultCode PopInData(ServiceCtx context)
         {
-            byte[] appletData = _appletStandalone.InputData.Dequeue();
+            byte[] appletData;
+
+            if (_realApplet != null)
+            {
+                if (!_realApplet.NormalSession.TryPop(out appletData))
+                {
+                    return ResultCode.NotAvailable;
+                }
+            }
+            else
+            {
+                appletData = _appletStandalone.InputData.Dequeue();
+            }
 
             if (appletData.Length == 0)
             {
@@ -62,22 +82,98 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(1)]
+        public ResultCode PushOutData(ServiceCtx context)
+        {
+            if (_realApplet != null)
+            {
+                IStorage data = GetObject<IStorage>(context, 0);
+                _realApplet.NormalSession.Push(data.Data);
+                _realApplet.InvokeAppletStateChanged();
+            }
 
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(3)]
+        public ResultCode PushInteractiveData(ServiceCtx context)
+        {
+            if (_realApplet != null)
+            {
+                IStorage data = GetObject<IStorage>(context, 0);
+                _realApplet.InteractiveSession.Push(data.Data);
+                _realApplet.InvokeAppletStateChanged();
+            }
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(10)]
+        public ResultCode ExitProcessAndReturn(ServiceCtx context)
+        {
+            ProcessResult result = context.Device.Processes.ActiveApplication;
+            if (result.RealAppletInstance != null)
+            {
+                result.RealAppletInstance.Terminate(context, this);
+            }
+            else
+            {
+                context.Process.Terminate();
+            }
+            
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(11)]
         // GetLibraryAppletInfo() -> nn::am::service::LibraryAppletInfo
         public ResultCode GetLibraryAppletInfo(ServiceCtx context)
         {
-            LibraryAppletInfo libraryAppletInfo = new()
+            LibraryAppletInfo libraryAppletInfo = new();
+            
+            if (_realApplet != null)
             {
-                AppletId = _appletStandalone.AppletId,
-                LibraryAppletMode = _appletStandalone.LibraryAppletMode,
-            };
+                libraryAppletInfo.AppletId = _realApplet.AppletId;
+                libraryAppletInfo.LibraryAppletMode = LibraryAppletMode.PartialForeground;
+            }
+            else
+            {
+                libraryAppletInfo.AppletId = _appletStandalone.AppletId;
+                libraryAppletInfo.LibraryAppletMode = _appletStandalone.LibraryAppletMode;
+            }
 
             context.ResponseData.WriteStruct(libraryAppletInfo);
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(12)]
+        // GetMainAppletIdentityInfo() -> nn::am::service::AppletIdentityInfo
+        public ResultCode GetMainAppletIdentityInfo(ServiceCtx context)
+        {
+            AppletIdentifyInfo appletIdentifyInfo = new()
+            {
+                AppletId = AppletId.QLaunch,
+                TitleId = 0x0100000000001000,
+            };
 
+            context.ResponseData.WriteStruct(appletIdentifyInfo);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(13)]
+        // CanUseApplicationCore() -> bool
+        public ResultCode CanUseApplicationCore(ServiceCtx context)
+        {
+            context.ResponseData.Write(false);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
+
+        
         [CommandCmif(14)]
         // GetCallerAppletIdentityInfo() -> nn::am::service::AppletIdentityInfo
         public ResultCode GetCallerAppletIdentityInfo(ServiceCtx context)
@@ -90,6 +186,32 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
 
             context.ResponseData.WriteStruct(appletIdentifyInfo);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(30)]
+        // UnpopInData(nn::am::service::IStorage)
+        public ResultCode UnpopInData(ServiceCtx context)
+        {
+            IStorage data = GetObject<IStorage>(context, 0);
+
+            if (_realApplet != null)
+            {
+                _realApplet.NormalSession.Push(data.Data);
+            }
+            else
+            {
+                _appletStandalone.InputData.Enqueue(data.Data);
+            }
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(50)]
+        // ReportVisibleError(nn::err::ErrorCode)
+        public ResultCode ReportVisibleError(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
     }

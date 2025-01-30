@@ -13,6 +13,10 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         public static IApplet Create(AppletId applet, Horizon system)
         {
+            if (IsReal(applet))
+            {
+                return new RealApplet(applet, system);
+            }
             switch (applet)
             {
                 case AppletId.Controller:
@@ -36,6 +40,11 @@ namespace Ryujinx.HLE.HOS.Applets
 
             Logger.Warning?.Print(LogClass.Application, $"Applet {applet} not implemented!");
             return new DummyApplet(system);
+        }
+
+        private static bool IsReal(AppletId applet)
+        {
+            return true;
         }
     }
 }
