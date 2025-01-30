@@ -42,15 +42,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetLastActiveNpad(u32) -> u8, u8
         public ResultCode GetLastActiveNpad(ServiceCtx context)
         {
-            // TODO: RequestData seems to have garbage data, reading an extra uint seems to fix the issue.
-            context.RequestData.ReadUInt32();
+            context.ResponseData.Write((byte)context.Device.Hid.Npads.GetLastActiveNpadId());
 
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
-
-            context.ResponseData.Write((byte)id);
-            context.ResponseData.Write((byte)0);
-
-            return resultCode;
+            return ResultCode.Success;
         }
         
         [CommandCmif(544)]
@@ -184,20 +178,19 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         // GetAppletFooterUiType(u32) -> u8
         public ResultCode GetAppletFooterUiType(ServiceCtx context)
         {
-            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out NpadIdType id, out AppletFooterUiType appletFooterUiType);
+            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out AppletFooterUiType appletFooterUiType);
 
             context.ResponseData.Write((byte)appletFooterUiType);
 
             return resultCode;
         }
 
-        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context,out NpadIdType id, out AppletFooterUiType appletFooterUiType)
+        private ResultCode GetAppletFooterUiTypeImpl(ServiceCtx context, out AppletFooterUiType appletFooterUiType)
         {
             NpadIdType npadIdType = (NpadIdType)context.RequestData.ReadUInt32();
             PlayerIndex playerIndex = HidUtils.GetIndexFromNpadIdType(npadIdType);
 
             appletFooterUiType = context.Device.Hid.SharedMemory.Npads[(int)playerIndex].InternalState.AppletFooterUiType;
-            id = npadIdType;
             return ResultCode.Success;
         }
     }
