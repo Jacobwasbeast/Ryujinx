@@ -403,15 +403,22 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(63)]
         // GetPrimaryAlbumStorage() -> s32
         public ResultCode GetPrimaryAlbumStorage(ServiceCtx context)
         {
             context.ResponseData.Write((byte)PrimaryAlbumStorage.Nand);
-
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
+            return ResultCode.Success;
+        }
 
+        [CommandCmif(68)]
+        // GetSerialNumber() -> buffer<nn::settings::system::SerialNumber, 0x16>
+        public ResultCode GetSerialNumber(ServiceCtx context)
+        {
+            context.ResponseData.Write(Encoding.ASCII.GetBytes("RYU00000000000"));
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
             return ResultCode.Success;
         }
         
@@ -433,10 +440,9 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             };
 
             context.ResponseData.WriteStruct(sleepSettings);
-
             return ResultCode.Success;
         }
-
+        
         [StructLayout(LayoutKind.Sequential, Size = 0xC)] // Total size: 0xC bytes
         public struct SleepSettings
         {
@@ -684,7 +690,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             IFileSystem firmwareRomFs = firmwareContent.OpenFileSystem(NcaSectionType.Data, device.System.FsIntegrityCheckLevel);
 
-            using var firmwareFile = new UniqueRef<IFile>();
+            using UniqueRef<IFile> firmwareFile = new();
 
             Result result = firmwareRomFs.OpenFile(ref firmwareFile.Ref, "/file".ToU8Span(), OpenMode.Read);
             if (result.IsFailure())
