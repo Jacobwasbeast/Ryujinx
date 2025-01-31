@@ -4,6 +4,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel.Process;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
@@ -86,12 +87,13 @@ namespace Ryujinx.HLE.HOS.Applets
 
         public ProcessResult Process;
         public KProcess ProcessHandle;
-
+        public KEvent PopInteractiveEvent;
         public RealApplet(AppletId appletId, Horizon system)
         {
             _system = system;
             AppletState = new AppletStateMgr(system);
             AppletId = appletId;
+            PopInteractiveEvent = new KEvent(_system.KernelContext);
         }
 
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)

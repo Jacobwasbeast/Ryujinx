@@ -3,6 +3,7 @@ using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Processes;
 using System;
 using System.Runtime.InteropServices;
@@ -109,6 +110,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return ResultCode.Success;
         }
         
+        [CommandCmif(6)]
+        public ResultCode GetPopInDataEvent(ServiceCtx context)
+        {
+           context.Process.HandleTable.GenerateHandle(_realApplet.PopInteractiveEvent.ReadableEvent, out int handle);
+           context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+
+           return ResultCode.Success;
+        }
+        
         [CommandCmif(10)]
         public ResultCode ExitProcessAndReturn(ServiceCtx context)
         {
@@ -185,6 +195,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             };
 
             context.ResponseData.WriteStruct(appletIdentifyInfo);
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(19)]
+        // GetDesirableKeyboardLayout() -> nn::settings::KeyboardLayout
+        public ResultCode GetDesirableKeyboardLayout(ServiceCtx context)
+        {
+            context.ResponseData.Write((ulong)KeyboardLayout.Default);
 
             return ResultCode.Success;
         }
