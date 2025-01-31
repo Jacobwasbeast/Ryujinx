@@ -333,6 +333,28 @@ namespace Ryujinx.Ava.UI.Models.Input
             }
         }
 
+        private GamepadInputId _buttonCapture;
+        public GamepadInputId ButtonCapture
+        {
+            get => _buttonCapture;
+            set
+            {
+                _buttonCapture = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        private GamepadInputId _buttonHome;
+        public GamepadInputId ButtonHome
+        {
+            get => _buttonHome;
+            set
+            {
+                _buttonHome = value;
+                OnPropertyChanged();
+            }
+        }
+        
         private float _deadzoneLeft;
         public float DeadzoneLeft
         {
@@ -496,6 +518,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                 LeftButtonSl = controllerInput.LeftJoycon.ButtonSl;
                 LeftButtonSr = controllerInput.LeftJoycon.ButtonSr;
                 ButtonZl = controllerInput.LeftJoycon.ButtonZl;
+                ButtonCapture = controllerInput.LeftJoycon.ButtonCapture;
 
                 ButtonA = controllerInput.RightJoycon.ButtonA;
                 ButtonB = controllerInput.RightJoycon.ButtonB;
@@ -506,6 +529,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                 RightButtonSl = controllerInput.RightJoycon.ButtonSl;
                 RightButtonSr = controllerInput.RightJoycon.ButtonSr;
                 ButtonZr = controllerInput.RightJoycon.ButtonZr;
+                ButtonHome = controllerInput.RightJoycon.ButtonHome;
 
                 DeadzoneLeft = controllerInput.DeadzoneLeft;
                 DeadzoneRight = controllerInput.DeadzoneRight;
@@ -571,6 +595,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                     ButtonSl = LeftButtonSl,
                     ButtonSr = LeftButtonSr,
                     ButtonZl = ButtonZl,
+                    ButtonCapture = ButtonCapture,
                 },
                 RightJoycon = new RightJoyconCommonConfig<GamepadInputId>
                 {
@@ -583,6 +608,7 @@ namespace Ryujinx.Ava.UI.Models.Input
                     ButtonSr = RightButtonSr,
                     ButtonR = ButtonR,
                     ButtonZr = ButtonZr,
+                    ButtonHome = ButtonHome,
                 },
                 LeftJoyconStick = new JoyconConfigControllerStick<GamepadInputId, StickInputId>
                 {
