@@ -87,18 +87,92 @@ namespace Ryujinx.HLE.HOS
 
         internal List<NfpDevice> NfpDevices { get; private set; }
 
-        internal SmRegistry SmRegistry { get; private set; }
+        internal ServerBaseManager LibHacServerManagerMain = new ServerBaseManager();
 
-        internal ServerBase SmServer { get; private set; }
-        internal ServerBase BsdServer { get; private set; }
-        internal ServerBase FsServer { get; private set; }
-        internal ServerBase HidServer { get; private set; }
-        internal ServerBase NvDrvServer { get; private set; }
-        internal ServerBase TimeServer { get; private set; }
-        internal ServerBase ViServer { get; private set; }
-        internal ServerBase ViServerM { get; private set; }
-        internal ServerBase ViServerS { get; private set; }
-        internal ServerBase LdnServer { get; private set; }
+       private T GetServerProperty<T>(Func<ServerBaseManager, T> selector)
+        {
+            return IsApplet() 
+                ? selector(Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager)
+                : selector(LibHacServerManagerMain);
+        }
+
+        private void SetServerProperty<T>(Action<ServerBaseManager, T> setter, T value)
+        {
+            if (IsApplet())
+            {
+                setter(Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager, value);
+            }
+            else
+            {
+                setter(LibHacServerManagerMain, value);
+            }
+        }
+
+        internal SmRegistry SmRegistry
+        {
+            get => GetServerProperty(server => server.SmRegistry);
+            set => SetServerProperty((server, v) => server.SmRegistry = v, value);
+        }
+
+        internal ServerBase SmServer
+        {
+            get => GetServerProperty(server => server.SmServer);
+            set => SetServerProperty((server, v) => server.SmServer = v, value);
+        }
+
+        internal ServerBase BsdServer
+        {
+            get => GetServerProperty(server => server.BsdServer);
+            set => SetServerProperty((server, v) => server.BsdServer = v, value);
+        }
+
+        internal ServerBase FsServer
+        {
+            get => GetServerProperty(server => server.FsServer);
+            set => SetServerProperty((server, v) => server.FsServer = v, value);
+        }
+
+        internal ServerBase HidServer
+        {
+            get => GetServerProperty(server => server.HidServer);
+            set => SetServerProperty((server, v) => server.HidServer = v, value);
+        }
+
+        internal ServerBase NvDrvServer
+        {
+            get => GetServerProperty(server => server.NvDrvServer);
+            set => SetServerProperty((server, v) => server.NvDrvServer = v, value);
+        }
+
+        internal ServerBase TimeServer
+        {
+            get => GetServerProperty(server => server.TimeServer);
+            set => SetServerProperty((server, v) => server.TimeServer = v, value);
+        }
+
+        internal ServerBase ViServer
+        {
+            get => GetServerProperty(server => server.ViServer);
+            set => SetServerProperty((server, v) => server.ViServer = v, value);
+        }
+
+        internal ServerBase ViServerM
+        {
+            get => GetServerProperty(server => server.ViServerM);
+            set => SetServerProperty((server, v) => server.ViServerM = v, value);
+        }
+
+        internal ServerBase ViServerS
+        {
+            get => GetServerProperty(server => server.ViServerS);
+            set => SetServerProperty((server, v) => server.ViServerS = v, value);
+        }
+
+        internal ServerBase LdnServer
+        {
+            get => GetServerProperty(server => server.LdnServer);
+            set => SetServerProperty((server, v) => server.LdnServer = v, value);
+        }
 
         internal KSharedMemory HidSharedMem { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
@@ -134,10 +208,47 @@ namespace Ryujinx.HLE.HOS
 
         internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
-        internal ServiceTable ServiceTable { get; set; }
+        internal ServiceTable ServiceTableMain { get; private set; }
+        internal ServiceTable ServiceTable
+        {
+            get
+            {
+                if (IsApplet())
+                {
+                    return Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.ServiceTable;
+                }
+                else
+                {
+                    return ServiceTableMain;
+                }
+            }
+            set
+            {
+                if (IsApplet())
+                {
+                    Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.ServiceTable = value;
+                }
+                else
+                {
+                    ServiceTableMain = value;
+                }
+            }
+        }
 
+        public bool IsApplet()
+        {
+            if (Device?.Processes?.ActiveApplication?.RealAppletInstance != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        
         public bool IsPaused { get; private set; }
-
+        
         public Horizon(Switch device)
         {
             TickSource = new TickSource(KernelConstants.CounterFrequency);

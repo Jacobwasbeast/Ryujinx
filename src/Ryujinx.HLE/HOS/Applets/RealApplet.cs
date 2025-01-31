@@ -84,6 +84,8 @@ namespace Ryujinx.HLE.HOS.Applets
         public ulong LastActivePID { get; private set; }
         public long LastActiveSurfaceLayer { get; private set; }
         public AppletStateMgr AppletState { get; private set; }
+        public ServerBaseManager LibHacServerManager { get; set; }
+
         public event EventHandler AppletStateChanged;
         public ResultCode TerminateResult = ResultCode.Success;
 
@@ -124,8 +126,8 @@ namespace Ryujinx.HLE.HOS.Applets
             
             while (prev==_system.Device.Processes.ActiveApplication)
             {}
-            
             Process.RealAppletInstance = this;
+            _system.Device.System.InitializeServices();
             ProcessHandle = _system.KernelContext.Processes[Process.ProcessId];
             AppletResourceUserId = ProcessHandle.Pid;
             _system.Device.System.ReturnFocus();
@@ -145,10 +147,10 @@ namespace Ryujinx.HLE.HOS.Applets
 
         public void Terminate(ServiceCtx context, IpcService sender)
         {
+            context.Process.Terminate();
             context.Device.System.SurfaceFlinger.CloseLayer(context.Device.System.SurfaceFlinger.RenderLayerId);
-            context.Device.System.SurfaceFlinger.SetRenderLayer(LastActiveSurfaceLayer);
             context.Device.Processes.SetActivePID(LastActivePID);
-            context.Process.TerminateApplet();
+            context.Device.System.SurfaceFlinger.SetRenderLayer(LastActiveSurfaceLayer);
             InvokeAppletStateChanged();
             if (NormalSession.Length==0)
             {
