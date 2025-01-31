@@ -653,6 +653,8 @@ namespace Ryujinx.Ava.Utilities.Configuration
             public ReactiveObject<bool> EnableShaderTranslationDelay { get; private set; }
             
             public ReactiveObject<int> ShaderTranslationDelay { get; private set; }
+            
+            public ReactiveObject<bool> SkipWaitOnGpu { get; private set; }
 
             public HacksSection()
             {
@@ -662,6 +664,7 @@ namespace Ryujinx.Ava.Utilities.Configuration
                 EnableShaderTranslationDelay = new ReactiveObject<bool>();
                 EnableShaderTranslationDelay.Event += HackChanged;
                 ShaderTranslationDelay = new ReactiveObject<int>();
+                SkipWaitOnGpu = new ReactiveObject<bool>();
             }
 
             private void HackChanged(object sender, ReactiveEventArgs<bool> rxe)
@@ -695,6 +698,9 @@ namespace Ryujinx.Ava.Utilities.Configuration
                     if (EnableShaderTranslationDelay)
                         Apply(DirtyHack.ShaderTranslationDelay, ShaderTranslationDelay);
                     
+                    if (SkipWaitOnGpu)
+                        Apply(DirtyHack.SkipWaitOnGpu);
+                    
                     return enabledHacks.ToArray();
 
                     void Apply(DirtyHack hack, int value = 0)
@@ -703,6 +709,7 @@ namespace Ryujinx.Ava.Utilities.Configuration
                     }
                 }
             }
+            
         }
 
         /// <summary>

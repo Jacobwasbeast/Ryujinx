@@ -157,6 +157,8 @@ namespace Ryujinx.Ava.Utilities.Configuration
 
                 Hacks.EnableShaderTranslationDelay.Value = hacks.IsEnabled(DirtyHack.ShaderTranslationDelay);
                 Hacks.ShaderTranslationDelay.Value = hacks[DirtyHack.ShaderTranslationDelay].CoerceAtLeast(0);
+                
+                Hacks.SkipWaitOnGpu.Value = hacks.IsEnabled(DirtyHack.SkipWaitOnGpu);
             }
 
             if (configurationFileUpdated)

@@ -1,4 +1,5 @@
 using ARMeilleure.Memory;
+using Ryujinx.Common.Configuration;
 using Ryujinx.Cpu;
 using Ryujinx.Graphics.Gpu;
 using Ryujinx.HLE.HOS.Kernel.Process;
@@ -58,8 +59,11 @@ namespace Ryujinx.HLE.HOS
 
         public void Execute(IExecutionContext context, ulong codeAddress)
         {
-            // We must wait until shader cache is loaded, among other things, before executing CPU code.
-            _gpuContext.WaitUntilGpuReady();
+            if (!Switch.Shared.DirtyHacks.IsEnabled(DirtyHack.SkipWaitOnGpu))
+            {
+                // We must wait until shader cache is loaded, among other things, before executing CPU code.
+                _gpuContext.WaitUntilGpuReady();
+            }
             _cpuContext.Execute(context, codeAddress);
         }
 

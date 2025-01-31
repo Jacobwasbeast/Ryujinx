@@ -706,6 +706,7 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.Hacks.Xc2MenuSoftlockFix.Value = DirtyHacks.Xc2MenuSoftlockFix;
             config.Hacks.EnableShaderTranslationDelay.Value = DirtyHacks.ShaderTranslationDelayEnabled;
             config.Hacks.ShaderTranslationDelay.Value = DirtyHacks.ShaderTranslationDelay;
+            config.Hacks.SkipWaitOnGpu.Value = DirtyHacks.SkipWaitOnGpuEnabled;
 
             config.ToFileFormat().SaveConfig(Program.ConfigurationPath);
 

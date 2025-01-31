@@ -76,6 +76,18 @@
                                Text="{Binding DirtyHacks.ShaderTranslationDelayValueText}"/>
                 </StackPanel>
                 <Separator/>
+                <StackPanel
+                    Margin="0,10,0,0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    ToolTip.Tip="{Binding DirtyHacks.SkipWaitOnGPUTooltip}">
+                    <CheckBox
+                        Margin="0"
+                        IsChecked="{Binding DirtyHacks.SkipWaitOnGpuEnabled}"/>
+                    <TextBlock VerticalAlignment="Center"
+                               Text="Skip Wait GPU on startup"/>
+                </StackPanel>
+                <Separator/>
             </StackPanel>
         </Border>
     </ScrollViewer>

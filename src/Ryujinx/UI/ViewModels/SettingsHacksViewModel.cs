@@ -17,8 +17,8 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         [ObservableProperty] private bool _xc2MenuSoftlockFix = ConfigurationState.Instance.Hacks.Xc2MenuSoftlockFix;
         [ObservableProperty] private bool _shaderTranslationDelayEnabled = ConfigurationState.Instance.Hacks.EnableShaderTranslationDelay;
+        [ObservableProperty] private bool _skipWaitOnGpuEnabled = ConfigurationState.Instance.Hacks.SkipWaitOnGpu;
         private int _shaderTranslationSleepDelay = ConfigurationState.Instance.Hacks.ShaderTranslationDelay;
-
         public string ShaderTranslationDelayValueText => $"{ShaderTranslationDelay}ms"; 
         
         public int ShaderTranslationDelay
@@ -31,7 +31,7 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertiesChanged(nameof(ShaderTranslationDelay), nameof(ShaderTranslationDelayValueText));
             }
         }
-        
+
         public static string Xc2MenuFixTooltip { get; } = Lambda.String(sb =>
         {
             sb.AppendLine(
@@ -51,6 +51,10 @@ namespace Ryujinx.Ava.UI.ViewModels
                 .AppendLine();
 
             sb.Append("Configurable via slider, only when this option is enabled.");
+        });
+        public static string SkipWaitOnGPUTooltip { get; } = Lambda.String(sb =>
+        {
+            sb.AppendLine("This hack skips the compiling of shaders on launch of a app (they will be compiled in the background).");
         });
     }
 }
