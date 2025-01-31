@@ -71,10 +71,5 @@ namespace Ryujinx.HLE.UI
         /// Displays the player select dialog and returns the selected profile.
         /// </summary>
         UserProfile ShowPlayerSelectDialog();
-
-        /// <summary>
-        /// Gets the applications installed in the system.
-        /// </summary>
-        Dictionary<ApplicationRecordData, ulong> GetApplications();
     }
 }

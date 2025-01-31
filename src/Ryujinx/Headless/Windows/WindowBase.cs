@@ -566,10 +566,5 @@ namespace Ryujinx.Headless
         {
             return AccountSaveDataManager.GetLastUsedUser();
         }
-
-        public Dictionary<ApplicationRecordData, ulong> GetApplications()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

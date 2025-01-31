@@ -1,90 +1,77 @@
 using LibHac.Ns;
 using Ryujinx.Common.Logging;
-using Ryujinx.Common.Memory;
 using Ryujinx.Common.Utilities;
+using Ryujinx.Horizon.Common;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.Horizon.Common;
+using Ryujinx.HLE.HOS.Services.Ns.Types;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using ApplicationId = LibHac.ApplicationId;
 
 namespace Ryujinx.HLE.HOS.Services.Ns
 {
     [Service("ns:am")]
     class IApplicationManagerInterface : IpcService
     {
-        KEvent _applicationRecordUpdateEvent;
-        int _applicationRecordUpdateEventHandle;
-        KEvent _sdCardMountStatusChangedEvent;
-        int _sdCardMountStatusChangedEventHandle;
-        KEvent _gameCardUpdateDetectionEvent;
-        int _gameCardUpdateDetectionEventHandle;
-        KEvent _gameCardMountFailureEvent;
-        int _gameCardMountFailureEventHandle;
+        private KEvent _applicationRecordUpdateSystemEvent;
+        private int _applicationRecordUpdateSystemEventHandle;
+
+        private KEvent _sdCardMountStatusChangedEvent;
+        private int _sdCardMountStatusChangedEventHandle;
+
+        private KEvent _gameCardUpdateDetectionEvent;
+        private int _gameCardUpdateDetectionEventHandle;
+
+        private KEvent _gameCardMountFailureEvent;
+        private int _gameCardMountFailureEventHandle;
 
         public IApplicationManagerInterface(ServiceCtx context)
         {
-            _applicationRecordUpdateEvent = new KEvent(context.Device.System.KernelContext);
-            _applicationRecordUpdateEventHandle = -1;
+            _applicationRecordUpdateSystemEvent = new KEvent(context.Device.System.KernelContext);
             _sdCardMountStatusChangedEvent = new KEvent(context.Device.System.KernelContext);
-            _sdCardMountStatusChangedEventHandle = -1;
             _gameCardUpdateDetectionEvent = new KEvent(context.Device.System.KernelContext);
-            _gameCardUpdateDetectionEventHandle = -1;
             _gameCardMountFailureEvent = new KEvent(context.Device.System.KernelContext);
-            _gameCardMountFailureEventHandle = -1;
         }
 
+
         [CommandCmif(0)]
-        // ListApplicationRecord(unknown<4>) -> (unknown<4>, buffer<unknown, 6>)
-        // unknown<4> is entry_offset and buffer<unknown, 6> is  OutArray<ApplicationRecord, BufferAttr_HipcMapAlias> out_records
+        // ListApplicationRecord(s32) -> (s32, buffer<ApplicationRecord[], 6>)
+        // entry_offset -> (out_entrycount, ApplicationRecord[])
         public ResultCode ListApplicationRecord(ServiceCtx context)
         {
-            // Read entry_offset from the input data
             int entryOffset = context.RequestData.ReadInt32();
-            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Entry offset {entryOffset}");
+            ulong position = context.Request.ReceiveBuff[0].Position;
+            List<ApplicationRecord> records = new();
 
-            var outputBuffer = context.Request.ReceiveBuff[0];
-
-            // Simulate fetching installed games (replace with actual data retrieval logic)
-            var installedGames = context.Device.UIHandler.GetApplications();
-            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {installedGames.Count} installed games found");
-
-            int recordCount = 0;
-            int index = 0;
-            int ii = 24;
-            Span<ApplicationRecord> records = CreateSpanFromBuffer<ApplicationRecord>(context, outputBuffer, true);
-            int maxCount = records.Length;
-            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Output buffer size {maxCount}");
-            foreach (var game in installedGames)
+            foreach (RyuApplicationData title in context.Device.Configuration.Titles)
             {
-                if (recordCount >= maxCount)
+                records.Add(new ApplicationRecord()
                 {
-                    Logger.Stub?.PrintStub(LogClass.ServiceNs, "ListApplicationRecord: Output buffer full");
-                    break;
-                }
-                
-                if (index < entryOffset)
-                {
-                    Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: Skipping record {index}");
-                    index++;
-                    continue;
-                }
-            
-                ApplicationRecord record = new ApplicationRecord
-                {
-                    ApplicationId = game.Value,
-                    Type = (byte)ApplicationRecordType.Installed,
-                    Unknown1 = 0, // Placeholder
-                    Unknown3 = (byte)ii++
-                };
-                
-                records[recordCount] = record;
-                recordCount++;
+                    Type = ApplicationRecordType.Installed,
+                    AppId = title.AppId,
+                    Unknown1 = 0x2,
+                    Unknown2 = new byte[6],
+                    Unknown3 = 0,
+                    Unknown4 = new byte[7]
+                });
             }
-            context.ResponseData.Write(recordCount);
-            WriteSpanToBuffer(context,outputBuffer, records);
-            Logger.Stub?.PrintStub(LogClass.ServiceNs, $"ListApplicationRecord: {recordCount} records written");
+            
+            records.Sort((x, y) => (int)(x.AppId.Value - y.AppId.Value));
+            if (entryOffset > 0)
+            {
+                records = records.Skip(entryOffset - 1).ToList();
+            }
+
+            context.ResponseData.Write(records.Count);
+            foreach (var record in records)
+            {
+                context.Memory.Write(position, StructToBytes(record));
+                position += (ulong)Marshal.SizeOf<ApplicationRecord>();
+            }
+
             return ResultCode.Success;
         }
 
@@ -92,71 +79,75 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // GetApplicationRecordUpdateSystemEvent() -> handle<copy>
         public ResultCode GetApplicationRecordUpdateSystemEvent(ServiceCtx context)
         {
-            if (_applicationRecordUpdateEventHandle == -1)
+            if (_applicationRecordUpdateSystemEventHandle == 0)
             {
-                Result resultCode = context.Process.HandleTable.GenerateHandle(_applicationRecordUpdateEvent.ReadableEvent, out _applicationRecordUpdateEventHandle);
-
-                if (resultCode != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(_applicationRecordUpdateSystemEvent.ReadableEvent, out _applicationRecordUpdateSystemEventHandle) != Result.Success)
                 {
-                    return (ResultCode)resultCode.ErrorCode;
+                    throw new InvalidOperationException("Out of handles!");
                 }
             }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_applicationRecordUpdateEventHandle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_applicationRecordUpdateSystemEventHandle);
 
-            Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
         
         [CommandCmif(3)]
         // GetApplicationView(buffer<unknown, 5>) -> buffer<unknown, 6>
-        public ResultCode GetApplicationViewDeprecated(ServiceCtx context)
+        public ResultCode GetApplicationViewDeperecated(ServiceCtx context)
         {
-            var buff1 = context.Request.ReceiveBuff[0];
-            
-            Span<ApplicationView> records = CreateSpanFromBuffer<ApplicationView>(context, buff1, true);
-            List<ulong> ids = new List<ulong>();
-            if (context.Device.Processes.ActiveApplication.ProgramId != 0x0100000000001000)
+            ulong inPosition = context.Request.SendBuff[0].Position;
+            ulong inSize = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
+
+            List<ApplicationId> applicationIds = new();
+            for (ulong i = 0; i < inSize / sizeof(ulong); i++)
             {
-                ids.Add(context.Device.Processes.ActiveApplication.ProgramId);
+                ulong position = inPosition + (i * sizeof(ulong));
+                applicationIds.Add(new(context.Memory.Read<ulong>(position)));
             }
 
-            records = CreateSpanFromBuffer<ApplicationView>(context, buff1, false);
-            for(int i=0; i<ids.Count;i++)
+            List<ApplicationView> views = new();
+
+            foreach (ApplicationId applicationId in applicationIds)
             {
-                if (records.Length >= i)
+                views.Add(new()
                 {
-                    records[i].ApplicationId = ids[i];
-                    records[i].Unknown1 = 0x70000;
-                    records[i].Flags = 0x401f17;
-                }
+                    AppId = applicationId,
+                    Unknown1 = 0,
+                    Flags = 0,
+                    Unknown2 = new byte[0x40]
+                });
             }
-            
-            WriteSpanToBuffer(context,buff1,records);
-            Logger.Stub?.PrintStub(LogClass.Service);
+
+            context.ResponseData.Write(views.Count);
+            foreach (var view in views)
+            {
+                context.Memory.Write(outputPosition, StructToBytes(view));
+                outputPosition += (ulong)Marshal.SizeOf<ApplicationView>();
+            }
+
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(44)]
         // GetSdCardMountStatusChangedEvent() -> handle<copy>
         public ResultCode GetSdCardMountStatusChangedEvent(ServiceCtx context)
         {
-            if (_sdCardMountStatusChangedEventHandle == -1)
+            if (_sdCardMountStatusChangedEventHandle == 0)
             {
-                Result resultCode = context.Process.HandleTable.GenerateHandle(_sdCardMountStatusChangedEvent.ReadableEvent, out _sdCardMountStatusChangedEventHandle);
-
-                if (resultCode != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(_sdCardMountStatusChangedEvent.ReadableEvent, out _sdCardMountStatusChangedEventHandle) != Result.Success)
                 {
-                    return (ResultCode)resultCode.ErrorCode;
+                    throw new InvalidOperationException("Out of handles!");
                 }
             }
-            
+
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_sdCardMountStatusChangedEventHandle);
-            
-            Logger.Stub?.PrintStub(LogClass.Service);
+
             return ResultCode.Success;
         }
-        
+
         const long storageFreeAndTotalSpaceSize = 6999999999999L;
         [CommandCmif(47)]
         // GetTotalSpaceSize(u8 storage_id) -> u64
@@ -185,39 +176,59 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // GetGameCardUpdateDetectionEvent() -> handle<copy>
         public ResultCode GetGameCardUpdateDetectionEvent(ServiceCtx context)
         {
-            if (_gameCardUpdateDetectionEventHandle == -1)
+            if (_gameCardUpdateDetectionEventHandle == 0)
             {
-                Result resultCode = context.Process.HandleTable.GenerateHandle(_gameCardUpdateDetectionEvent.ReadableEvent, out _gameCardUpdateDetectionEventHandle);
-
-                if (resultCode != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(_gameCardUpdateDetectionEvent.ReadableEvent, out _gameCardUpdateDetectionEventHandle) != Result.Success)
                 {
-                    return (ResultCode)resultCode.ErrorCode;
+                    throw new InvalidOperationException("Out of handles!");
                 }
             }
-            
+
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_gameCardUpdateDetectionEventHandle);
-            
-            Logger.Stub?.PrintStub(LogClass.Service);
+
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(55)]
-        // GetApplicationDesiredLanguage()
+        // GetApplicationDesiredLanguage(u8) -> u8
         public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
         {
-            // TODO: Implement this method properly.
-            Logger.Stub?.PrintStub(LogClass.Service);
+            byte source = context.RequestData.ReadByte();
+            byte language = 0;
+
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, new { source, language });
+
+            context.ResponseData.Write(language);
+
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(70)]
         // ResumeAll()
         public ResultCode ResumeAll(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.Service);
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
+
             return ResultCode.Success;
         }
-        
+
+        [CommandCmif(505)]
+        // GetGameCardMountFailureEvent() -> handle<copy>
+        public ResultCode GetGameCardMountFailureEvent(ServiceCtx context)
+        {
+            if (_gameCardMountFailureEventHandle == 0)
+            {
+                if (context.Process.HandleTable.GenerateHandle(_gameCardMountFailureEvent.ReadableEvent, out _gameCardMountFailureEventHandle) != Result.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_gameCardMountFailureEventHandle);
+
+            return ResultCode.Success;
+        }
+
         [CommandCmif(400)]
         // GetApplicationControlData(u8, u64) -> (unknown<4>, buffer<unknown, 6>)
         public ResultCode GetApplicationControlData(ServiceCtx context)
@@ -229,41 +240,17 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             ulong position = context.Request.ReceiveBuff[0].Position;
 
-            ApplicationControlProperty nacp;
-            if (titleId == context.Device.Processes.ActiveApplication.ProgramId)
-            {
-                nacp = context.Device.Processes.ActiveApplication.ApplicationControlProperties;
-            }
-            else
-            {
-                var apps = context.Device.UIHandler.GetApplications();
-                nacp = new ApplicationControlProperty();
-                foreach(var app in apps)
-                {
-                    if (app.Value == titleId)
-                    {
-                        Logger.Stub?.PrintStub(LogClass.Service, "Application control property found");
-                        var nameBytes = System.Text.Encoding.UTF8.GetBytes(app.Key.Name);
-                        var publisherBytes = System.Text.Encoding.UTF8.GetBytes(app.Key.Publisher);
-                        var version = app.Key.Version;
-                        ref var title = ref nacp.Title[0];
-                        
-                        nameBytes.CopyTo(title.Name.Items);
-                        
-                        publisherBytes.CopyTo(title.Publisher.Items);
-                        
-                        byte[] versionBytes = System.Text.Encoding.ASCII.GetBytes(version);
-                        
-                        versionBytes.CopyTo(nacp.DisplayVersion.Items);
-                    }
-                }
-            }
+            var title = context.Device.Configuration.Titles.Where(x => x.AppId.Value == titleId).FirstOrDefault();
+
+            ApplicationControlProperty nacp = title.Nacp;
 
             context.Memory.Write(position, SpanHelpers.AsByteSpan(ref nacp).ToArray());
+            context.Memory.Write(position + 0x4000, title.Icon);
+
+            context.ResponseData.Write(0x4000 + title.Icon.Length);
 
             return ResultCode.Success;
         }
-        
         
         [CommandCmif(403)]
         // GetMaxApplicationControlCacheCount() -> u32
@@ -273,110 +260,44 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
-        
-        [CommandCmif(505)]
-        // GetGameCarudMontFailureEvent() -> handle<copy>
-        public ResultCode GetGameCardMountFailureEvent(ServiceCtx context)
-        {
-            if (_gameCardMountFailureEventHandle == -1)
-            {
-                Result resultCode = context.Process.HandleTable.GenerateHandle(_gameCardMountFailureEvent.ReadableEvent, out _gameCardMountFailureEventHandle);
 
-                if (resultCode != Result.Success)
-                {
-                    return (ResultCode)resultCode.ErrorCode;
-                }
-            }
-            
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_gameCardMountFailureEventHandle);
-            
-            Logger.Stub?.PrintStub(LogClass.Service);
-            return ResultCode.Success;
-        }
-        
         [CommandCmif(1701)]
-        // GetApplicationView(buffer(ApplicationView), buffer(ApplicationIds)
+        // GetApplicationView(buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode GetApplicationView(ServiceCtx context)
         {
-            // TODO: Implement this method properly.
-            Logger.Stub?.PrintStub(LogClass.Service);
+            ulong inPosition = context.Request.SendBuff[0].Position;
+            ulong inSize = context.Request.SendBuff[0].Size;
+            ulong outputPosition = context.Request.ReceiveBuff[0].Position;
+            ulong outputSize = context.Request.ReceiveBuff[0].Size;
+
+            List<ApplicationId> applicationIds = new();
+            for (ulong i = 0; i < inSize / sizeof(ulong); i++)
+            {
+                ulong position = inPosition + (i * sizeof(ulong));
+                applicationIds.Add(new(context.Memory.Read<ulong>(position)));
+            }
+
+            List<ApplicationView> views = new();
+
+            foreach (ApplicationId applicationId in applicationIds)
+            {
+                views.Add(new()
+                {
+                    AppId = applicationId,
+                    Unknown1 = 0,
+                    Flags = 0,
+                    Unknown2 = new byte[0x40]
+                });
+            }
+
+            context.ResponseData.Write(views.Count);
+            foreach (var view in views)
+            {
+                context.Memory.Write(outputPosition, StructToBytes(view));
+                outputPosition += (ulong)Marshal.SizeOf<ApplicationView>();
+            }
+
             return ResultCode.Success;
         }
-        
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        public struct ApplicationView
-        {
-            public ulong ApplicationId;
-            
-            public uint Unknown1;
-            
-            public uint Flags;
-            
-            public Array64<byte> Unknown2;
-        }
-        
-        [CommandCmif(3002)]
-        // Unknown3002()
-        public ResultCode Unknown3002(ServiceCtx context)
-        {
-            Logger.Stub?.PrintStub(LogClass.Service);
-            return ResultCode.Success;
-        }
-        
-    }
-    
-    [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 1)]
-    unsafe public struct ApplicationRecord
-    {
-        public ulong ApplicationId;
-        public byte Type;
-        public byte Unknown1;
-        // Replace arrays with fixed-size buffers
-        private fixed byte Unknown2[6];
-        public byte Unknown3;
-        private fixed byte Unknown4[7];
-
-        // Helper properties to access fixed-size buffers as arrays
-        public Span<byte> Unknown2Span
-        {
-            get
-            {
-                unsafe
-                {
-                    fixed (byte* ptr = Unknown2)
-                    {
-                        return new Span<byte>(ptr, 6);
-                    }
-                }
-            }
-        }
-
-        public Span<byte> Unknown4Span
-        {
-            get
-            {
-                unsafe
-                {
-                    fixed (byte* ptr = Unknown4)
-                    {
-                        return new Span<byte>(ptr, 7);
-                    }
-                }
-            }
-        }
-    }
-    
-    public enum ApplicationRecordType
-    {
-        Installed = 0x3,
-    }
-
-    public class ApplicationRecordData()
-    {
-        public string Name;
-        public string Version;
-        public string Publisher;
-        public ulong TitleId;
-        public string Path;
     }
 }

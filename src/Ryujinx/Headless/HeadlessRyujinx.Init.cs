@@ -16,9 +16,11 @@ using Ryujinx.Graphics.Metal;
 using Ryujinx.Graphics.OpenGL;
 using Ryujinx.Graphics.Vulkan;
 using Ryujinx.HLE;
+using Ryujinx.HLE.HOS.Services.Ns.Types;
 using Ryujinx.Input;
 using Silk.NET.Vulkan;
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -333,6 +335,7 @@ namespace Ryujinx.Headless
                 _libHacHorizonManager,
                 _contentManager,
                 _accountManager,
+                new ImmutableArray<RyuApplicationData>(),
                 _userChannelPersistence,
                 renderer,
                 new SDL2HardwareDeviceDriver(),

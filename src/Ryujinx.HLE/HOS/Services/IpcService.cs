@@ -202,7 +202,7 @@ namespace Ryujinx.HLE.HOS.Services
             }
         }
 
-        protected void MakeObject(ServiceCtx context, IpcService obj)
+        public void MakeObject(ServiceCtx context, IpcService obj)
         {
             obj.TrySetServer(_parent.Server);
 
@@ -281,6 +281,25 @@ namespace Ryujinx.HLE.HOS.Services
             }
 
             _domainObjects.Clear();
+        }
+        
+        public static byte[] StructToBytes<T>(T structure) where T : struct
+        {
+            int size = Marshal.SizeOf(structure);
+            byte[] bytes = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+
+            try
+            {
+                Marshal.StructureToPtr(structure, ptr, false);
+                Marshal.Copy(ptr, bytes, 0, size);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+
+            return bytes;
         }
         
         public Span<byte> CreateByteSpanFromBuffer(ServiceCtx context, IpcBuffDesc ipcBuff, bool isOutput)

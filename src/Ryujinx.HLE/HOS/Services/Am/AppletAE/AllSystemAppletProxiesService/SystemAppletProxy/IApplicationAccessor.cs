@@ -43,10 +43,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // Start()
         public ResultCode Start(ServiceCtx context)
         {
-            var apps = context.Device.UIHandler.GetApplications();
-            var app = apps.FirstOrDefault(x => x.Value == TitleId);
+            var apps = context.Device.Configuration.Titles;
+            var app = apps.FirstOrDefault(x => x.AppId.Value == TitleId);
 
-            string path = app.Key.Path;
+            string path = app.Path;
             bool isNsp = path.EndsWith(".nsp");
             context.Device.System.CreateNewAppletManager();
             if (isNsp)
