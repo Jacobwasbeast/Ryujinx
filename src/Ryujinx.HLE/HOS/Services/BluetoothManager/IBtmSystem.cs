@@ -1,3 +1,5 @@
+using Ryujinx.HLE.HOS.Services.BluetoothManager.BtmSystem;
+
 namespace Ryujinx.HLE.HOS.Services.BluetoothManager
 {
     [Service("btm:sys")]
@@ -9,7 +11,7 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager
         // GetCoreImpl() -> object<nn::btm::IBtmSystemCore>
         public ResultCode GetCoreImpl(ServiceCtx context)
         {
-            MakeObject(context, new IBtmSystemCore(context));
+            MakeObject(context, new IBtmSystemCore());
 
             return ResultCode.Success;
         }

@@ -9,10 +9,12 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.Common.Memory;
+using Ryujinx.HLE.HOS.Services.Settings.Types;
 using Ryujinx.HLE.HOS.Services.Time.Clock;
 using Ryujinx.HLE.HOS.SystemState;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -94,7 +96,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetLockScreenFlag() -> bool
         public ResultCode GetLockScreenFlag(ServiceCtx context)
         {
-            context.ResponseData.Write(false); // TODO: Implement this function properly.
+            context.ResponseData.Write(false);
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
             return ResultCode.Success;
         }
@@ -105,17 +107,11 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         {
             AccountSettings accountSettings = new AccountSettings
             {
-                Flags = 0x295F0
+                UserSelectorSettings = new UserSelectorSettings()
             };
             context.ResponseData.WriteStruct(accountSettings);
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
             return ResultCode.Success;
-        }
-
-        [StructLayout(LayoutKind.Sequential, Size = 0x4, Pack = 1)]
-        public struct AccountSettings
-        {
-            public uint Flags;
         }
         
         [CommandCmif(21)]
@@ -123,26 +119,32 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         public ResultCode GetEulaVersions(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
-            ulong position = context.Request.ReceiveBuff[0].Position;
-            EulaVersion eulaVersion = new EulaVersion
+
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferLen = context.Request.ReceiveBuff[0].Size;
+
+            if ((ulong)Unsafe.SizeOf<EulaVersion>() > bufferLen)
             {
-                Version =  0x10000,
-                RegionCode = (byte)context.Device.Configuration.Region,
-                ClockType = 0x29580,
-                Padding = 0
+                return ResultCode.NullEULAVersionBuffer;
+            }
+
+            var eulaVersion = new EulaVersion
+            {
+                Version = 0x10000,
+                RegionCode = 1,
+                ClockType = 1,
+                NetworkSystemClock = 0,
+                SteadyClock = new Time.Clock.SteadyClockTimePoint {
+                    TimePoint = 0xc,
+                    ClockSourceId = new UInt128(0x36a0328708bc18c1, 0x1608ea2b023284)
+                }
             };
+
+            context.Memory.Write(bufferPosition, eulaVersion);
+
             context.ResponseData.Write(1);
-            context.Memory.Write(position, eulaVersion);
+
             return ResultCode.Success;
-        }
-        
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        struct EulaVersion
-        {
-            public uint Version;
-            public uint RegionCode;
-            public uint ClockType;
-            public int Padding;
         }
         
         [CommandCmif(23)]
@@ -170,24 +172,15 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         {
             NotificationSettings notificationSettings = new NotificationSettings
             {
-                Flags = 0x1F,
-                Volume = 0x1,
-                HeadTime = 0x0,
-                TailTime = 0x0
+                Flags = NotificationFlag.None,
+                Volume = NotificationVolume.Low,
+                HeadTime = new NotificationTime(),
+                TailTime = new NotificationTime()
             };
 
             context.ResponseData.WriteStruct(notificationSettings);
 
             return ResultCode.Success;
-        }
-        
-        [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 1)]
-        public struct NotificationSettings
-        {
-            public uint Flags;             // 0x0 - 0x4
-            public uint Volume;            // 0x4 - 0x4
-            public ulong HeadTime;         // 0x8 - 0x8
-            public ulong TailTime;         // 0x10 - 0x8
         }
         
         [CommandCmif(31)]
@@ -213,21 +206,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
         
-        [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 1)]
-        public struct AccountNotificationSettings
-        {
-            public Array16<byte> Uid;                             // 0x0 - 0x10: Unique ID (16 bytes)
 
-            public uint Flags;                             // 0x10 - 0x4: Notification Flags
-
-            public byte FriendPresenceOverlayPermission;   // 0x14 - 0x1: Friend presence overlay permission
-
-            public byte FriendInvitationOverlayPermission; // 0x15 - 0x1: Friend invitation overlay permission
-            
-            public byte Reserved1;                        // 0x16 - 0x2: Reserved bytes
-            public byte Reserved2;                        // 0x16 - 0x2: Reserved bytes
-        }
-        
         [CommandCmif(37)]
         // GetSettingsItemValueSize(buffer<nn::settings::SettingsName, 0x19>, buffer<nn::settings::SettingsItemKey, 0x19>) -> u64
         public ResultCode GetSettingsItemValueSize(ServiceCtx context)
@@ -347,36 +326,13 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetTvSettings() -> nn::settings::system::TvSettings
         public ResultCode GetTvSettings(ServiceCtx context)
         {
-            TvSettings tvSettings = new TvSettings
-            {
-                Flags = 0x1F,
-                TvResolution = 0x1,
-                HdmiContentType = 0x1,
-                RgbRange = 0x1,
-                CmuMode = 0x1,
-                TvUnderscan = 0x1,
-                TvGamma = 0x1,
-                ContrastRatio = 0x1
-            };
+            TvSettings tvSettings = new();
 
             context.ResponseData.WriteStruct(tvSettings);
 
             return ResultCode.Success;
         }
-        
-        [StructLayout(LayoutKind.Sequential, Size = 0x20)]
-        public struct TvSettings
-        {
-            public uint Flags;              // Offset 0x0, Size 0x4
-            public uint TvResolution;       // Offset 0x4, Size 0x4
-            public uint HdmiContentType;    // Offset 0x8, Size 0x4
-            public uint RgbRange;           // Offset 0xC, Size 0x4
-            public uint CmuMode;            // Offset 0x10, Size 0x4
-            public uint TvUnderscan;        // Offset 0x14, Size 0x4
-            public uint TvGamma;            // Offset 0x18, Size 0x4
-            public uint ContrastRatio;      // Offset 0x1C, Size 0x4
-        }
-        
+
         [CommandCmif(47)]
         // GetQuestFlag() -> bool
         public ResultCode GetQuestFlag(ServiceCtx context)
@@ -430,110 +386,30 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
         
-        public enum PrimaryAlbumStorage : uint
-        {
-            Nand = 0,    // 0 - Nand storage
-            SdCard = 1   // 1 - SD card storage
-        }
-        
         [CommandCmif(71)]
         // GetSleepSettings() -> SleepSettings
         public ResultCode GetSleepSettings(ServiceCtx context)
         {
-            SleepSettings sleepSettings = new SleepSettings
-            {
-                Flags = 0x1F,
-                HandheldSleepPlan = 0x1,
-                ConsoleSleepPlan = 0x1
-            };
+            SleepSettings sleepSettings = new();
 
             context.ResponseData.WriteStruct(sleepSettings);
             return ResultCode.Success;
-        }
-        
-        [StructLayout(LayoutKind.Sequential, Size = 0xC)] // Total size: 0xC bytes
-        public struct SleepSettings
-        {
-            public uint Flags;               // Offset: 0x0, Size: 0x4
-            public uint HandheldSleepPlan;   // Offset: 0x4, Size: 0x4
-            public uint ConsoleSleepPlan;    // Offset: 0x8, Size: 0x4
         }
         
         [CommandCmif(75)]
         // GetInitialLaunchSettings() -> nn::settings::system::InitialLaunchSettings
         public ResultCode GetInitialLaunchSettings(ServiceCtx context)
         {
-            InitialLaunchSettings launchSettings = new InitialLaunchSettings
-            {
-                Flags = new InitialLaunchFlag
-                {
-                    InitialLaunchCompletionFlag = true,
-                    InitialLaunchUserAdditionFlag = true,
-                    InitialLaunchTimestampFlag = false
-                }.Raw,
-                TimeStamp = SteadyClockTimePoint.GetRandom()
-            };
+            InitialLaunchSettings launchSettings = new InitialLaunchSettings();
+            launchSettings.Flags |= InitialLaunchFlag.InitialLaunchCompletionFlag;
+            launchSettings.Flags |= InitialLaunchFlag.InitialLaunchUserAdditionFlag;
+            launchSettings.Flags |= InitialLaunchFlag.InitialLaunchTimestampFlag;
             
             context.ResponseData.WriteStruct(launchSettings);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
             return ResultCode.Success;
-        }
-        
-        // This is "nn::settings::system::InitialLaunchSettings". This struct is 8-byte aligned.
-        [StructLayout(LayoutKind.Explicit, Size = 0x20)]
-        public struct InitialLaunchSettings
-        {
-            [FieldOffset(0x0)]
-            public uint Flags;
-
-            [FieldOffset(0x4)]
-            private uint Padding; // Adds the necessary 4 bytes of padding.
-
-            [FieldOffset(0x8)]
-            public SteadyClockTimePoint TimeStamp;
-        }
-        
-        public struct InitialLaunchFlag
-        {
-            private uint _raw;
-
-            public uint Raw
-            {
-                get => _raw;
-                set => _raw = value;
-            }
-
-            public bool InitialLaunchCompletionFlag
-            {
-                get => (_raw & (1 << 0)) != 0;
-                set
-                {
-                    if (value) _raw |= (1u << 0);
-                    else _raw &= ~(1u << 0);
-                }
-            }
-
-            public bool InitialLaunchUserAdditionFlag
-            {
-                get => (_raw & (1 << 8)) != 0;
-                set
-                {
-                    if (value) _raw |= (1u << 8);
-                    else _raw &= ~(1u << 8);
-                }
-            }
-
-            public bool InitialLaunchTimestampFlag
-            {
-                get => (_raw & (1 << 16)) != 0;
-                set
-                {
-                    if (value) _raw |= (1u << 16);
-                    else _raw &= ~(1u << 16);
-                }
-            }
         }
         
         [CommandCmif(77)]
@@ -578,7 +454,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetProductModel() -> s32
         public ResultCode GetProductModel(ServiceCtx context)
         {
-            context.ResponseData.Write("HAC-001");
+            context.ResponseData.Write(1);
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 

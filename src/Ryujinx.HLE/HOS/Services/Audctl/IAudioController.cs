@@ -1,19 +1,39 @@
 ﻿using Ryujinx.Common.Logging;
-using Ryujinx.HLE.HOS.Ipc;
-using Ryujinx.HLE.HOS.Kernel.Threading;
-using Ryujinx.Horizon.Common;
 
-namespace Ryujinx.HLE.HOS.Services.Audctl
+namespace Ryujinx.HLE.HOS.Services.Audio
 {
     [Service("audctl")]
     class IAudioController : IpcService
     {
-        private KEvent _notificationEvent;
-        private int _notificationEventHandle;
-        public IAudioController(ServiceCtx context)
+        public IAudioController(ServiceCtx context) { }
+
+        [CommandCmif(9)]
+        // GetAudioOutputMode(s32) -> s32
+        public ResultCode GetAudioOutputMode(ServiceCtx context)
         {
-            _notificationEvent = new KEvent(context.Device.System.KernelContext);
-            _notificationEventHandle = -1;
+            context.ResponseData.Write(0); // todo?
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10)]
+        // SetAudioOutputMode(s32, s32)
+        public ResultCode SetAudioOutputMode(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(11)]
+        // SetForceMutePolicy(u32)
+        public ResultCode SetForceMutePolicy(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
         }
 
         [CommandCmif(12)]
@@ -21,65 +41,140 @@ namespace Ryujinx.HLE.HOS.Services.Audctl
         public ResultCode GetForceMutePolicy(ServiceCtx context)
         {
             context.ResponseData.Write(0);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(13)]
-        // GetOutputModeSetting() -> u32
+        // GetOutputModeSetting(u32) -> u32
         public ResultCode GetOutputModeSetting(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)AudioOutputModeTarget.Speaker);
+            context.ResponseData.Write(0);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
             return ResultCode.Success;
         }
-        
-        public enum AudioOutputModeTarget : uint
-        {
-            None = 0,
-            Hdmi = 1,
-            Speaker = 2,
-            Headphone = 3
-        }
-        
-        [CommandCmif(18)]
+
+        [CommandCmif(18)] // 3.0.0+
         // GetHeadphoneOutputLevelMode() -> u32
         public ResultCode GetHeadphoneOutputLevelMode(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)HeadphoneOutputLevelMode.Normal);
+            context.ResponseData.Write(0);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
             return ResultCode.Success;
         }
-        
-        public enum HeadphoneOutputLevelMode
-        {
-            Normal = 0,
-            HighPower = 1
-        }
-        
-        [CommandCmif(31)]
+
+        [CommandCmif(31)] // 13.0.0+
         // IsSpeakerAutoMuteEnabled() -> b8
         public ResultCode IsSpeakerAutoMuteEnabled(ServiceCtx context)
         {
-            context.ResponseData.Write(true);
+            context.ResponseData.Write(false);
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }
-        
-        [CommandCmif(34)]
-        // AcquireTargetNotification() -> handle<copy>
-        public ResultCode AcquireTargetNotification(ServiceCtx context)
+
+        [CommandCmif(10000)]
+        // NotifyAudioOutputTargetForPlayReport()
+        public ResultCode NotifyAudioOutputTargetForPlayReport(ServiceCtx context)
         {
-            if (_notificationEventHandle == -1)
-            {
-                Result resultCode = context.Process.HandleTable.GenerateHandle(_notificationEvent.ReadableEvent, out _notificationEventHandle);
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
-                if (resultCode != Result.Success)
-                {
-                    return (ResultCode)resultCode.ErrorCode;
-                }
-            }
+            return ResultCode.Success;
+        }
 
-            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_notificationEventHandle);
+        [CommandCmif(10001)]
+        // NotifyAudioOutputChannelCountForPlayReport()
+        public ResultCode NotifyAudioOutputChannelCountForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
-            Logger.Stub?.PrintStub(LogClass.Audio);
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10002)]
+        // NotifyUnsupportedUsbOutputDeviceAttachedForPlayReport()
+        public ResultCode NotifyUnsupportedUsbOutputDeviceAttachedForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10100)]
+        // GetAudioVolumeDataForPlayReport()
+        public ResultCode GetAudioVolumeDataForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10101)]
+        // BindAudioVolumeUpdateEventForPlayReport()
+        public ResultCode BindAudioVolumeUpdateEventForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10102)]
+        // BindAudioOutputTargetUpdateEventForPlayReport()
+        public ResultCode BindAudioOutputTargetUpdateEventForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10103)]
+        // GetAudioOutputTargetForPlayReport()
+        public ResultCode GetAudioOutputTargetForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10104)]
+        // GetAudioOutputChannelCountForPlayReport()
+        public ResultCode GetAudioOutputChannelCountForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10105)]
+        // BindAudioOutputChannelCountUpdateEventForPlayReport()
+        public ResultCode BindAudioOutputChannelCountUpdateEventForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(10106)]
+        // GetDefaultAudioOutputTargetForPlayReport()
+        public ResultCode GetDefaultAudioOutputTargetForPlayReport(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(50000)]
+        // SetAnalogInputBoostGainForPrototyping()
+        public ResultCode SetAnalogInputBoostGainForPrototyping(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAudio);
 
             return ResultCode.Success;
         }

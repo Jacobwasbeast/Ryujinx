@@ -166,7 +166,7 @@ namespace Ryujinx.Ava.UI.Views.Main
             }
         }
         
-        public AppletMetadata SystemAppletMenu => new(ViewModel.ContentManager,"qlaunch", 0x0100000000001000);
+        public AppletMetadata SystemAppletMenu => new(ViewModel.ContentManager,"qlaunch", 0x0100000000001000ul);
         public async Task OpenSystemApplet()
         {
             if (SystemAppletMenu.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
