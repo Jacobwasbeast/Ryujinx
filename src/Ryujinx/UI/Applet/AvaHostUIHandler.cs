@@ -324,5 +324,10 @@ namespace Ryujinx.Ava.UI.Applet
         {
             _parent.ViewModel.AppHost.ScreenshotRequested = true;
         }
+
+        public bool IsDarkMode()
+        {
+            return ConfigurationState.Instance.UI.BaseStyle.Value == "Dark";
+        }
     }
 }

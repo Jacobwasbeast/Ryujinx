@@ -89,6 +89,15 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(7)]
+        // GetLockScreenFlag() -> bool
+        public ResultCode GetLockScreenFlag(ServiceCtx context)
+        {
+            context.ResponseData.Write(false); // TODO: Implement this function properly.
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(17)]
         // GetAccountSettings() -> nn::settings::system::AccountSettings
@@ -140,7 +149,8 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetColorSetId() -> i32
         public ResultCode GetColorSetId(ServiceCtx context)
         {
-            context.ResponseData.Write((int)context.Device.System.State.ThemeColor);
+            bool isDarkMode = context.Device.UIHandler.IsDarkMode();
+            context.ResponseData.Write(isDarkMode ? 1 : 0);
 
             return ResultCode.Success;
         }
@@ -149,9 +159,7 @@ namespace Ryujinx.HLE.HOS.Services.Settings
         // GetColorSetId() -> i32
         public ResultCode SetColorSetId(ServiceCtx context)
         {
-            int colorSetId = context.RequestData.ReadInt32();
-
-            context.Device.System.State.ThemeColor = (ColorSet)colorSetId;
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
             return ResultCode.Success;
         }

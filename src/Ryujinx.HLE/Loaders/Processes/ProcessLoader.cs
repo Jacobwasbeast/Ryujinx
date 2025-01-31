@@ -139,6 +139,30 @@ namespace Ryujinx.HLE.Loaders.Processes
 
             return false;
         }
+        
+        public bool LoadNca(string path, out ProcessResult processResult)
+        {
+            FileStream file = new(path, FileMode.Open, FileAccess.Read);
+            Nca nca = new(_device.Configuration.VirtualFileSystem.KeySet, file.AsStorage(false));
+
+            processResult = nca.Load(_device, null, null);
+
+            if (processResult.ProcessId != 0 && _processesByPid.TryAdd(processResult.ProcessId, processResult))
+            {
+                if (processResult.Start(_device))
+                {
+                    // NOTE: Check if process is SystemApplicationId or ApplicationId
+                    // if (processResult.ProgramId > 0x01000000000007FF)
+                    // {
+                    _latestPid = processResult.ProcessId;
+                    // }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public bool LoadUnpackedNca(string exeFsDirPath, string romFsPath = null)
         {

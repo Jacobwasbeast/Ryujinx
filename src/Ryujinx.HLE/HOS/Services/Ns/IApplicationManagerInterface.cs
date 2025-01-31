@@ -245,9 +245,12 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             ApplicationControlProperty nacp = title.Nacp;
 
             context.Memory.Write(position, SpanHelpers.AsByteSpan(ref nacp).ToArray());
-            context.Memory.Write(position + 0x4000, title.Icon);
+            if (title.Icon?.Length > 0)
+            {
+                context.Memory.Write(position + 0x4000, title.Icon);
 
-            context.ResponseData.Write(0x4000 + title.Icon.Length);
+                context.ResponseData.Write(0x4000 + title.Icon.Length);
+            }
 
             return ResultCode.Success;
         }

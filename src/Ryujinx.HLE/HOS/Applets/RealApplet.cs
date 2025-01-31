@@ -8,8 +8,10 @@ using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
+using Ryujinx.HLE.HOS.Services.Hid;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Processes;
+using Ryujinx.Horizon;
 using Ryujinx.Horizon.Sdk.Ns;
 using System;
 using System.Collections.Generic;
@@ -115,7 +117,7 @@ namespace Ryujinx.HLE.HOS.Applets
             ProcessResult prev = _system.Device.Processes.ActiveApplication;
             LastActivePID = _system.Device.Processes.ActiveApplication.ProcessId;
             LastActiveSurfaceLayer = _system.Device.System.SurfaceFlinger.RenderLayerId;
-            if (!_system.Device.Processes.LoadNca(contentPath))
+            if (!_system.Device.Processes.LoadNca(contentPath, out Process))
             {
                 return ResultCode.NotAllocated;
             }
@@ -123,7 +125,6 @@ namespace Ryujinx.HLE.HOS.Applets
             while (prev==_system.Device.Processes.ActiveApplication)
             {}
             
-            Process = _system.Device.Processes.ActiveApplication;
             Process.RealAppletInstance = this;
             ProcessHandle = _system.KernelContext.Processes[Process.ProcessId];
             AppletResourceUserId = ProcessHandle.Pid;
@@ -147,7 +148,7 @@ namespace Ryujinx.HLE.HOS.Applets
             context.Device.System.SurfaceFlinger.CloseLayer(context.Device.System.SurfaceFlinger.RenderLayerId);
             context.Device.System.SurfaceFlinger.SetRenderLayer(LastActiveSurfaceLayer);
             context.Device.Processes.SetActivePID(LastActivePID);
-            context.Process.TerminateCurrentProcess();
+            context.Process.TerminateApplet();
             InvokeAppletStateChanged();
             if (NormalSession.Length==0)
             {

@@ -571,5 +571,10 @@ namespace Ryujinx.Headless
         {
             throw new NotImplementedException();
         }
+
+        public bool IsDarkMode()
+        {
+            return false;
+        }
     }
 }

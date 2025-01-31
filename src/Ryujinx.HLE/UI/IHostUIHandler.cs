@@ -76,5 +76,10 @@ namespace Ryujinx.HLE.UI
         /// Takes a screenshot from the current renderer and saves it in the screenshots folder.
         /// </summary>
         void TakeScreenshot();
+
+        /// <summary>
+        /// Is dark mode enabled?
+        /// </summary>
+        bool IsDarkMode();
     }
 }

@@ -4,9 +4,12 @@ using LibHac.Common;
 using LibHac.FsSrv.Impl;
 using LibHac.Loader;
 using LibHac.Ncm;
+using LibHac.Util;
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Services.Arp;
 using System;
+using System.Collections.Concurrent;
 
 namespace Ryujinx.HLE.HOS
 {
@@ -24,6 +27,8 @@ namespace Ryujinx.HLE.HOS
         public HorizonClient PmClient { get; private set; }
         public HorizonClient SdbClient { get; private set; }
 
+        public ConcurrentDictionary<ProgramId, HorizonClient> ApplicationClients { get; } = new();
+        
         private SharedRef<LibHacIReader> _arpIReader;
         internal LibHacIReader ArpIReader => _arpIReader.Get;
 
@@ -72,7 +77,16 @@ namespace Ryujinx.HLE.HOS
 
         public void InitializeApplicationClient(ProgramId programId, in Npdm npdm)
         {
-            ApplicationClient = Server.CreateHorizonClient(new ProgramLocation(programId, StorageId.BuiltInUser), npdm.FsAccessControlData, npdm.FsAccessControlDescriptor);
+            // TODO: Use the actual storage ID instead of assuming it from program ID.
+            Logger.Info?.Print(LogClass.ServiceFs, $"InitializeApplicationClient({programId}) {npdm.FsAccessControlData.ToHexString()} {npdm.FsAccessControlDescriptor.ToHexString()}");
+            if (programId.Value < 0x010000000000FFFF)
+            {
+                ApplicationClients[programId] = PmClient;
+            }
+            else
+            {
+                ApplicationClients[programId] = Server.CreateHorizonClient(new ProgramLocation(programId, StorageId.BuiltInUser), npdm.FsAccessControlData, npdm.FsAccessControlDescriptor);
+            }
         }
 
         private static AccessControlBits.Bits AccountFsPermissions => AccessControlBits.Bits.SystemSaveData |

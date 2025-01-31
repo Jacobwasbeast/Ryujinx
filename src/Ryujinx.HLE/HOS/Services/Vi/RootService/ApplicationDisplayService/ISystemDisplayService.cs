@@ -28,7 +28,9 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService
         // SetLayerVisibility(b8, u64)
         public ResultCode SetLayerVisibility(ServiceCtx context)
         {
-            Logger.Stub?.PrintStub(LogClass.ServiceVi);
+            ulong layerId = context.RequestData.ReadUInt64();
+            bool visibility = context.RequestData.ReadBoolean();
+            Logger.Stub?.PrintStub(LogClass.ServiceVi, new { layerId, visibility });
 
             return ResultCode.Success;
         }

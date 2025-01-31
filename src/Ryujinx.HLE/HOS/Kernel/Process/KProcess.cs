@@ -952,6 +952,12 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             KernelStatic.GetCurrentThread().Exit();
         }
 
+        
+        public void TerminateApplet()
+        {
+            KernelStatic.GetCurrentThread().Exit();
+        }
+
         private void UnpauseAndTerminateAllThreadsExcept(KThread currentThread)
         {
             lock (_threadingLock)

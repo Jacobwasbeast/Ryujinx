@@ -134,7 +134,7 @@ namespace Ryujinx.HLE.HOS
 
         internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
-        internal ServiceTable ServiceTable { get; private set; }
+        internal ServiceTable ServiceTable { get; set; }
 
         public bool IsPaused { get; private set; }
 
@@ -502,12 +502,13 @@ namespace Ryujinx.HLE.HOS
                 // Destroy nvservices channels as KThread could be waiting on some user events.
                 // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
                 INvDrvServices.Destroy();
-
-                if (LibHacHorizonManager.ApplicationClient != null)
+                
+                foreach (var client in LibHacHorizonManager.ApplicationClients)
                 {
-                    LibHacHorizonManager.PmClient.Fs.UnregisterProgram(LibHacHorizonManager.ApplicationClient.Os.GetCurrentProcessId().Value).ThrowIfFailure();
+                    LibHacHorizonManager.PmClient.Fs.UnregisterProgram(client.Value.Os.GetCurrentProcessId().Value).ThrowIfFailure();
                 }
-
+                LibHacHorizonManager.ApplicationClients.Clear();
+                
                 KernelContext.Dispose();
             }
         }
