@@ -911,6 +911,8 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 SignalExitToDebugTerminated();
                 SignalExit();
             }
+            
+            KernelContext.Device.Processes._processesByPid.TryRemove(Pid, out _);
 
             return result;
         }

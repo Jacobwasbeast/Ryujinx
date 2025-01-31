@@ -375,6 +375,47 @@ namespace Ryujinx.HLE.HOS
             SurfaceFlinger = new SurfaceFlinger(device);
         }
 
+        private void StopAndDisposeService(ServerBase server)
+        {
+            if (server != null)
+            {
+                try
+                {
+                    server.Stop();
+                    Logger.Info?.Print(LogClass.Application,$"{server.Name} successfully stopped.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info?.Print(LogClass.Application,$"Error while stopping {server.Name}: {ex.Message}");
+                }
+            }
+        }
+
+        public void DeinitializeServices()
+        {
+            // Stop and clean up the services in reverse order of initialization for safety.
+            StopAndDisposeService(LdnServer);
+            StopAndDisposeService(ViServerS);
+            StopAndDisposeService(ViServerM);
+            StopAndDisposeService(ViServer);
+            StopAndDisposeService(TimeServer);
+            StopAndDisposeService(NvDrvServer);
+            StopAndDisposeService(HidServer);
+            StopAndDisposeService(FsServer);
+            StopAndDisposeService(BsdServer);
+    
+            if (SmServer != null)
+            {
+                SmServer.Stop();
+                SmServer = null;
+            }
+
+            SmRegistry = null;
+
+            ServiceTable?.Dispose();
+            ServiceTable = null;
+        }
+        
         public void InitializeServices()
         {
             SmRegistry = new SmRegistry();

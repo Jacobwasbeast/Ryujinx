@@ -22,7 +22,7 @@ namespace Ryujinx.HLE.Loaders.Processes
     {
         private readonly Switch _device;
 
-        private readonly ConcurrentDictionary<ulong, ProcessResult> _processesByPid;
+        public readonly ConcurrentDictionary<ulong, ProcessResult> _processesByPid;
 
         private ulong _latestPid;
 

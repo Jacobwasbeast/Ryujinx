@@ -1,4 +1,5 @@
-﻿using Ryujinx.HLE.HOS.Services.Sm;
+﻿using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Services.Sm;
 using Ryujinx.Horizon;
 
 namespace Ryujinx.HLE.HOS.Services

@@ -3,6 +3,7 @@ using LibHac.Ncm;
 using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.FileSystem;
+using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services;
@@ -85,7 +86,6 @@ namespace Ryujinx.HLE.HOS.Applets
         public long LastActiveSurfaceLayer { get; private set; }
         public AppletStateMgr AppletState { get; private set; }
         public ServerBaseManager LibHacServerManager { get; set; }
-
         public event EventHandler AppletStateChanged;
         public ResultCode TerminateResult = ResultCode.Success;
 
@@ -98,6 +98,7 @@ namespace Ryujinx.HLE.HOS.Applets
             AppletState = new AppletStateMgr(system);
             AppletId = appletId;
             PopInteractiveEvent = new KEvent(_system.KernelContext);
+            LibHacServerManager = new ServerBaseManager();
         }
 
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
@@ -119,19 +120,18 @@ namespace Ryujinx.HLE.HOS.Applets
             ProcessResult prev = _system.Device.Processes.ActiveApplication;
             LastActivePID = _system.Device.Processes.ActiveApplication.ProcessId;
             LastActiveSurfaceLayer = _system.Device.System.SurfaceFlinger.RenderLayerId;
+            LibHacServerManager.ServiceTable = new();
+            prev.RealAppletInstance = this;
+            _system.Device.System.InitializeServices();
             if (!_system.Device.Processes.LoadNca(contentPath, out Process))
             {
                 return ResultCode.NotAllocated;
             }
-            
-            while (prev==_system.Device.Processes.ActiveApplication)
-            {}
+            prev.RealAppletInstance = null;
             Process.RealAppletInstance = this;
-            _system.Device.System.InitializeServices();
             ProcessHandle = _system.KernelContext.Processes[Process.ProcessId];
             AppletResourceUserId = ProcessHandle.Pid;
             _system.Device.System.ReturnFocus();
-
             return ResultCode.Success;
         }
         
@@ -147,6 +147,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
         public void Terminate(ServiceCtx context, IpcService sender)
         {
+            context.Device.System.DeinitializeServices();
             context.Process.Terminate();
             context.Device.System.SurfaceFlinger.CloseLayer(context.Device.System.SurfaceFlinger.RenderLayerId);
             context.Device.Processes.SetActivePID(LastActivePID);
