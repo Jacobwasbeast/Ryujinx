@@ -913,7 +913,6 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
             }
             
             KernelContext.Device.Processes._processesByPid.TryRemove(Pid, out _);
-
             return result;
         }
 
@@ -953,13 +952,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
             KernelStatic.GetCurrentThread().Exit();
         }
-
         
-        public void TerminateApplet()
-        {
-            KernelStatic.GetCurrentThread().Exit();
-        }
-
         private void UnpauseAndTerminateAllThreadsExcept(KThread currentThread)
         {
             lock (_threadingLock)

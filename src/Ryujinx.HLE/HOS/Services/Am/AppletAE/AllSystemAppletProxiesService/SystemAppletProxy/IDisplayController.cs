@@ -16,7 +16,43 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             _transferMem = context.Device.System.AppletCaptureBufferTransfer;
         }
+        
+        [CommandCmif(4)]
+        [CommandCmif(5)]
+        [CommandCmif(6)]
+        [CommandCmif(7)]
+        // GetCallerAppletCaptureImageEx() -> (b8, buffer<bytes, 6>)
+        public ResultCode GetLastForegroundCaptureImageEx(ServiceCtx context)
+        {
+            ulong bufferPosition = context.Request.ReceiveBuff[0].Position;
+            ulong bufferSize = context.Request.ReceiveBuff[0].Size;
 
+            if (bufferSize != 0x384000)
+            {
+                return ResultCode.BufferNotAcquired;
+            }
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { bufferSize });
+
+            var frame = context.Device.Gpu.Window.GetLastPresentedDataLinear().Data;
+            if (frame == null || frame.Length == 0)
+            {
+                return ResultCode.BufferNotAcquired;
+            }
+
+            if ((ulong)frame.Length != bufferSize)
+            {
+                Logger.Warning?.Print(LogClass.ServiceAm, $"Frame size mismatch. Expected: {bufferSize}, got: {frame.Length}");
+                return ResultCode.BufferNotAcquired;
+            }
+
+            context.ResponseData.Write(true);
+            context.Memory.Write(bufferPosition, frame);
+            Logger.Debug?.Print(LogClass.ServiceAm, "Wrote last presented data to buffer.");
+
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(8)] // 2.0.0+
         // TakeScreenShotOfOwnLayer(b8, s32)
         public ResultCode TakeScreenShotOfOwnLayer(ServiceCtx context)

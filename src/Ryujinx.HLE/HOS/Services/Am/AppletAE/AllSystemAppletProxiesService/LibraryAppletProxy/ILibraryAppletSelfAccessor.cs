@@ -1,11 +1,13 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
+using Ryujinx.Common.Memory;
 using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.HLE.Loaders.Processes;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.LibraryAppletProxy
@@ -19,6 +21,22 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             if (context.Device.Processes.ActiveApplication.RealAppletInstance != null)
             {
                 _realApplet = context.Device.Processes.ActiveApplication.RealAppletInstance;
+                switch (context.Device.Processes.ActiveApplication.ProgramId)
+                {
+                    case 0x0100000000001006:
+                    case 0x010000000000100F:
+                        CommonArguments commonArguments = new()
+                        {
+                            Version = 1,
+                            StructureSize = (uint)Marshal.SizeOf(typeof(CommonArguments)),
+                            AppletVersion = 0x1,
+                        };
+                        MemoryStream stream = MemoryStreamManager.Shared.GetStream();
+                        BinaryWriter writer = new(stream);
+                        writer.WriteStruct(commonArguments);
+                        _realApplet.NormalSession.Push(stream.ToArray());
+                        break;
+                }
             }
             else if (context.Device.Processes.ActiveApplication.ProgramId == 0x0100000000001009)
             {

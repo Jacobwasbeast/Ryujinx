@@ -44,6 +44,11 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private static bool IsReal(AppletId applet)
         {
+            switch (applet)
+            {
+                case (AppletId.LibAppletShop):
+                    return false;
+            }
             return true;
         }
     }

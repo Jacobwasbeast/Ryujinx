@@ -16,5 +16,15 @@ namespace Ryujinx.HLE.HOS.Services.News
             return ResultCode.Success;
         }
         
+        [CommandCmif(30200)]
+        // IsSystemUpdateRequired() -> bool
+        public ResultCode IsSystemUpdateRequired(ServiceCtx context)
+        {
+            // TODO: Implement this properly
+            Logger.Stub?.PrintStub(LogClass.Service);
+            context.ResponseData.Write(false);
+            return ResultCode.Success;
+        }
+        
     }
 }
