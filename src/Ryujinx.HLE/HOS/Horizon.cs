@@ -205,10 +205,7 @@ namespace Ryujinx.HLE.HOS
         internal SharedMemoryStorage HidStorage { get; private set; }
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
-
-        internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
-
-        internal ServiceTable ServiceTableMain { get; private set; }
+        
         internal ServiceTable ServiceTable
         {
             get
@@ -219,7 +216,7 @@ namespace Ryujinx.HLE.HOS
                 }
                 else
                 {
-                    return ServiceTableMain;
+                    return LibHacServerManagerMain.ServiceTable;
                 }
             }
             set
@@ -230,7 +227,33 @@ namespace Ryujinx.HLE.HOS
                 }
                 else
                 {
-                    ServiceTableMain = value;
+                    LibHacServerManagerMain.ServiceTable = value;
+                }
+            }
+        }
+
+        internal LibHacHorizonManager LibHacHorizonManager
+        {
+            get
+            {
+                if (IsApplet())
+                {
+                    return Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.LibHacHorizonManager;
+                }
+                else
+                {
+                    return LibHacServerManagerMain.LibHacHorizonManager;
+                }
+            }
+            set
+            {
+                if (IsApplet())
+                {
+                    Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.LibHacHorizonManager = value;
+                }
+                else
+                {
+                    LibHacServerManagerMain.LibHacHorizonManager = value;
                 }
             }
         }
@@ -374,48 +397,6 @@ namespace Ryujinx.HLE.HOS
 
             SurfaceFlinger = new SurfaceFlinger(device);
         }
-
-        private void StopAndDisposeService(ServerBase server)
-        {
-            if (server != null)
-            {
-                try
-                {
-                    server.Stop();
-                    Logger.Info?.Print(LogClass.Application,$"{server.Name} successfully stopped.");
-                }
-                catch (Exception ex)
-                {
-                    Logger.Info?.Print(LogClass.Application,$"Error while stopping {server.Name}: {ex.Message}");
-                }
-            }
-        }
-
-        public void DeinitializeServices()
-        {
-            // Stop and clean up the services in reverse order of initialization for safety.
-            StopAndDisposeService(LdnServer);
-            StopAndDisposeService(ViServerS);
-            StopAndDisposeService(ViServerM);
-            StopAndDisposeService(ViServer);
-            StopAndDisposeService(TimeServer);
-            StopAndDisposeService(NvDrvServer);
-            StopAndDisposeService(HidServer);
-            StopAndDisposeService(FsServer);
-            StopAndDisposeService(BsdServer);
-    
-            if (SmServer != null)
-            {
-                SmServer.Stop();
-                SmServer = null;
-            }
-
-            SmRegistry = null;
-
-            ServiceTable?.Dispose();
-            ServiceTable = null;
-        }
-        
         public void InitializeServices()
         {
             SmRegistry = new SmRegistry();
@@ -655,11 +636,10 @@ namespace Ryujinx.HLE.HOS
                 // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
                 INvDrvServices.Destroy();
                 
-                foreach (var client in LibHacHorizonManager.ApplicationClients)
+                if (LibHacHorizonManager.ApplicationClient != null)
                 {
-                    LibHacHorizonManager.PmClient.Fs.UnregisterProgram(client.Value.Os.GetCurrentProcessId().Value).ThrowIfFailure();
+                    LibHacHorizonManager.PmClient.Fs.UnregisterProgram(LibHacHorizonManager.ApplicationClient.Os.GetCurrentProcessId().Value).ThrowIfFailure();
                 }
-                LibHacHorizonManager.ApplicationClients.Clear();
                 
                 KernelContext.Dispose();
             }

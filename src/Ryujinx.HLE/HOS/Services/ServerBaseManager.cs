@@ -18,5 +18,25 @@ namespace Ryujinx.HLE.HOS.Services
         internal ServerBase ViServerS { get; set; }
         internal ServerBase LdnServer { get; set; }
         internal ServiceTable ServiceTable { get; set; }
+        internal LibHacHorizonManager LibHacHorizonManager { get; set; }
+
+        public ServerBaseManager Clone()
+        {
+            ServerBaseManager clone = new ServerBaseManager();
+            clone.LibHacHorizonManager = this.LibHacHorizonManager.Clone();
+            clone.ServiceTable = this.ServiceTable.Clone();
+            clone.LdnServer = this.LdnServer;
+            clone.ViServer = this.ViServer;
+            clone.ViServerM = this.ViServerM;
+            clone.ViServerS = this.ViServerS;
+            clone.TimeServer = this.TimeServer;
+            clone.NvDrvServer = this.NvDrvServer;
+            clone.HidServer = this.HidServer;
+            clone.FsServer = this.FsServer;
+            clone.BsdServer = this.BsdServer;
+            clone.SmServer = this.SmServer;
+            clone.SmRegistry = this.SmRegistry;
+            return clone;
+        }
     }
 }

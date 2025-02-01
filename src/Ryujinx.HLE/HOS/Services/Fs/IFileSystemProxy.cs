@@ -28,21 +28,13 @@ namespace Ryujinx.HLE.HOS.Services.Fs
     [Service("fsp-srv")]
     class IFileSystemProxy : DisposableIpcService
     {
-        private Switch _device;
-        private SharedRef<LibHac.FsSrv.Sf.IFileSystemProxy> _baseFileSystemProxy {
-            get {
-                // var proc = _device.Processes.GetProcess(_pid);
-                var proc = _device.Processes.ActiveApplication;
-                var applicationClient = _device.System.LibHacHorizonManager.ApplicationClients[new ProgramId(proc.ProgramId)];
-                return applicationClient.Fs.Impl.GetFileSystemProxyServiceObject();
-            }
-        }
+        private SharedRef<LibHac.FsSrv.Sf.IFileSystemProxy> _baseFileSystemProxy;
         private ulong _pid;
 
         public IFileSystemProxy(ServiceCtx context) : base(context.Device.System.FsServer)
         {
-            _device = context.Device;
-            //_baseFileSystemProxy = applicationClient.Fs.Impl.GetFileSystemProxyServiceObject();
+            HorizonClient applicationClient = context.Device.System.LibHacHorizonManager.ApplicationClient;
+            _baseFileSystemProxy = applicationClient.Fs.Impl.GetFileSystemProxyServiceObject();
         }
 
         [CommandCmif(1)]

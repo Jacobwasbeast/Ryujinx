@@ -235,7 +235,10 @@ namespace Ryujinx.HLE.Loaders.Processes
             byte[] arguments = null,
             params ReadOnlySpan<IExecutable> executables)
         {
-            context.Device.System.ServiceTable.WaitServicesReady();
+            if (!context.Device.System.IsApplet())
+            {
+                context.Device.System.ServiceTable.WaitServicesReady();
+            }
 
             LibHac.Result resultCode = metaLoader.GetNpdm(out LibHac.Loader.Npdm npdm);
 
@@ -316,7 +319,10 @@ namespace Ryujinx.HLE.Loaders.Processes
                 0,
                 personalMmHeapPagesCount);
 
-            context.Device.System.LibHacHorizonManager.InitializeApplicationClient(new ProgramId(programId), in npdm);
+            if (!context.Device.System.IsApplet())
+            {
+                context.Device.System.LibHacHorizonManager.InitializeApplicationClient(new ProgramId(programId), in npdm);
+            }
 
             Result result;
 

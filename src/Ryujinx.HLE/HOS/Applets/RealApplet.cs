@@ -98,7 +98,7 @@ namespace Ryujinx.HLE.HOS.Applets
             AppletState = new AppletStateMgr(system);
             AppletId = appletId;
             PopInteractiveEvent = new KEvent(_system.KernelContext);
-            LibHacServerManager = new ServerBaseManager();
+            LibHacServerManager = system.LibHacServerManagerMain.Clone();
         }
 
         public ResultCode Start(AppletSession normalSession, AppletSession interactiveSession)
@@ -120,9 +120,7 @@ namespace Ryujinx.HLE.HOS.Applets
             ProcessResult prev = _system.Device.Processes.ActiveApplication;
             LastActivePID = _system.Device.Processes.ActiveApplication.ProcessId;
             LastActiveSurfaceLayer = _system.Device.System.SurfaceFlinger.RenderLayerId;
-            LibHacServerManager.ServiceTable = new();
             prev.RealAppletInstance = this;
-            _system.Device.System.InitializeServices();
             if (!_system.Device.Processes.LoadNca(contentPath, out Process))
             {
                 return ResultCode.NotAllocated;
@@ -147,8 +145,8 @@ namespace Ryujinx.HLE.HOS.Applets
 
         public void Terminate(ServiceCtx context, IpcService sender)
         {
-            context.Device.System.DeinitializeServices();
             context.Process.Terminate();
+            LibHacServerManager.ServiceTable.ShutdownApplet();
             context.Device.System.SurfaceFlinger.CloseLayer(context.Device.System.SurfaceFlinger.RenderLayerId);
             context.Device.Processes.SetActivePID(LastActivePID);
             context.Device.System.SurfaceFlinger.SetRenderLayer(LastActiveSurfaceLayer);
