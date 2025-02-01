@@ -86,6 +86,8 @@ namespace Ryujinx.HLE.HOS.Applets
         public long LastActiveSurfaceLayer { get; private set; }
         public AppletStateMgr AppletState { get; private set; }
         public ServerBaseManager LibHacServerManager { get; set; }
+        public List<long> Layers = new List<long>();
+
         public event EventHandler AppletStateChanged;
         public ResultCode TerminateResult = ResultCode.Success;
 
@@ -147,10 +149,12 @@ namespace Ryujinx.HLE.HOS.Applets
         {
             context.Process.Terminate();
             LibHacServerManager.ServiceTable.ShutdownApplet();
-            context.Device.System.SurfaceFlinger.CloseLayer(context.Device.System.SurfaceFlinger.RenderLayerId);
+            foreach (long layer in Layers)
+            {
+                context.Device.System.SurfaceFlinger.CloseLayer(layer);
+            }
             context.Device.Processes.SetActivePID(LastActivePID);
             context.Device.System.SurfaceFlinger.SetRenderLayer(LastActiveSurfaceLayer);
-            InvokeAppletStateChanged();
             if (NormalSession.Length==0)
             {
                 NormalSession.Push(new byte[0]);
@@ -160,6 +164,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 sender.MakeObject(context, new IStorage(data));
             }
+            InvokeAppletStateChanged();
             context.Device.System.ReturnFocus();
         }
     }

@@ -17,7 +17,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             _transferMem = context.Device.System.AppletCaptureBufferTransfer;
         }
         
+        
         [CommandCmif(4)]
+        public ResultCode UpdateCallerAppletCaptureImage(ServiceCtx context)
+        {
+            if (context.Device.System.IsApplet())
+            {
+                int count = context.Device.Processes.ActiveApplication.RealAppletInstance.Layers.Count;
+                context.Device.System.SurfaceFlinger.SetRenderLayer(context.Device.Processes.ActiveApplication.RealAppletInstance.Layers[count - 1]);
+            }
+
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(5)]
         [CommandCmif(6)]
         [CommandCmif(7)]
