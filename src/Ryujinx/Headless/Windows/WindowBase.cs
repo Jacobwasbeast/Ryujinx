@@ -2,7 +2,6 @@ using Humanizer;
 using LibHac.Common;
 using LibHac.Ns;
 using Ryujinx.Ava;
-using Ryujinx.Ava.UI.Models;
 using Ryujinx.Common;
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Configuration.Hid;

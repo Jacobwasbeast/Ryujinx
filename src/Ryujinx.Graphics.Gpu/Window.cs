@@ -10,8 +10,9 @@ using System.Threading;
 namespace Ryujinx.Graphics.Gpu
 {
     using Texture = Image.Texture;
-    
+
     public record TextureData(int Width, int Height, byte[] Data);
+
     /// <summary>
     /// GPU image presentation window.
     /// </summary>
@@ -19,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu
     {
         private const int CaptureTextureWidth = 1280;
         private const int CaptureTextureHeight = 720;
-        
+
         private readonly GpuContext _context;
 
         /// <summary>
@@ -95,13 +96,14 @@ namespace Ryujinx.Graphics.Gpu
         {
             public readonly Texture Texture;
             public readonly ImageCrop Crop;
+
             public PresentedTexture(Texture texture, ImageCrop crop)
             {
                 Texture = texture;
                 Crop = crop;
             }
         }
-        
+
         private readonly ConcurrentQueue<PresentationTexture> _frameQueue;
         private PresentedTexture _lastPresentedTexture;
         private ITexture _captureTexture;
@@ -210,9 +212,11 @@ namespace Ryujinx.Graphics.Gpu
         public TextureData GetLastPresentedData()
         {
             PresentedTexture pt = Volatile.Read(ref _lastPresentedTexture);
+
             if (pt != null)
             {
                 byte[] inputData = CaptureLastFrame(pt.Texture.HostTexture, pt.Crop);
+
                 int size = SizeCalculator.GetBlockLinearTextureSize(
                     CaptureTextureWidth,
                     CaptureTextureHeight,
@@ -225,23 +229,31 @@ namespace Ryujinx.Graphics.Gpu
                     16,
                     1,
                     1).TotalSize;
+
                 byte[] data = new byte[size];
+
                 LayoutConverter.ConvertLinearToBlockLinear(data, CaptureTextureWidth, CaptureTextureHeight, CaptureTextureWidth * 4, 4, 16, inputData);
+
                 return new TextureData(CaptureTextureWidth, CaptureTextureHeight, data);
             }
+
             return new TextureData(0, 0, Array.Empty<byte>());
         }
+
         public TextureData GetLastPresentedDataLinear()
         {
             PresentedTexture pt = Volatile.Read(ref _lastPresentedTexture);
+
             if (pt != null)
             {
                 byte[] inputData = CaptureLastFrame(pt.Texture.HostTexture, new ImageCrop());
+
                 return new TextureData(pt.Texture.Info.Width, pt.Texture.Info.Height, inputData);
             }
+
             return new TextureData(0, 0, Array.Empty<byte>());
         }
-        
+
         /// <summary>
         /// Presents a texture on the queue.
         /// If the queue is empty, then no texture is presented.
@@ -258,8 +270,9 @@ namespace Ryujinx.Graphics.Gpu
                 Image.Texture texture = pt.Cache.FindOrCreateTexture(null, TextureSearchFlags.WithUpscale, pt.Info, 0, range: pt.Range);
 
                 pt.Cache.Tick();
-                
+
                 EnsureCaptureTexture();
+
                 Volatile.Write(ref _lastPresentedTexture, new PresentedTexture(texture, pt.Crop));
 
                 texture.SynchronizeMemory();
@@ -300,8 +313,8 @@ namespace Ryujinx.Graphics.Gpu
                 pt.ReleaseCallback(pt.UserObj);
             }
         }
-        
-                private void EnsureCaptureTexture()
+
+        private void EnsureCaptureTexture()
         {
             if (_captureTexture == null)
             {
@@ -323,9 +336,11 @@ namespace Ryujinx.Graphics.Gpu
                     SwizzleComponent.Alpha));
             }
         }
+
         private byte[] CaptureLastFrame(ITexture lastFrame, ImageCrop crop)
         {
             int cropLeft, cropRight, cropTop, cropBottom;
+
             if (crop.Left == 0 && crop.Right == 0)
             {
                 cropLeft = 0;
@@ -336,6 +351,7 @@ namespace Ryujinx.Graphics.Gpu
                 cropLeft = crop.Left;
                 cropRight = crop.Right;
             }
+
             if (crop.Top == 0 && crop.Bottom == 0)
             {
                 cropTop = 0;
@@ -346,7 +362,9 @@ namespace Ryujinx.Graphics.Gpu
                 cropTop = crop.Top;
                 cropBottom = crop.Bottom;
             }
+
             int x1, y1, x2, y2;
+
             if (crop.FlipX)
             {
                 x1 = cropRight;
@@ -357,6 +375,7 @@ namespace Ryujinx.Graphics.Gpu
                 x1 = cropLeft;
                 x2 = cropRight;
             }
+
             if (crop.FlipY)
             {
                 y1 = cropBottom;
@@ -367,15 +386,21 @@ namespace Ryujinx.Graphics.Gpu
                 y1 = cropTop;
                 y2 = cropBottom;
             }
+
             Extents2D srcRegion = new(x1, y1, x2, y2);
             Extents2D dstRegion = new(0, 0, CaptureTextureWidth, CaptureTextureHeight);
+
             byte[] outputData = null;
+
             _context.Renderer.BackgroundContextAction(() =>
             {
                 lastFrame.CopyTo(_captureTexture, srcRegion, dstRegion, true);
+
                 using var data = _captureTexture.GetData();
+
                 outputData = data.Get().ToArray();
             });
+
             return outputData;
         }
 

@@ -4,7 +4,6 @@ using Ryujinx.Graphics.Gpu.Memory;
 using Ryujinx.Graphics.Shader;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Ryujinx.Graphics.Gpu.Image
@@ -661,6 +660,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
             ISampler[] samplers = isImage ? null : new ISampler[bindingInfo.ArrayLength];
             ITexture[] textures = new ITexture[bindingInfo.ArrayLength];
+            BufferCache bufferCache = null;
 
             for (int index = 0; index < length; index++)
             {
@@ -674,7 +674,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 else
                 {
                     ref readonly TextureDescriptor descriptor = ref texturePool.GetForBinding(index, bindingInfo.FormatInfo, out texture);
-
+                    bufferCache = _channel.MemoryManager.GetBackingMemory(descriptor.UnpackAddress()).BufferCache;
                     if (texture != null)
                     {
                         entry.Textures[texture] = texture.InvalidatedSequence;
@@ -703,11 +703,10 @@ namespace Ryujinx.Graphics.Gpu.Image
                     // to ensure we're not using a old buffer that was already deleted.
                     if (isImage)
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, texture.Range, bindingInfo, index);
-                    }
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, bufferCache, texture.Range, bindingInfo, index);                    }
                     else
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, texture.Range, bindingInfo, index);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, bufferCache, texture.Range, bindingInfo, index);
                     }
                 }
                 else if (isImage)
@@ -798,11 +797,11 @@ namespace Ryujinx.Graphics.Gpu.Image
                     return;
                 }
 
-                cachedTextureBuffer = MemoryMarshal.Cast<byte, int>(_channel.MemoryManager.Physical.GetSpan(textureBufferBounds.Range));
-
+                cachedTextureBuffer = MemoryMarshal.Cast<byte, int>(textureBufferBounds.Physical.GetSpan(textureBufferBounds.Range));
+                
                 if (separateSamplerBuffer)
                 {
-                    cachedSamplerBuffer = MemoryMarshal.Cast<byte, int>(_channel.MemoryManager.Physical.GetSpan(samplerBufferBounds.Range));
+                    cachedSamplerBuffer = MemoryMarshal.Cast<byte, int>(samplerBufferBounds.Physical.GetSpan(samplerBufferBounds.Range));
                 }
                 else
                 {
@@ -829,11 +828,10 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
             else
             {
-                cachedTextureBuffer = MemoryMarshal.Cast<byte, int>(_channel.MemoryManager.Physical.GetSpan(textureBufferBounds.Range));
-
+                cachedTextureBuffer = MemoryMarshal.Cast<byte, int>(textureBufferBounds.Physical.GetSpan(textureBufferBounds.Range));
                 if (separateSamplerBuffer)
                 {
-                    cachedSamplerBuffer = MemoryMarshal.Cast<byte, int>(_channel.MemoryManager.Physical.GetSpan(samplerBufferBounds.Range));
+                    cachedSamplerBuffer = MemoryMarshal.Cast<byte, int>(samplerBufferBounds.Physical.GetSpan(samplerBufferBounds.Range));
                 }
                 else
                 {
@@ -902,16 +900,18 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 if (hostTexture != null && texture.Target == Target.TextureBuffer)
                 {
+                    var bufferCache = textureBufferBounds.BufferCache;
+                    
                     // Ensure that the buffer texture is using the correct buffer as storage.
                     // Buffers are frequently re-created to accommodate larger data, so we need to re-bind
                     // to ensure we're not using a old buffer that was already deleted.
                     if (isImage)
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, texture.Range, bindingInfo, index);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.ImageArray, hostTexture, bufferCache, texture.Range, bindingInfo, index);
                     }
                     else
                     {
-                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, texture.Range, bindingInfo, index);
+                        _channel.BufferManager.SetBufferTextureStorage(stage, entry.TextureArray, hostTexture, bufferCache, texture.Range, bindingInfo, index);
                     }
                 }
                 else if (isImage)

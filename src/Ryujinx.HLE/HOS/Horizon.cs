@@ -4,7 +4,6 @@ using LibHac.Fs;
 using LibHac.Fs.Shim;
 using LibHac.FsSystem;
 using LibHac.Tools.FsSystem;
-using Ryujinx.Common.Logging;
 using Ryujinx.Cpu;
 using Ryujinx.HLE.FileSystem;
 using Ryujinx.HLE.HOS.Kernel;
@@ -62,117 +61,22 @@ namespace Ryujinx.HLE.HOS
 
         internal PerformanceState PerformanceState { get; private set; }
 
-        internal AppletStateMgr IntialAppletState { get; private set; }
-
-        internal AppletStateMgr AppletState
-        {
-            get
-            {
-                if (Device.Processes?.ActiveApplication?.RealAppletInstance != null)
-                {
-                    Logger.Info?.Print(LogClass.Application, "Real applet instance found");
-                    return Device.Processes.ActiveApplication.RealAppletInstance.AppletState;
-                }
-
-                return IntialAppletState;
-            }
-            set
-            {
-                if (value != null)
-                {
-                    IntialAppletState = value;
-                }
-            }
-        }
+        internal AppletStateMgr AppletState { get; private set; }
 
         internal List<NfpDevice> NfpDevices { get; private set; }
 
-        internal ServerBaseManager LibHacServerManagerMain = new ServerBaseManager();
+        internal SmRegistry SmRegistry { get; private set; }
 
-       private T GetServerProperty<T>(Func<ServerBaseManager, T> selector)
-        {
-            return IsApplet() 
-                ? selector(Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager)
-                : selector(LibHacServerManagerMain);
-        }
-
-        private void SetServerProperty<T>(Action<ServerBaseManager, T> setter, T value)
-        {
-            if (IsApplet())
-            {
-                setter(Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager, value);
-            }
-            else
-            {
-                setter(LibHacServerManagerMain, value);
-            }
-        }
-
-        internal SmRegistry SmRegistry
-        {
-            get => GetServerProperty(server => server.SmRegistry);
-            set => SetServerProperty((server, v) => server.SmRegistry = v, value);
-        }
-
-        internal ServerBase SmServer
-        {
-            get => GetServerProperty(server => server.SmServer);
-            set => SetServerProperty((server, v) => server.SmServer = v, value);
-        }
-
-        internal ServerBase BsdServer
-        {
-            get => GetServerProperty(server => server.BsdServer);
-            set => SetServerProperty((server, v) => server.BsdServer = v, value);
-        }
-
-        internal ServerBase FsServer
-        {
-            get => GetServerProperty(server => server.FsServer);
-            set => SetServerProperty((server, v) => server.FsServer = v, value);
-        }
-
-        internal ServerBase HidServer
-        {
-            get => GetServerProperty(server => server.HidServer);
-            set => SetServerProperty((server, v) => server.HidServer = v, value);
-        }
-
-        internal ServerBase NvDrvServer
-        {
-            get => GetServerProperty(server => server.NvDrvServer);
-            set => SetServerProperty((server, v) => server.NvDrvServer = v, value);
-        }
-
-        internal ServerBase TimeServer
-        {
-            get => GetServerProperty(server => server.TimeServer);
-            set => SetServerProperty((server, v) => server.TimeServer = v, value);
-        }
-
-        internal ServerBase ViServer
-        {
-            get => GetServerProperty(server => server.ViServer);
-            set => SetServerProperty((server, v) => server.ViServer = v, value);
-        }
-
-        internal ServerBase ViServerM
-        {
-            get => GetServerProperty(server => server.ViServerM);
-            set => SetServerProperty((server, v) => server.ViServerM = v, value);
-        }
-
-        internal ServerBase ViServerS
-        {
-            get => GetServerProperty(server => server.ViServerS);
-            set => SetServerProperty((server, v) => server.ViServerS = v, value);
-        }
-
-        internal ServerBase LdnServer
-        {
-            get => GetServerProperty(server => server.LdnServer);
-            set => SetServerProperty((server, v) => server.LdnServer = v, value);
-        }
+        internal ServerBase SmServer { get; private set; }
+        internal ServerBase BsdServer { get; private set; }
+        internal ServerBase FsServer { get; private set; }
+        internal ServerBase HidServer { get; private set; }
+        internal ServerBase NvDrvServer { get; private set; }
+        internal ServerBase TimeServer { get; private set; }
+        internal ServerBase ViServer { get; private set; }
+        internal ServerBase ViServerM { get; private set; }
+        internal ViServer ViServerS { get; private set; }
+        internal ServerBase LdnServer { get; private set; }
 
         internal KSharedMemory HidSharedMem { get; private set; }
         internal KSharedMemory FontSharedMem { get; private set; }
@@ -188,9 +92,6 @@ namespace Ryujinx.HLE.HOS
         internal KEvent VsyncEvent { get; private set; }
 
         internal KEvent DisplayResolutionChangeEvent { get; private set; }
-        
-        internal KEvent GeneralChannelEvent { get; private set; }
-        internal Queue<byte[]> GeneralChannelData { get; private set; } = new();
 
         public KeySet KeySet => Device.FileSystem.KeySet;
 
@@ -205,73 +106,13 @@ namespace Ryujinx.HLE.HOS
         internal SharedMemoryStorage HidStorage { get; private set; }
 
         internal NvHostSyncpt HostSyncpoint { get; private set; }
-        
-        internal ServiceTable ServiceTable
-        {
-            get
-            {
-                if (IsApplet())
-                {
-                    return Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.ServiceTable;
-                }
-                else
-                {
-                    return LibHacServerManagerMain.ServiceTable;
-                }
-            }
-            set
-            {
-                if (IsApplet())
-                {
-                    Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.ServiceTable = value;
-                }
-                else
-                {
-                    LibHacServerManagerMain.ServiceTable = value;
-                }
-            }
-        }
 
-        internal LibHacHorizonManager LibHacHorizonManager
-        {
-            get
-            {
-                if (IsApplet())
-                {
-                    return Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.LibHacHorizonManager;
-                }
-                else
-                {
-                    return LibHacServerManagerMain.LibHacHorizonManager;
-                }
-            }
-            set
-            {
-                if (IsApplet())
-                {
-                    Device.Processes.ActiveApplication.RealAppletInstance.LibHacServerManager.LibHacHorizonManager = value;
-                }
-                else
-                {
-                    LibHacServerManagerMain.LibHacHorizonManager = value;
-                }
-            }
-        }
+        internal LibHacHorizonManager LibHacHorizonManager { get; private set; }
 
-        public bool IsApplet()
-        {
-            if (Device?.Processes?.ActiveApplication?.RealAppletInstance != null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        
+        internal ServiceTable ServiceTable { get; private set; }
+
         public bool IsPaused { get; private set; }
-        
+
         public Horizon(Switch device)
         {
             TickSource = new TickSource(KernelConstants.CounterFrequency);
@@ -338,7 +179,6 @@ namespace Ryujinx.HLE.HOS
             VsyncEvent = new KEvent(KernelContext);
 
             DisplayResolutionChangeEvent = new KEvent(KernelContext);
-            GeneralChannelEvent = new KEvent(KernelContext);
 
             SharedFontManager = new SharedFontManager(device, fontStorage);
             AccountManager = device.Configuration.AccountManager;
@@ -397,6 +237,7 @@ namespace Ryujinx.HLE.HOS
 
             SurfaceFlinger = new SurfaceFlinger(device);
         }
+
         public void InitializeServices()
         {
             SmRegistry = new SmRegistry();
@@ -413,7 +254,7 @@ namespace Ryujinx.HLE.HOS
             TimeServer = new ServerBase(KernelContext, "TimeServer");
             ViServer = new ServerBase(KernelContext, "ViServerU");
             ViServerM = new ServerBase(KernelContext, "ViServerM");
-            ViServerS = new ServerBase(KernelContext, "ViServerS");
+            ViServerS = new ViServer(KernelContext, "ViServerS");
             LdnServer = new ServerBase(KernelContext, "LdnServer");
 
             StartNewServices();
@@ -495,23 +336,8 @@ namespace Ryujinx.HLE.HOS
         {
             AppletState.Messages.Enqueue(AppletMessage.Resume);
             AppletState.MessageEvent.ReadableEvent.Signal();
-
-            // 0x534D4153 0x00000001 0x00000002 0x00000001
-            PushToGeneralChannel(new byte[] {
-                0x53, 0x41, 0x4D, 0x53, 0x01, 0x00, 0x00, 0x00,
-                0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-            });
         }
 
-        public void PushToGeneralChannel(byte[] data)
-        {
-            if (data.Length > 0)
-            {
-                GeneralChannelData.Enqueue(data);
-                GeneralChannelEvent.ReadableEvent.Signal();
-            }
-        }
-        
         public void ScanAmiibo(int nfpDeviceId, string amiiboId, bool useRandomUuid)
         {
             if (VirtualAmiibo.ApplicationBytes.Length > 0)
@@ -635,12 +461,12 @@ namespace Ryujinx.HLE.HOS
                 // Destroy nvservices channels as KThread could be waiting on some user events.
                 // This is safe as KThread that are likely to call ioctls are going to be terminated by the post handler hook on the SVC facade.
                 INvDrvServices.Destroy();
-                
+
                 if (LibHacHorizonManager.ApplicationClient != null)
                 {
                     LibHacHorizonManager.PmClient.Fs.UnregisterProgram(LibHacHorizonManager.ApplicationClient.Os.GetCurrentProcessId().Value).ThrowIfFailure();
                 }
-                
+
                 KernelContext.Dispose();
             }
         }
@@ -670,17 +496,6 @@ namespace Ryujinx.HLE.HOS
                 }
             }
             IsPaused = pause;
-        }
-
-        public void CreateNewAppletManager()
-        {
-            AppletState = new AppletStateMgr(this);
-            AppletState.SetFocus(true);
-        }
-        
-        internal void SetFromAppletStateMgr(AppletStateMgr state)
-        {
-            AppletState = state;
         }
     }
 }
