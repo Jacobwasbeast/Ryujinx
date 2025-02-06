@@ -7,6 +7,7 @@ using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.Horizon;
 using Ryujinx.Horizon.Common;
 using System;
@@ -564,6 +565,18 @@ namespace Ryujinx.HLE.HOS.Services
         public void Dispose()
         {
             Dispose(true);
+        }
+
+        public void Stop()
+        {
+            try
+            {
+                _selfProcess.Terminate();
+                _selfThread.Terminate();
+            }
+            catch (Exception e) { }
+
+            Dispose();
         }
     }
 }

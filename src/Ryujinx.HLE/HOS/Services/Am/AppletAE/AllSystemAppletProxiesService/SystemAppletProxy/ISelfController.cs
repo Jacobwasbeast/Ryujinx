@@ -279,6 +279,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(60)]
+        // OverrideAutoSleepTimeAndDimmingTime() 
+        public ResultCode OverrideAutoSleepTimeAndDimmingTime(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
+
         [CommandCmif(62)]
         // SetIdleTimeDetectionExtension(u32)
         public ResultCode SetIdleTimeDetectionExtension(ServiceCtx context)
@@ -303,6 +312,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(64)]
+        // SetInputDetectionSourceSet(u32) 
+        public ResultCode SetInputDetectionSourceSet(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(65)]
         // ReportUserIsActive()
         public ResultCode ReportUserIsActive(ServiceCtx context)
@@ -427,8 +444,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 return ResultCode.InvalidParameters;
             }
 
-            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { albumReportOption });
-
+            context.Device.UIHandler.TakeScreenshot();
+            
             return ResultCode.Success;
         }
 

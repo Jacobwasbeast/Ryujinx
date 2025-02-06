@@ -137,6 +137,12 @@ namespace Ryujinx.HLE.HOS.Services.SurfaceFlinger
                     State = initialState,
                 });
             }
+
+            if (_device.System.IsApplet())
+            {
+                Logger.Info?.Print(LogClass.SurfaceFlinger, $"Created layer {layerId} for applet");
+                _device.Processes.ActiveApplication.RealAppletInstance.Layers.Add(layerId);
+            }
         }
 
         public Vi.ResultCode OpenLayer(ulong pid, long layerId, out IBinder producer)
