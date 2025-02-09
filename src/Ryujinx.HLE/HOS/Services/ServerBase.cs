@@ -58,6 +58,9 @@ namespace Ryujinx.HLE.HOS.Services
         public ManualResetEvent InitDone { get; }
         public string Name { get; }
         public Func<IpcService> SmObjectFactory { get; }
+        
+        internal KProcess SelfProcess => _selfProcess;
+        internal KThread SelfThread => _selfThread;
 
         public ServerBase(KernelContext context, string name, Func<IpcService> smObjectFactory = null)
         {

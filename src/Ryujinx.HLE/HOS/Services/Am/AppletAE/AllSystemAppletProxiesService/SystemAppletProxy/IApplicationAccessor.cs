@@ -1,0 +1,107 @@
+﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel;
+using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.Services.Account.Acc;
+using Ryujinx.HLE.Loaders.Processes;
+using Ryujinx.Horizon.Common;
+using System;
+
+namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy
+{
+    class IApplicationAccessor : IpcService
+    {
+        private readonly KernelContext _kernelContext;
+        private readonly ulong _callerPid;
+        private readonly ulong _applicationId;
+        private readonly string _contentPath;
+
+        private readonly KEvent _stateChangedEvent;
+        private int _stateChangedEventHandle;
+
+        public IApplicationAccessor(ulong pid, ulong applicationId, string contentPath, Horizon system)
+        {
+            _callerPid = pid;
+            _kernelContext = system.KernelContext;
+            _applicationId = applicationId;
+            _contentPath = contentPath;
+
+            _stateChangedEvent = new KEvent(system.KernelContext);
+        }
+
+
+        [CommandCmif(0)]
+        // GetAppletStateChangedEvent() -> handle<copy>
+        public ResultCode GetAppletStateChangedEvent(ServiceCtx context)
+        {
+            if (_stateChangedEventHandle == 0)
+            {
+                if (context.Process.HandleTable.GenerateHandle(_stateChangedEvent.ReadableEvent, out _stateChangedEventHandle) != Result.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_stateChangedEventHandle);
+
+            return ResultCode.Success;
+        }
+
+
+        [CommandCmif(10)]
+        // Start()
+        public ResultCode Start(ServiceCtx context)
+        {
+            _stateChangedEvent.ReadableEvent.Signal();
+
+            Logger.Info?.Print(LogClass.ServiceAm, $"Application 0x{_applicationId:X}:{_contentPath} start requested.");
+            ProcessResult processResult = null;
+            bool isApplet = false;
+            if (_contentPath.EndsWith("nsp"))
+            {
+                context.Device.Processes.LoadNsp(_contentPath,_applicationId, out processResult);
+            }
+            else if (_contentPath.EndsWith("xci"))
+            {
+                context.Device.Processes.LoadXci(_contentPath,_applicationId, out processResult);
+            }
+            else
+            {
+                context.Device.Processes.LoadNca(_contentPath, out processResult);
+                isApplet = true;
+            }
+            
+            var applet = context.Device.System.WindowSystem.TrackProcess(processResult.ProcessId, 0, !isApplet);
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(101)]
+        // RequestForApplicationToGetForeground()
+        public ResultCode RequestForApplicationToGetForeground(ServiceCtx context)
+        {
+            // _stateChangedEvent.ReadableEvent.Signal();
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            context.Device.System.ReturnFocus();
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(121)]
+        // PushLaunchParameter(u32) -> IStorage
+        public ResultCode PushLaunchParameter(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            MakeObject(context, new IStorage(new byte[0],false));
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(130)]
+        // SetUsers()
+        public ResultCode SetUsers(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            bool enable = context.RequestData.ReadBoolean();
+            return ResultCode.Success;
+        }
+    }
+}

@@ -87,7 +87,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
         // GetApplicationCreator() -> object<nn::am::service::IApplicationCreator>
         public ResultCode GetApplicationCreator(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationCreator());
+            MakeObject(context, new IApplicationCreator(context.Device.Processes.ActiveApplication.ProcessId));
 
             return ResultCode.Success;
         }

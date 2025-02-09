@@ -15,7 +15,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetAppletResourceUserId() -> nn::applet::AppletResourceUserId
         public ResultCode GetAppletResourceUserId(ServiceCtx context)
         {
-            long appletResourceUserId = context.Device.System.AppletState.AppletResourceUserIds.Add(_pid);
+            ulong appletResourceUserId = _pid;
 
             context.ResponseData.Write(appletResourceUserId);
 

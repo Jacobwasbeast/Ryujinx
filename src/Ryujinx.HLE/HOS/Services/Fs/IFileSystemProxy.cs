@@ -13,6 +13,7 @@ using LibHac.Tools.FsSystem.NcaUtils;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Fs.FileSystemProxy;
+using Ryujinx.HLE.HOS.Services.Pcv;
 using Ryujinx.Memory;
 using System;
 using System.IO;
@@ -673,6 +674,14 @@ namespace Ryujinx.HLE.HOS.Services.Fs
             }
 
             MakeObject(context, new IFile(ref file.Ref));
+
+            return ResultCode.Success;
+        }
+        [CommandCmif(83)]
+        // OpenSaveDataTransferProhibiter(u64) -> nn::fssrv::sf::ISaveDataTransferProhibiter
+        public ResultCode OpenSaveDataTransferProhibiter(ServiceCtx context)
+        {
+            MakeObject(context, new IPcvService(context));
 
             return ResultCode.Success;
         }

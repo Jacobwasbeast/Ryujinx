@@ -1175,5 +1175,10 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         {
             return Capabilities.IsSvcPermitted(svcId);
         }
+
+        public bool IsRunning()
+        {
+            return State == ProcessState.Started || State == ProcessState.Attached || State == ProcessState.DebugSuspended;
+        }
     }
 }
