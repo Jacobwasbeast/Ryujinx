@@ -35,5 +35,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(450)]
+        // ISystemProcessCommonFunctions() -> object<nn::am::service::ISystemProcessCommonFunctions>
+        public ResultCode ISystemProcessCommonFunctions(ServiceCtx context)
+        {
+            MakeObject(context, new ISystemProcessCommonFunctions());
+            return ResultCode.Success;
+        }
+        
     }
 }

@@ -65,6 +65,11 @@
                         Header="{ext:Locale MenuBarFileOpenAppletOpenPhotoViewerApplet}"
                         Icon="{ext:Icon fa-solid fa-photo-film}"
                         ToolTip.Tip="{ext:Locale MenuBarFileOpenAppletOpenPhotoViewerAppletToolTip}" />
+                    <MenuItem
+                        Name="QLaunchAppletMenuItem"
+                        Header="{ext:Locale MenuBarFileOpenAppletOpenQLaunchApplet}"
+                        Icon="{ext:Icon fa-solid fa-newspaper}"
+                        ToolTip.Tip="{ext:Locale MenuBarFileOpenAppletOpenQLaunchAppletToolTip}" />
                 </MenuItem>
                 <Separator />
                 <MenuItem

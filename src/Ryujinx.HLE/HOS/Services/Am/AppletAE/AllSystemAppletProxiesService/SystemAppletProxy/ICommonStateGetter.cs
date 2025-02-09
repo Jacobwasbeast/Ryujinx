@@ -155,6 +155,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(31)]
+        [CommandCmif(32)]
+        // GetReaderLockAccessorEx(u32) -> object<nn::am::service::ILockAccessor>
+        public ResultCode GetReaderLockAccessorEx(ServiceCtx context)
+        {
+            int lockId = context.RequestData.ReadInt32();
+
+            MakeObject(context, new ILockAccessor(lockId, context.Device.System));
+
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            return ResultCode.Success;
+        }
 
         [CommandCmif(50)] // 3.0.0+
         // IsVrModeEnabled() -> b8

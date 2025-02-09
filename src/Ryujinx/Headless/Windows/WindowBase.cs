@@ -563,5 +563,10 @@ namespace Ryujinx.Headless
         {
             return AccountSaveDataManager.GetLastUsedUser();
         }
+
+        public bool IsDarkMode()
+        {
+            return true;
+        }
     }
 }

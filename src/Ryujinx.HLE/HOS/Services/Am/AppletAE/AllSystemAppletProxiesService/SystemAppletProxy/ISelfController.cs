@@ -276,6 +276,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(60)]
+        // OverrideAutoSleepTimeAndDimmingTime()
+        public ResultCode OverrideAutoSleepTimeAndDimmingTime(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(62)]
         // SetIdleTimeDetectionExtension(u32)
         public ResultCode SetIdleTimeDetectionExtension(ServiceCtx context)
@@ -356,6 +364,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(72)]
+        // SetInputDetectionPolicy()
+        public ResultCode SetInputDetectionPolicy(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(80)] // 4.0.0+
         // SetWirelessPriorityMode(s32 wireless_priority_mode)
         public ResultCode SetWirelessPriorityMode(ServiceCtx context)

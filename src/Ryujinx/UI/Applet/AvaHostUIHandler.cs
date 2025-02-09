@@ -313,5 +313,10 @@ namespace Ryujinx.Ava.UI.Applet
             }
             return profile;
         }
+
+        public bool IsDarkMode()
+        {
+            return ConfigurationState.Instance.UI.BaseStyle.Value == "Dark";
+        }
     }
 }

@@ -8,21 +8,31 @@ namespace Ryujinx.HLE.HOS.Services.Ns
     class IServiceGetterInterface : IpcService
     {
         public IServiceGetterInterface(ServiceCtx context) { }
+        
 
-        [CommandCmif(7996)]
-        // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
-        public ResultCode GetApplicationManagerInterface(ServiceCtx context)
+        [CommandCmif(7988)]
+        // GetDynamicRightsInterface() -> object<nn::ns::detail::GetDynamicRightsInterface>
+        public ResultCode GetDynamicRightsInterface(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationManagerInterface(context));
+            MakeObject(context, new IDynamicRightsInterface());
 
             return ResultCode.Success;
         }
-
+        
         [CommandCmif(7989)]
         // GetReadOnlyApplicationControlDataInterface() -> object<nn::ns::detail::IReadOnlyApplicationControlDataInterface>
         public ResultCode GetReadOnlyApplicationControlDataInterface(ServiceCtx context)
         {
             MakeObject(context, new IReadOnlyApplicationControlDataInterface(context));
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(7996)]
+        // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
+        public ResultCode GetApplicationManagerInterface(ServiceCtx context)
+        {
+            MakeObject(context, new IApplicationManagerInterface(context));
 
             return ResultCode.Success;
         }

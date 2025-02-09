@@ -66,5 +66,10 @@ namespace Ryujinx.HLE.UI
         /// Displays the player select dialog and returns the selected profile.
         /// </summary>
         UserProfile ShowPlayerSelectDialog();
+
+        /// <summary>
+        /// Gets the UI theme and returns true if is dark mode.
+        /// </summary>
+        bool IsDarkMode();
     }
 }

@@ -42,5 +42,13 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
+        
+        [CommandCmif(30)]
+        // OpenCradleFirmwareUpdater() -> ICradleFirmwareUpdater. 
+        public ResultCode OpenCradleFirmwareUpdater(ServiceCtx context)
+        {
+            MakeObject(context, new ICradleFirmwareUpdater());
+            return ResultCode.Success;
+        }
     }
 }

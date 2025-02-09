@@ -41,6 +41,7 @@ namespace Ryujinx.Ava.UI.Views.Main
 
             MiiAppletMenuItem.Command = Commands.Create(OpenMiiApplet);
             PhotoViewerAppletMenuItem.Command = Commands.Create(OpenPhotoViewerApplet);
+            QLaunchAppletMenuItem.Command =  Commands.Create(OpenSystemApplet);
             CloseRyujinxMenuItem.Command = Commands.Create(CloseWindow);
             OpenSettingsMenuItem.Command = Commands.Create(OpenSettings);
             PauseEmulationMenuItem.Command = Commands.Create(() => ViewModel.AppHost?.Pause());
@@ -161,6 +162,16 @@ namespace Ryujinx.Ava.UI.Views.Main
         public async Task OpenPhotoViewerApplet()
         {
             if (PhotoViewer.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
+            {
+                await ViewModel.LoadApplication(appData, ViewModel.IsFullScreen || ViewModel.StartGamesInFullscreen, nacpData);
+            }
+        }
+        
+        public AppletMetadata SystemApplet => new(ViewModel.ContentManager,"qlaunch", 0x0100000000001000);
+        
+        public async Task OpenSystemApplet()
+        {
+            if (SystemApplet.CanStart(ViewModel.ContentManager, out var appData, out var nacpData))
             {
                 await ViewModel.LoadApplication(appData, ViewModel.IsFullScreen || ViewModel.StartGamesInFullscreen, nacpData);
             }
