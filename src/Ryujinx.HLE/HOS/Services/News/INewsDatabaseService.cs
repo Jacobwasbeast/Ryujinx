@@ -32,5 +32,21 @@ namespace Ryujinx.HLE.HOS.Services.News
             Logger.Stub?.PrintStub(LogClass.Service);
             return ResultCode.Success;
         }
+        
+        [CommandCmif(4)]
+        // UpdateIntegerValueWithAddition
+        public ResultCode UpdateIntegerValueWithAddition(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1000)]
+        // GetListEx(unknown<4>, buffer<unknown, 9>, buffer<unknown, 9>) -> (unknown<4>, buffer<unknown, 6>)
+        public ResultCode GetListEx(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
     }
 }

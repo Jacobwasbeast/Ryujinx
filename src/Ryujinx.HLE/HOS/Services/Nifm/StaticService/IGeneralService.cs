@@ -337,6 +337,14 @@ namespace Ryujinx.HLE.HOS.Services.Nifm.StaticService
             return ResultCode.Success;
         }
         
+        [CommandCmif(36)] // [4.0.0+]
+        // GetCurrentAccessPoint()
+        public ResultCode GetCurrentAccessPoint(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNifm);
+            return ResultCode.Success;
+        }
+        
         private (IPInterfaceProperties, UnicastIPAddressInformation) GetLocalInterface(ServiceCtx context)
         {
             if (!NetworkInterface.GetIsNetworkAvailable())

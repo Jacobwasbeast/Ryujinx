@@ -8,16 +8,20 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class IHomeMenuFunctions : IpcService
     {
+        private ulong _pid;
         private int _channelEventHandle;
 
-        public IHomeMenuFunctions(Horizon system) { }
+        public IHomeMenuFunctions(Horizon system, ulong pid)
+        {
+            _pid = pid;
+        }
 
         [CommandCmif(10)]
         // RequestToGetForeground()
         public ResultCode RequestToGetForeground(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
-            context.Device.System.WindowSystem.RequestApplicationToGetForeground(context.Process.Pid);
+            context.Device.System.WindowSystem.RequestApplicationToGetForeground(_pid);
             
             return ResultCode.Success;
         }

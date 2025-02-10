@@ -120,6 +120,14 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
+        [CommandCmif(161)] // [7.0.0+] 
+        // GetPlatformConfig()
+        public ResultCode GetPlatformConfig(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(301)]
         // ActivateNpadSystem(u32)
         public ResultCode ActivateNpadSystem(ServiceCtx context)
@@ -193,6 +201,22 @@ namespace Ryujinx.HLE.HOS.Services.Hid
         {
             context.ResponseData.Write(0L);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(514)]
+        // SendVibrationNotificationPattern()
+        public ResultCode SendVibrationNotificationPattern(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(523)]
+        // IsJoyConRailEnabled() -> bool
+        public ResultCode IsJoyConRailEnabled(ServiceCtx context)
+        {
+            context.ResponseData.Write(true);
             return ResultCode.Success;
         }
         

@@ -496,6 +496,16 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
         
+        [CommandCmif(120)] // [3.0.0+] 
+        // GetPushNotificationActivityModeOnSleep()
+        public ResultCode GetPushNotificationActivityModeOnSleep(ServiceCtx context)
+        {
+            context.ResponseData.Write(false);
+            
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(124)]
         // GetErrorReportSharePermission() -> s32
         public ResultCode GetErrorReportSharePermission(ServiceCtx context)
@@ -549,6 +559,14 @@ namespace Ryujinx.HLE.HOS.Services.Settings
 
             Logger.Stub?.PrintStub(LogClass.ServiceSet);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(203)]
+        // GetPanelCrcMode()
+        public ResultCode GetPanelCrcMode(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
             return ResultCode.Success;
         }
         

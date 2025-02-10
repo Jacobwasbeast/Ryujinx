@@ -77,5 +77,21 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmSystem
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(14)] // [13.0.0+]
+        // AcquireAudioDeviceConnectionEvent() -> handle<copy>
+        public ResultCode AcquireAudioDeviceConnectionEvent(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceBtm);
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(20)] // [13.0.0+] 
+        // GetPairedAudioDevices()
+        public ResultCode GetPairedAudioDevices(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceBtm);
+            return ResultCode.Success;
+        }
     }
 }

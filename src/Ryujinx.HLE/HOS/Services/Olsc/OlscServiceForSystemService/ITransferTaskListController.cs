@@ -16,6 +16,14 @@ namespace Ryujinx.HLE.HOS.Services.Olsc.OlscServiceForSystemService
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(8)]
+        // StopNextTransferTaskExecution()
+        public ResultCode StopNextTransferTaskExecution(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceOlsc);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(9)]
         // GetNativeHandleHolderEx() -> object<nn::olsc::srv::INativeHandleHolder>
@@ -25,6 +33,22 @@ namespace Ryujinx.HLE.HOS.Services.Olsc.OlscServiceForSystemService
 
             Logger.Stub?.PrintStub(LogClass.ServiceOlsc);
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(24)]
+        // GetCurrentTransferTaskInfo()
+        public ResultCode GetCurrentTransferTaskInfo(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceOlsc);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(25)]
+        // FindTransferTaskInfo()
+        public ResultCode FindTransferTaskInfo(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceOlsc);
             return ResultCode.Success;
         }
     }

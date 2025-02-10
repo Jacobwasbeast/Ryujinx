@@ -103,6 +103,17 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
         
+        [CommandCmif(20)]
+        // ClearCaptureBuffer(u8, s32, u32)
+        public ResultCode ClearCaptureBuffer(ServiceCtx context)
+        {
+            byte unknown1 = context.RequestData.ReadByte();
+            int captureSharedBuffer = context.RequestData.ReadInt32();
+            uint color = context.RequestData.ReadUInt32();
+            Logger.Stub?.PrintStub(LogClass.ServiceAm, new { unknown1, captureSharedBuffer });
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(22)]
         // AcquireLastApplicationCaptureSharedBuffer() -> (b8, u32)
         public ResultCode AcquireLastApplicationCaptureSharedBuffer(ServiceCtx context)
@@ -113,6 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(24)]
         [CommandCmif(26)]
         
         // AcquireCallerAppletCaptureSharedBuffer() -> (b8, u32)

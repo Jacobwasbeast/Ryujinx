@@ -169,9 +169,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode GetNsRightsEnvironmentHandle(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
-            KEvent eventObj = new KEvent(_kernelContext);
-            context.Process.HandleTable.GenerateHandle(eventObj.ReadableEvent, out int handle);
-            context.ResponseData.Write(handle);
+            context.ResponseData.Write(0xdeadbeef);
             return ResultCode.Success;
         }
     }

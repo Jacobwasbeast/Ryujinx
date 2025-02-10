@@ -26,5 +26,13 @@ namespace Ryujinx.HLE.HOS.Services.News
             return ResultCode.Success;
         }
         
+        [CommandCmif(40101)]
+        // RequestAutoSubscription()
+        public ResultCode RequestAutoSubscription(ServiceCtx context)
+        {
+            // TODO: Implement this properly
+            Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
     }
 }

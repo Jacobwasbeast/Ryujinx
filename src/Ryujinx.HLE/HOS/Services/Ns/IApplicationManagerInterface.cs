@@ -133,6 +133,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(38)]
+        // CheckApplicationLaunchVersion(u64)
+        public ResultCode CheckApplicationLaunchVersion(ServiceCtx context)
+        {
+            ulong applicationId = context.RequestData.ReadUInt64();
+            Logger.Stub?.PrintStub(LogClass.ServiceNs, new { applicationId });
+            return ResultCode.Success;
+        }
 
         [CommandCmif(44)]
         // GetSdCardMountStatusChangedEvent() -> handle<copy>
@@ -294,6 +303,24 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
 
+        [CommandCmif(906)]
+        // IsApplicationUpdateRequested() -> bool
+        public ResultCode IsApplicationUpdateRequested(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
+            context.ResponseData.Write(false);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1300)]
+        // IsAnyApplicationEntityInstalled() -> bool
+        public ResultCode IsAnyApplicationEntityInstalled(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
+            context.ResponseData.Write(true);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(1701)]
         // GetApplicationView(buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode GetApplicationView(ServiceCtx context)
@@ -332,6 +359,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
 
             return ResultCode.Success;
         }
+        
         [CommandCmif(1704)]
         // GetApplicationView(buffer<unknown, 5>) -> buffer<unknown, 6>
         public ResultCode GetApplicationViewWithPromotionInfo(ServiceCtx context)
@@ -378,6 +406,14 @@ namespace Ryujinx.HLE.HOS.Services.Ns
                 outputPosition += (ulong)Marshal.SizeOf<ApplicationViewWithPromotionInfo>();
             }
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(2050)]
+        // GetApplicationRightsOnClient()
+        public ResultCode GetApplicationRightsOnClient(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
             return ResultCode.Success;
         }
     }

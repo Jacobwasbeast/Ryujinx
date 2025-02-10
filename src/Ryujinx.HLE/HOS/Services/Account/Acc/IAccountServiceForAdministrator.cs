@@ -73,11 +73,13 @@ namespace Ryujinx.HLE.HOS.Services.Account.Acc
         }
 
         [CommandCmif(51)]
+        [CommandCmif(52)]
         // TrySelectUserWithoutInteraction(bool) -> nn::account::Uid
         public ResultCode TrySelectUserWithoutInteraction(ServiceCtx context)
         {
             return _applicationServiceServer.TrySelectUserWithoutInteraction(context);
         }
+        
 
         [CommandCmif(102)]
         // GetBaasAccountManagerForSystemService(nn::account::Uid) -> object<nn::account::baas::IManagerForApplication>

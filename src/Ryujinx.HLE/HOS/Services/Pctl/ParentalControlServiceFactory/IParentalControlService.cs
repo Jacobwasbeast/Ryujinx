@@ -112,6 +112,14 @@ namespace Ryujinx.HLE.HOS.Services.Pctl.ParentalControlServiceFactory
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(1002)]
+        // ConfirmLaunchApplicationPermission()
+        public ResultCode ConfirmLaunchApplicationPermission(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServicePctl);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(1006)]
         // IsRestrictionTemporaryUnlocked() -> b8

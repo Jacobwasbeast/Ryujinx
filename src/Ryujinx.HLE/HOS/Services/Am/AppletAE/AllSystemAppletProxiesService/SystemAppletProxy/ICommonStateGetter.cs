@@ -324,7 +324,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             return (ResultCode)_apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
         }
-
+        
+        [CommandCmif(200)]
+        // GetOperationModeSystemInfo() -> u32
+        public ResultCode GetOperationModeSystemInfo(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(300)] // 9.0.0+
         // GetSettingsPlatformRegion() -> u8
         public ResultCode GetSettingsPlatformRegion(ServiceCtx context)
