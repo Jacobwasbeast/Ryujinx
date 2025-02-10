@@ -26,14 +26,18 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         private int _gameCardUpdateDetectionEventHandle;
 
         private KEvent _gameCardMountFailureEvent;
-        private int _gameCardMountFailureEventHandle;
+        private int _gameCardMountFailureEventHandle;        
+        
+        private KEvent _gameCardWakeEvent;
+        private int _gameCardWakeEventHandle;
 
         public IApplicationManagerInterface(ServiceCtx context)
         {
             _applicationRecordUpdateSystemEvent = new KEvent(context.Device.System.KernelContext);
             _sdCardMountStatusChangedEvent = new KEvent(context.Device.System.KernelContext);
             _gameCardUpdateDetectionEvent = new KEvent(context.Device.System.KernelContext);
-            _gameCardMountFailureEvent = new KEvent(context.Device.System.KernelContext);
+            _gameCardMountFailureEvent = new KEvent(context.Device.System.KernelContext);            
+            _gameCardWakeEvent = new KEvent(context.Device.System.KernelContext);
         }
 
 
@@ -260,6 +264,33 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             // TODO: Implement this method properly.
             Logger.Stub?.PrintStub(LogClass.Service);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(511)]
+        // GetGameCardWakenReadyEvent() -> handle<copy>
+        public ResultCode GetGameCardWakenReadyEvent(ServiceCtx context)
+        {
+            if (_gameCardWakeEventHandle == 0)
+            {
+                if (context.Process.HandleTable.GenerateHandle(_gameCardWakeEvent.ReadableEvent, out _gameCardWakeEventHandle) != Result.Success)
+                {
+                    throw new InvalidOperationException("Out of handles!");
+                }
+            }
+
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_gameCardWakeEventHandle);
+            _gameCardWakeEvent.ReadableEvent.Signal();
+
+            return ResultCode.Success;
+        } 
+        
+        [CommandCmif(512)]
+        // IsGameCardApplicationRunning() -> bool
+        public ResultCode IsGameCardApplicationRunning(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNs);
+            context.ResponseData.Write(true);
             return ResultCode.Success;
         }
 

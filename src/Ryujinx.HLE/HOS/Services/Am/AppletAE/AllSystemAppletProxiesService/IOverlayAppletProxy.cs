@@ -1,14 +1,13 @@
-using Ryujinx.HLE.HOS.Applets;
+﻿using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.OverlayAppletProxy;
 using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
-using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy;
 
-namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
+namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
 {
-    class IApplicationProxy : IpcService
+    class IOverlayAppletProxy : IpcService
     {
         private readonly ulong _pid;
 
-        public IApplicationProxy(ulong pid)
+        public IOverlayAppletProxy(ulong pid)
         {
             _pid = pid;
         }
@@ -68,10 +67,28 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService
         }
 
         [CommandCmif(20)]
-        // GetApplicationFunctions() -> object<nn::am::service::IApplicationFunctions>
-        public ResultCode GetApplicationFunctions(ServiceCtx context)
+        // GetOverlayFunctions() -> object<nn::am::service::IOverlayFunctions>
+        public ResultCode GetOverlayFunctions(ServiceCtx context)
         {
-            MakeObject(context, new IApplicationFunctions(context.Device.System));
+            MakeObject(context, new IOverlayFunctions(context.Device.System));
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(21)]
+        // GetAppletCommonFunctions() -> object<nn::am::service::IAppletCommonFunctions>
+        public ResultCode GetAppletCommonFunctions(ServiceCtx context)
+        {
+            MakeObject(context, new IAppletCommonFunctions());
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(23)]
+        // GetGlobalStateController() -> object<nn::am::service::IGlobalStateController>
+        public ResultCode GetGlobalStateController(ServiceCtx context)
+        {
+            MakeObject(context, new IGlobalStateController(context));
 
             return ResultCode.Success;
         }

@@ -12,6 +12,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // OpenSystemAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ISystemAppletProxy>
         public ResultCode OpenSystemAppletProxy(ServiceCtx context)
         {
+            context.Device.System.WindowSystem.TrackProcess(context.Request.HandleDesc.PId, 0, false);
             MakeObject(context, new ISystemAppletProxy(context.Request.HandleDesc.PId));
 
             return ResultCode.Success;
@@ -22,7 +23,18 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // OpenLibraryAppletProxy(u64, pid, handle<copy>) -> object<nn::am::service::ILibraryAppletProxy>
         public ResultCode OpenLibraryAppletProxy(ServiceCtx context)
         {
-            MakeObject(context, new ILibraryAppletProxy(context.Request.HandleDesc.PId));
+            context.Device.System.WindowSystem.TrackProcess(context.Request.HandleDesc.PId, 0, false);
+            MakeObject(context, new ILibraryAppletProxy(context,context.Request.HandleDesc.PId));
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(300)]
+        // OpenOverlayAppletProxy(pid, handle<copy>) -> object<nn::am::service::IOverlayAppletProxy>
+        public ResultCode OpenOverlayAppletProxy(ServiceCtx context)
+        {
+            context.Device.System.WindowSystem.TrackProcess(context.Request.HandleDesc.PId, 0, false);
+            MakeObject(context, new IOverlayAppletProxy(context.Request.HandleDesc.PId));
 
             return ResultCode.Success;
         }
@@ -31,6 +43,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE
         // OpenSystemApplicationProxy(u64, pid, handle<copy>) -> object<nn::am::service::IApplicationProxy>
         public ResultCode OpenSystemApplicationProxy(ServiceCtx context)
         {
+            context.Device.System.WindowSystem.TrackProcess(context.Request.HandleDesc.PId, 0, false);
             MakeObject(context, new IApplicationProxy(context.Request.HandleDesc.PId));
 
             return ResultCode.Success;

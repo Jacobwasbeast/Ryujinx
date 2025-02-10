@@ -1,3 +1,4 @@
+using Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.SystemAppletProxy;
 using Ryujinx.HLE.HOS.Services.Olsc.OlscServiceForSystemService;
 
 namespace Ryujinx.HLE.HOS.Services.Olsc
@@ -12,6 +13,15 @@ namespace Ryujinx.HLE.HOS.Services.Olsc
         public ResultCode GetTransferTaskListController(ServiceCtx context)
         {
             MakeObject(context, new ITransferTaskListController(context));
+
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(1)]
+        // GetRemoteStorageController() -> object<nn::olsc::IRemoteStorageController. >
+        public ResultCode GetRemoteStorageController(ServiceCtx context)
+        {
+            MakeObject(context, new IRemoteStorageController());
 
             return ResultCode.Success;
         }

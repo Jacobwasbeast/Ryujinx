@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Kernel.Process;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon;
 using Ryujinx.Horizon.Sdk.OsTypes;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -17,8 +18,8 @@ namespace Ryujinx.HLE.HOS.Applets
         private WindowSystem _windowSystem;
 
         // Guest event handle to wake up the event loop
-        internal SystemEventType _wakeupEvent;
-        internal MultiWaitHolder _wakeupHolder;
+        private SystemEventType _wakeupEvent;
+        private MultiWaitHolder _wakeupHolder;
         private KWritableEvent _wakeupEventObj;
 
         // List of owned process holders
@@ -195,32 +196,42 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private void ThreadFunc()
         {
-            HorizonStatic.Register(
-                default,
-                _system.KernelContext.Syscall,
-                null,
-                _thread.ThreadContext,
-                (int)_thread.ThreadContext.GetX(1));
-
-            // lock (_lock)
+            try
             {
-                Os.CreateSystemEvent(out _wakeupEvent, EventClearMode.ManualClear, true).AbortOnFailure();
-                _wakeupEventObj = _thread.Owner.HandleTable.GetObject<KWritableEvent>(Os.GetWritableHandleOfSystemEvent(ref _wakeupEvent));
+                HorizonStatic.Register(
+                    default,
+                    _system.KernelContext.Syscall,
+                    null,
+                    _thread.ThreadContext,
+                    (int)_thread.ThreadContext.GetX(1));
 
-                _wakeupHolder = new MultiWaitHolderOfInterProcessEvent(_wakeupEvent.InterProcessEvent);
-                _wakeupHolder.UserData = UserDataTag.WakeupEvent;
-                _multiWait.LinkMultiWaitHolder(_wakeupHolder);
-            }
-
-            while (!_cts.Token.IsCancellationRequested)
-            {
-                var holder = WaitSignaled();
-                if (holder == null)
+                lock (_lock)
                 {
-                    break;
+                    Os.CreateSystemEvent(out _wakeupEvent, EventClearMode.ManualClear, true).AbortOnFailure();
+                    _wakeupEventObj = _thread.Owner.HandleTable.GetObject<KWritableEvent>(
+                        Os.GetWritableHandleOfSystemEvent(ref _wakeupEvent));
+
+                    _wakeupHolder = new MultiWaitHolderOfInterProcessEvent(_wakeupEvent.InterProcessEvent)
+                    {
+                        UserData = UserDataTag.WakeupEvent
+                    };
+                    _multiWait.LinkMultiWaitHolder(_wakeupHolder);
                 }
 
-                Process(holder);
+                while (!_cts.Token.IsCancellationRequested)
+                {
+                    var holder = WaitSignaled();
+                    if (holder == null)
+                    {
+                        break;
+                    }
+
+                    Process(holder);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error?.Print(LogClass.ServiceAm, $"EventObserver thread encountered an exception: {ex}");
             }
         }
     }

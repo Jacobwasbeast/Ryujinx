@@ -388,7 +388,7 @@ namespace Ryujinx.HLE.HOS.Services.Vi.RootService
             RenderingSurfaceInfo surfaceInfo = new(ColorFormat.A8B8G8R8, (uint)layerWidth, (uint)layerHeight, (uint)pitch, (uint)layerBuffSize);
 
             // Get the applet associated with the handle.
-            object appletObject = context.Device.System.AppletState.IndirectLayerHandles.GetData((int)layerHandle);
+            object appletObject = context.Device.System.GetAppletState(context.Process.Pid).IndirectLayerHandles.GetData((int)layerHandle);
 
             if (appletObject == null)
             {

@@ -8,21 +8,16 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 {
     class IHomeMenuFunctions : IpcService
     {
-        private readonly KEvent _channelEvent;
         private int _channelEventHandle;
 
-        public IHomeMenuFunctions(Horizon system)
-        {
-            // TODO: Signal this Event somewhere in future.
-            _channelEvent = new KEvent(system.KernelContext);
-        }
+        public IHomeMenuFunctions(Horizon system) { }
 
         [CommandCmif(10)]
         // RequestToGetForeground()
         public ResultCode RequestToGetForeground(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
-            context.Device.System.WindowSystem.RequestApplicationToGetForeground();
+            context.Device.System.WindowSystem.RequestApplicationToGetForeground(context.Process.Pid);
             
             return ResultCode.Success;
         }
@@ -36,6 +31,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             
             return ResultCode.Success;
         } 
+        
         [CommandCmif(12)]
         // UnlockForeground()
         public ResultCode UnlockForeground(ServiceCtx context)
@@ -52,7 +48,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             if (_channelEventHandle == 0)
             {
-                if (context.Process.HandleTable.GenerateHandle(_channelEvent.ReadableEvent, out _channelEventHandle) != Result.Success)
+                if (context.Process.HandleTable.GenerateHandle(
+                        context.Device.System.GeneralChannelEvent.ReadableEvent,
+                        out _channelEventHandle) != Result.Success)
                 {
                     throw new InvalidOperationException("Out of handles!");
                 }

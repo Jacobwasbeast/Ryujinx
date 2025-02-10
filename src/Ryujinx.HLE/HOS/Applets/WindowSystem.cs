@@ -7,6 +7,7 @@ using System.Linq;
 using Ryujinx.Horizon.Sdk.Applet;
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Applets.Types;
+using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Applets
 {
@@ -14,21 +15,20 @@ namespace Ryujinx.HLE.HOS.Applets
     {
         private Horizon _system;
         private readonly object _lock = new();
-        EventObserver _eventObserver = null;
+        private EventObserver _eventObserver = null;
 
-        // Foreground roots
-        RealApplet _homeMenu = null;
-        RealApplet _overlayDisp = null;
-        RealApplet _application = null;
+        // Foreground roots.
+        private RealApplet _homeMenu = null;
+        private RealApplet _overlayDisp = null;
+        // Removed single application field to allow multiple applications.
 
-        // Home menu state
-        bool _homeMenuForegroundLocked = false;
-        RealApplet _foregroundRequestedApplet = null;
+        // Home menu state.
+        private bool _homeMenuForegroundLocked = false;
+        private RealApplet _foregroundRequestedApplet = null;
 
-
-        // aruid -> applet map
-        Dictionary<ulong, RealApplet> _applets = new();
-        List<RealApplet> _rootApplets = new();
+        // aruid -> applet map.
+        private Dictionary<ulong, RealApplet> _applets = new();
+        private List<RealApplet> _rootApplets = new();
 
         internal ButtonPressTracker ButtonPressTracker { get; }
 
@@ -60,6 +60,7 @@ namespace Ryujinx.HLE.HOS.Applets
                     return;
                 }
 
+                // If no foreground applet is explicitly requested, choose the last root applet.
                 if (_foregroundRequestedApplet == null && _rootApplets.Count != 0)
                 {
                     _foregroundRequestedApplet = _rootApplets.Last();
@@ -72,6 +73,9 @@ namespace Ryujinx.HLE.HOS.Applets
             }
         }
 
+        /// <summary>
+        /// Tracks a new process as an applet.
+        /// </summary>
         internal RealApplet TrackProcess(ulong pid, ulong callerPid, bool isApplication)
         {
             lock (_lock)
@@ -106,6 +110,9 @@ namespace Ryujinx.HLE.HOS.Applets
             }
         }
 
+        /// <summary>
+        /// Registers the applet in the global tracking data structures.
+        /// </summary>
         private void TrackApplet(RealApplet applet, bool isApplication)
         {
             if (_applets.ContainsKey(applet.AppletResourceUserId))
@@ -122,30 +129,33 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 _overlayDisp = applet;
             }
-            else if (isApplication)
-            {
-                _application = applet;
-            }
+            // For application applets, we no longer assign a unique field.
+            // They are simply tracked as root applets (if callerPid == 0) and in the _applets dictionary.
 
             _applets[applet.AppletResourceUserId] = applet;
             _eventObserver.TrackAppletProcess(applet);
 
-            if (_applets.Count == 1 || applet.AppletId == RealAppletId.SystemAppletMenu || applet.AppletId == RealAppletId.OverlayApplet)
+            // If this is the first applet being tracked, or if it is one of the special system applets,
+            // perform initial setup.
+            if (_applets.Count == 1 ||
+                applet.AppletId == RealAppletId.SystemAppletMenu ||
+                applet.AppletId == RealAppletId.OverlayApplet)
             {
                 SetupFirstApplet(applet);
+                _foregroundRequestedApplet = applet;
+                applet.AppletState.SetFocus(false);
             }
-
-            // _foregroundRequestedApplet = applet;
-            // applet.AppletState.SetFocusState(FocusState.InFocus);
 
             _eventObserver.RequestUpdate();
         }
 
+        /// <summary>
+        /// Performs initial setup for the first tracked applet.
+        /// </summary>
         private void SetupFirstApplet(RealApplet applet)
         {
             if (applet.AppletId == RealAppletId.SystemAppletMenu)
             {
-                //applet.AppletState.SetFocusHandlingMode(false);
                 applet.AppletState.SetOutOfFocusSuspendingEnabled(false);
                 RequestHomeMenuToGetForeground();
             }
@@ -158,7 +168,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 applet.AppletState.SetFocusState(FocusState.InFocus);
                 _foregroundRequestedApplet = applet;
-                RequestApplicationToGetForeground();
+                RequestApplicationToGetForeground(applet.ProcessHandle.Pid);
             }
 
             applet.UpdateSuspensionStateLocked(true);
@@ -166,70 +176,94 @@ namespace Ryujinx.HLE.HOS.Applets
 
         internal RealApplet GetByAruId(ulong aruid)
         {
-            // lock (_lock)
+            if (_applets.TryGetValue(aruid, out RealApplet applet))
             {
-                if (_applets.TryGetValue(aruid, out RealApplet applet))
-                {
-                    return applet;
-                }
-
-                return null;
+                return applet;
             }
+
+            return null;
         }
 
+        /// <summary>
+        /// Returns the current foreground application.
+        /// If none is explicitly set, the first tracked application is returned.
+        /// </summary>
         internal RealApplet GetMainApplet()
         {
-            // lock (_lock)
+            lock (_lock)
             {
-                if (_application != null)
+                if (_foregroundRequestedApplet != null && _foregroundRequestedApplet.IsApplication)
                 {
-                    if (_applets.TryGetValue(_application.AppletResourceUserId, out RealApplet applet))
-                    {
-                        return applet;
-                    }
+                    return _foregroundRequestedApplet;
                 }
 
-                return null;
+                return _rootApplets.FirstOrDefault(applet => applet.IsApplication);
             }
         }
 
         internal void RequestHomeMenuToGetForeground()
         {
-            // lock (_lock)
-            {
-                _foregroundRequestedApplet = _homeMenu;
-            }
-
+            _foregroundRequestedApplet = _homeMenu;
             _eventObserver.RequestUpdate();
         }
 
-        internal void RequestApplicationToGetForeground()
+        /// <summary>
+        /// Requests that the home menu be focused.
+        /// The PID provided must match the home menu’s PID.
+        /// </summary>
+        internal void RequestHomeMenuToGetForeground(ulong pid)
         {
-            // lock (_lock)
+            lock (_lock)
             {
-                _foregroundRequestedApplet = _application;
+                if (_homeMenu != null && _homeMenu.ProcessHandle.Pid == pid)
+                {
+                    _foregroundRequestedApplet = _homeMenu;
+                }
+                else
+                {
+                    Logger.Warning?.Print(LogClass.ServiceAm, $"RequestHomeMenuToGetForeground: Provided pid {pid} does not match the home menu.");
+                }
             }
+            _eventObserver.RequestUpdate();
+        }
 
+        /// <summary>
+        /// Requests that an application be focused.
+        /// The PID provided must belong to an application applet.
+        /// </summary>
+        internal void RequestApplicationToGetForeground(ulong pid)
+        {
+            lock (_lock)
+            {
+                if (_applets.TryGetValue(pid, out var applet))
+                {
+                    _foregroundRequestedApplet = applet;
+                }
+                else
+                {
+                    if (pid == _homeMenu?.ProcessHandle.Pid)
+                    {
+                        _foregroundRequestedApplet.AppletState.SetFocusForce(false,true);
+                        _foregroundRequestedApplet = _homeMenu;
+                    }
+                    else
+                    {
+                        Logger.Warning?.Print(LogClass.ServiceAm, $"RequestApplicationToGetForeground: Provided pid {pid} is not an application applet.");
+                    }
+                }
+            }
             _eventObserver.RequestUpdate();
         }
 
         internal void RequestLockHomeMenuIntoForeground()
         {
-            // lock (_lock)
-            {
-                _homeMenuForegroundLocked = true;
-            }
-
+            _homeMenuForegroundLocked = true;
             _eventObserver.RequestUpdate();
         }
 
         internal void RequestUnlockHomeMenuFromForeground()
         {
-            // lock (_lock)
-            {
-                _homeMenuForegroundLocked = false;
-            }
-
+            _homeMenuForegroundLocked = false;
             _eventObserver.RequestUpdate();
         }
 
@@ -245,48 +279,39 @@ namespace Ryujinx.HLE.HOS.Applets
 
         internal void OnOperationModeChanged()
         {
-            // lock (_lock)
+            foreach (var (_, applet) in _applets)
             {
-                foreach (var (aruid, applet) in _applets)
+                lock (applet.Lock)
                 {
-                    lock (applet.Lock)
-                    {
-                        applet.AppletState.OnOperationAndPerformanceModeChanged();
-                    }
+                    applet.AppletState.OnOperationAndPerformanceModeChanged();
                 }
             }
         }
 
         internal void OnExitRequested()
         {
-            // lock (_lock)
+            foreach (var (_, applet) in _applets)
             {
-                foreach (var (aruid, applet) in _applets)
+                lock (applet.Lock)
                 {
-                    lock (applet.Lock)
-                    {
-                        applet.AppletState.OnExitRequested();
-                    }
+                    applet.AppletState.OnExitRequested();
                 }
             }
         }
 
         internal void OnSystemButtonPress(SystemButtonType type)
         {
-            // lock (_lock)
+            switch (type)
             {
-                switch (type)
-                {
-                    case SystemButtonType.PerformHomeButtonShortPressing:
-                        SendButtonAppletMessageLocked(AppletMessage.DetectShortPressingHomeButton);
-                        break;
-                    case SystemButtonType.PerformHomeButtonLongPressing:
-                        SendButtonAppletMessageLocked(AppletMessage.DetectLongPressingHomeButton);
-                        break;
-                    case SystemButtonType.PerformCaptureButtonShortPressing:
-                        SendButtonAppletMessageLocked(AppletMessage.DetectShortPressingCaptureButton);
-                        break;
-                }
+                case SystemButtonType.PerformHomeButtonShortPressing:
+                    SendButtonAppletMessageLocked(AppletMessage.DetectShortPressingHomeButton);
+                    break;
+                case SystemButtonType.PerformHomeButtonLongPressing:
+                    SendButtonAppletMessageLocked(AppletMessage.DetectLongPressingHomeButton);
+                    break;
+                case SystemButtonType.PerformCaptureButtonShortPressing:
+                    SendButtonAppletMessageLocked(AppletMessage.DetectShortPressingCaptureButton);
+                    break;
             }
         }
 
@@ -297,6 +322,16 @@ namespace Ryujinx.HLE.HOS.Applets
                 lock (_homeMenu.Lock)
                 {
                     _homeMenu.AppletState.PushUnorderedMessage(message);
+                    if (message == AppletMessage.DetectShortPressingHomeButton)
+                    {
+                        foreach (var applet in _applets.Values)
+                        {
+                            if (applet != _homeMenu)
+                            {
+                                applet.ProcessHandle.SetActivity(true);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -309,9 +344,13 @@ namespace Ryujinx.HLE.HOS.Applets
             }
         }
 
+        /// <summary>
+        /// Removes terminated applets from tracking.
+        /// </summary>
         private void PruneTerminatedAppletsLocked()
         {
-            foreach (var (aruid, applet) in _applets)
+            // We need to iterate over a copy of the dictionary keys because we might remove items.
+            foreach (var (aruid, applet) in _applets.ToList())
             {
                 lock (applet.Lock)
                 {
@@ -320,12 +359,14 @@ namespace Ryujinx.HLE.HOS.Applets
                         continue;
                     }
 
+                    // If the applet has child applets still, terminate them first.
                     if (applet.ChildApplets.Count != 0)
                     {
                         TerminateChildAppletsLocked(applet);
                         continue;
                     }
 
+                    // If this applet was started by another, remove it from its caller’s child list.
                     if (applet.CallerApplet != null)
                     {
                         applet.CallerApplet.ChildApplets.Remove(applet);
@@ -343,10 +384,14 @@ namespace Ryujinx.HLE.HOS.Applets
                         _foregroundRequestedApplet = null;
                     }
 
-                    if (applet == _application)
+                    // For application applets, clear the foreground reference if necessary and
+                    // notify the home menu that an application has exited.
+                    if (applet.IsApplication)
                     {
-                        _application = null;
-                        _foregroundRequestedApplet = null;
+                        if (_foregroundRequestedApplet == applet)
+                        {
+                            _foregroundRequestedApplet = null;
+                        }
 
                         if (_homeMenu != null)
                         {
@@ -363,9 +408,26 @@ namespace Ryujinx.HLE.HOS.Applets
             }
         }
 
+        /// <summary>
+        /// Terminates any child applets of the specified parent.
+        /// </summary>
+        private void TerminateChildAppletsLocked(RealApplet parent)
+        {
+            foreach (var child in parent.ChildApplets)
+            {
+                if (child.ProcessHandle.State != ProcessState.Exited)
+                {
+                    child.ProcessHandle.Terminate();
+                    child.TerminateResult = (ResultCode)Services.Am.ResultCode.LibraryAppletTerminated;
+                }
+            }
+        }
+
+        /// <summary>
+        /// If the home menu is locked into the foreground, ensure it remains in front.
+        /// </summary>
         private bool LockHomeMenuIntoForegroundLocked()
         {
-            // If the home menu is not locked into the foreground, then there's nothing to do.
             if (_homeMenu == null || !_homeMenuForegroundLocked)
             {
                 _homeMenuForegroundLocked = false;
@@ -387,18 +449,9 @@ namespace Ryujinx.HLE.HOS.Applets
             return true;
         }
 
-        private void TerminateChildAppletsLocked(RealApplet parent)
-        {
-            foreach (var child in parent.ChildApplets)
-            {
-                if (child.ProcessHandle.State != ProcessState.Exited)
-                {
-                    child.ProcessHandle.Terminate();
-                    child.TerminateResult = (ResultCode)Services.Am.ResultCode.LibraryAppletTerminated;
-                }
-            }
-        }
-
+        /// <summary>
+        /// Updates the state of the specified applet and its children.
+        /// </summary>
         private void UpdateAppletStateLocked(RealApplet applet, bool isForeground)
         {
             if (applet == null)
@@ -427,7 +480,7 @@ namespace Ryujinx.HLE.HOS.Applets
                     return false;
                 });
 
-                // TODO: Update visibility state
+                // TODO: Update visibility state if needed.
 
                 applet.SetInteractibleLocked(isForeground && applet.WindowVisible);
 
@@ -445,13 +498,81 @@ namespace Ryujinx.HLE.HOS.Applets
                     applet.UpdateSuspensionStateLocked(true);
                 }
 
-                Logger.Info?.Print(LogClass.ServiceAm, $"Updating applet state for {applet.AppletId}: visible={applet.WindowVisible}, foreground={isForeground}, obscured={isObscured}, reqFState={applet.AppletState.RequestedFocusState}, ackFState={applet.AppletState.AcknowledgedFocusState}, runnable={applet.AppletState.IsRunnable()}");
-
-
-                // Recurse into child applets
+                Logger.Info?.Print(LogClass.ServiceAm,
+                    $"Updating applet state for {applet.AppletId}: visible={applet.WindowVisible}, foreground={isForeground}, obscured={isObscured}, reqFState={applet.AppletState.RequestedFocusState}, ackFState={applet.AppletState.AcknowledgedFocusState}, runnable={applet.AppletState.IsRunnable()}");
+                
+                // Recurse into child applets.
                 foreach (var child in applet.ChildApplets)
                 {
-                    UpdateAppletStateLocked(child, isForeground);
+                    if (child == _foregroundRequestedApplet)
+                    {
+                        UpdateAppletStateLocked(child, true);
+                    }
+                    else
+                    {
+                        UpdateAppletStateLocked(child, isForeground);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the process identifier of the currently focused applet.
+        /// </summary>
+        public ulong GetFocusedApp()
+        {
+            if (_foregroundRequestedApplet == null)
+            {
+                return _homeMenu == null ? 0 : _homeMenu.ProcessHandle.Pid;
+            }
+            return _foregroundRequestedApplet.ProcessHandle.Pid;
+        }
+
+        internal RealApplet GetFirstApplet()
+        {
+            lock (_lock)
+            {
+                if (_applets.Count == 0)
+                {
+                    return null;
+                }
+                ulong oldestPID = _applets.Keys.Min();
+                return _applets[oldestPID];
+            }
+        }
+
+        internal bool IsFocusedApplet(RealApplet applet)
+        {
+            return _foregroundRequestedApplet == applet;
+        }
+
+        internal RealApplet GetApplicationApplet()
+        {
+            RealApplet applet = null;
+            lock (_lock)
+            {
+                foreach (var (_, value) in _applets)
+                {
+                    if (value.IsApplication)
+                    {
+                        applet = value;
+                        break;
+                    }
+                }
+            }
+
+            return applet;
+        }
+
+        public void RemoveProcess(ulong processHandlePid)
+        {
+            lock (_lock)
+            {
+                if (_applets.TryGetValue(processHandlePid, out RealApplet applet))
+                {
+                    _applets.Remove(processHandlePid);
+                    _rootApplets.Remove(applet);
+                    _eventObserver.RequestUpdate();
                 }
             }
         }

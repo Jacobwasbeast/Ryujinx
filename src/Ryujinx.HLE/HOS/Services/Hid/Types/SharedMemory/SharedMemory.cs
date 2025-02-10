@@ -79,6 +79,9 @@ namespace Ryujinx.HLE.HOS.Services.Hid.Types.SharedMemory
                 TouchScreen = RingLifo<TouchScreenState>.Create(),
                 Mouse = RingLifo<MouseState>.Create(),
                 Keyboard = RingLifo<KeyboardState>.Create(),
+                HomeButton = RingLifo<ButtonState>.Create(),
+                SleepButton = RingLifo<ButtonState>.Create(),
+                CaptureButton = RingLifo<ButtonState>.Create(),
             };
 
             for (int i = 0; i < result.Npads.Length; i++)

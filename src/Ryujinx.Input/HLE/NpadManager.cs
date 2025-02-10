@@ -209,6 +209,9 @@ namespace Ryujinx.Input.HLE
                 List<SixAxisInput> hleMotionStates = new(NpadDevices.MaxControllers);
 
                 KeyboardInput? hleKeyboardInput = null;
+                
+                bool homeDown = false;
+                bool captureDown = false;
 
                 foreach (InputConfig inputConfig in _inputConfig)
                 {
@@ -238,6 +241,11 @@ namespace Ryujinx.Input.HLE
                         SixAxisInput altMotionState = isJoyconPair ? controller.GetHLEMotionState(true) : default;
 
                         motionState = (controller.GetHLEMotionState(), altMotionState);
+                        
+                        homeDown |= inputState.Buttons.HasFlag(ControllerKeys.Home);
+                        captureDown |= inputState.Buttons.HasFlag(ControllerKeys.Capture);
+                        
+                        inputState.Buttons &= ~(ControllerKeys.Home | ControllerKeys.Capture);
                     }
                     else
                     {
@@ -266,6 +274,9 @@ namespace Ryujinx.Input.HLE
 
                 _device.Hid.Npads.Update(hleInputStates);
                 _device.Hid.Npads.UpdateSixAxis(hleMotionStates);
+                
+                _device.Hid.HomeButton.Update(homeDown);
+                _device.Hid.CaptureButton.Update(captureDown);
 
                 if (hleKeyboardInput.HasValue)
                 {
@@ -315,6 +326,7 @@ namespace Ryujinx.Input.HLE
                 }
 
                 _device.TamperMachine.UpdateInput(hleInputStates);
+                _device.UpdateWindowSystemInput();
             }
         }
 

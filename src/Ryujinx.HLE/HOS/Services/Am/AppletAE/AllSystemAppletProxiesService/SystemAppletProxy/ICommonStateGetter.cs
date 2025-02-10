@@ -1,4 +1,5 @@
 using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.HLE.HOS.Services.Settings.Types;
@@ -16,6 +17,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
         private readonly Apm.ManagerServer _apmManagerServer;
         private readonly Apm.SystemManagerServer _apmSystemManagerServer;
+        private readonly RealApplet _applet;
 
         private bool _vrModeEnabled;
 #pragma warning disable CS0414, IDE0052 // Remove unread private member
@@ -28,9 +30,10 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         private readonly KEvent _acquiredSleepLockEvent;
         private int _acquiredSleepLockEventHandle;
 
-        public ICommonStateGetter(ServiceCtx context)
+        public ICommonStateGetter(ServiceCtx context, ulong pid)
         {
             _context = context;
+            _applet = context.Device.System.WindowSystem.GetByAruId(pid);
 
             _apmManagerServer = new Apm.ManagerServer(context);
             _apmSystemManagerServer = new Apm.SystemManagerServer(context);
@@ -42,7 +45,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetEventHandle() -> handle<copy>
         public ResultCode GetEventHandle(ServiceCtx context)
         {
-            KEvent messageEvent = context.Device.System.AppletState.MessageEvent;
+            KEvent messageEvent = _applet.AppletState.MessageEvent;
 
             if (_messageEventHandle == 0)
             {
@@ -61,12 +64,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // ReceiveMessage() -> nn::am::AppletMessage
         public ResultCode ReceiveMessage(ServiceCtx context)
         {
-            if (!context.Device.System.AppletState.PopMessage(out AppletMessage message))
+            if (!_applet.AppletState.PopMessage(out AppletMessage message))
             {
                 return ResultCode.NoMessages;
             }
-            
+
+            Logger.Info?.Print(LogClass.ServiceAm, $"pid: {_applet.ProcessHandle.Pid}, msg={message}");
             context.ResponseData.Write((int)message);
+
             return ResultCode.Success;
         }
 
@@ -94,7 +99,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetBootMode() -> u8
         public ResultCode GetBootMode(ServiceCtx context)
         {
-            context.ResponseData.Write((byte)0); //Unknown value.
+            context.ResponseData.Write((byte)0); // PmBootMode_Normal
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
@@ -105,7 +110,19 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetCurrentFocusState() -> u8
         public ResultCode GetCurrentFocusState(ServiceCtx context)
         {
-            context.ResponseData.Write((byte)context.Device.System.AppletState.AcknowledgedFocusState);
+            FocusState focusState;
+            lock (_applet.Lock)
+            {
+                focusState = _applet.AppletState.GetAndClearFocusState();
+            }
+
+            if (context.Device.System.WindowSystem.IsFocusedApplet(_applet))
+            {
+                focusState = FocusState.InFocus;
+            }
+
+            Logger.Info?.Print(LogClass.ServiceAm, $"pid: {_applet.ProcessHandle.Pid}, GetCurrentFocusState():{focusState}");
+            context.ResponseData.Write((byte)focusState);
 
             return ResultCode.Success;
         }
@@ -115,6 +132,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode RequestToAcquireSleepLock(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
+
+            _acquiredSleepLockEvent.ReadableEvent.Signal();
 
             return ResultCode.Success;
         }
@@ -132,15 +151,21 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             }
 
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(_acquiredSleepLockEventHandle);
-            // NOTE: This needs to be signaled when sleep lock is acquired so it does not just wait forever.
-            //       However, since we don't support sleep lock yet, it's fine to signal immediately.
-            _acquiredSleepLockEvent.ReadableEvent.Signal();
+
+            return ResultCode.Success;
+        }
+
+        [CommandCmif(20)]
+        // PushToGeneralChannel(object<nn::am::service::IStorage>)
+        public ResultCode PushInData(ServiceCtx context)
+        {
+            IStorage data = GetObject<IStorage>(context, 0);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(31)]
         [CommandCmif(32)]
         // GetReaderLockAccessorEx(u32) -> object<nn::am::service::ILockAccessor>
@@ -216,7 +241,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             _vrModeEnabled = vrModeEnabled;
 
-            using LblApi lblApi = new();
+            using var lblApi = new LblApi();
 
             if (vrModeEnabled)
             {

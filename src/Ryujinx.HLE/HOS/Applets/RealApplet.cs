@@ -120,6 +120,7 @@ namespace Ryujinx.HLE.HOS.Applets
         internal bool IsInteractable = true;
         internal bool WindowVisible = true;
         internal bool ExitLocked = false;
+        internal bool IsApplication { get; }
 
         internal AppletStateMgr AppletState { get; private set; }
         public event EventHandler AppletStateChanged;
@@ -132,10 +133,11 @@ namespace Ryujinx.HLE.HOS.Applets
         public RealApplet(ulong pid, bool isApplication, Horizon system)
         {
             _system = system;
-            AppletState = new AppletStateMgr(system, isApplication);
+            AppletState = new AppletStateMgr(system);
             ProcessHandle = _system.KernelContext.Processes[pid];
             AppletResourceUserId = ProcessHandle.Pid;
             AppletId = GetAppletIdFromProgramId(ProcessHandle.TitleId);
+            IsApplication = isApplication;
         }
 
         public void RegisterChild(RealApplet applet)
