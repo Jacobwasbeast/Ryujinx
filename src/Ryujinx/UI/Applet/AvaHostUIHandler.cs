@@ -15,6 +15,7 @@ using Ryujinx.HLE.HOS.Applets.SoftwareKeyboard;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.UI;
+using Ryujinx.Horizon.Sdk.Applet;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -317,6 +318,37 @@ namespace Ryujinx.Ava.UI.Applet
         public bool IsDarkMode()
         {
             return ConfigurationState.Instance.UI.BaseStyle.Value == "Dark";
+        }
+
+        public bool IsMissingAppletsAsReal()
+        {
+            return ConfigurationState.Instance.System.MissingAppletsAsReal;
+        }
+        
+        public bool IsAppletReal(RealAppletId appletId)
+        {
+            bool softwareKeyboardReal = ConfigurationState.Instance.System.SoftwareKeyboardIsReal;
+            bool browserReal = ConfigurationState.Instance.System.BrowserIsReal;
+            bool controllerReal = ConfigurationState.Instance.System.ControllerIsReal;
+            bool playerSelectReal = ConfigurationState.Instance.System.PlayerSelectIsReal;
+            bool cabinetReal = ConfigurationState.Instance.System.CabinetIsReal;
+            bool missingAppletsAsReal = ConfigurationState.Instance.System.MissingAppletsAsReal;
+
+            switch (appletId)
+            {
+                case RealAppletId.LibraryAppletSwkbd:
+                    return softwareKeyboardReal;
+                case RealAppletId.LibraryAppletWeb:
+                    return browserReal;
+                case RealAppletId.LibraryAppletController:
+                    return controllerReal;
+                case RealAppletId.LibraryAppletPlayerSelect:
+                    return playerSelectReal;
+                case RealAppletId.LibraryAppletCabinet:
+                    return cabinetReal;
+                default:
+                    return missingAppletsAsReal;
+            }
         }
     }
 }

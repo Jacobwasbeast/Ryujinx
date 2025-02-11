@@ -22,7 +22,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             int libraryAppletMode = context.RequestData.ReadInt32();
 #pragma warning restore IDE0059
 
-            MakeObject(context, new ILibraryAppletAccessor(appletId, context.Device.System, _pid));
+            if (ShouldBeReal(context.Device.System,appletId))
+            {
+                RealAppletId realAppletId = (RealAppletId)appletId;
+                MakeObject(context, new ILibraryRealAppletAccessor(realAppletId, context.Device.System, _pid));
+            }
+            else
+            {
+                MakeObject(context, new ILibraryAppletAccessor(appletId, context.Device.System, _pid));
+            }
 
             return ResultCode.Success;
         }
@@ -94,6 +102,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             MakeObject(context, new IStorage(data));
 
             return ResultCode.Success;
+        }
+
+        public bool ShouldBeReal(Horizon horizon, AppletId appletId)
+        {
+            return horizon.Device.Configuration.HostUIHandler.IsAppletReal((RealAppletId)appletId);
         }
     }
 }

@@ -576,6 +576,35 @@ namespace Ryujinx.HLE.HOS.Applets
                 }
             }
         }
+
+        public bool IsLaunchedAsReal(ulong pid)
+        {
+            RealApplet applet = null;
+            lock (_lock)
+            {
+                if (_applets.TryGetValue(pid, out applet))
+                {
+                    if (_applets.Count > 1)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        if (applet==_homeMenu||applet==_overlayDisp)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool HasAnyApplets()
+        {
+            return _applets.Count > 0;
+        }
     }
 
     internal class ButtonPressTracker

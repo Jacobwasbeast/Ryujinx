@@ -13,6 +13,7 @@ using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Am.AppletOE.ApplicationProxyService.ApplicationProxy.Types;
 using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.HLE.UI;
+using Ryujinx.Horizon.Sdk.Applet;
 using Ryujinx.Input;
 using Ryujinx.Input.HLE;
 using Ryujinx.Input.SDL2;
@@ -567,6 +568,11 @@ namespace Ryujinx.Headless
         public bool IsDarkMode()
         {
             return true;
+        }
+
+        public bool IsAppletReal(RealAppletId appletId)
+        {
+            return false;
         }
     }
 }

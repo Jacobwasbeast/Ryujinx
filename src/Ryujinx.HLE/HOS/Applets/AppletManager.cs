@@ -25,9 +25,6 @@ namespace Ryujinx.HLE.HOS.Applets
                 case AppletId.LibAppletShop:
                 case AppletId.LibAppletOff:
                     return new BrowserApplet();
-                case AppletId.MiiEdit:
-                    Logger.Warning?.Print(LogClass.Application, $"Please use the MiiEdit inside File/Open Applet");
-                    return new DummyApplet(system);
                 case AppletId.Cabinet:
                     return new CabinetApplet(system);
             }

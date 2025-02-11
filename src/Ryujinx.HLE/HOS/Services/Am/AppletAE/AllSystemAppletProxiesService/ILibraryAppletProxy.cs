@@ -88,8 +88,15 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
         // OpenLibraryAppletSelfAccessor() -> object<nn::am::service::ILibraryAppletSelfAccessor>
         public ResultCode OpenLibraryAppletSelfAccessor(ServiceCtx context)
         {
-            MakeObject(context, new ILibraryAppletSelfAccessor(context));
-
+            if (context.Device.System.WindowSystem.IsLaunchedAsReal(_pid))
+            {
+                MakeObject(context, new ILibraryRealAppletSelfAccessor(context, _pid));
+            }
+            else
+            {
+                MakeObject(context, new ILibraryAppletSelfAccessor(context));
+            }
+            
             return ResultCode.Success;
         }
 

@@ -124,6 +124,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             return ResultCode.Success;
         }
 
+        [CommandCmif(7)]
         [CommandCmif(24)]
         [CommandCmif(26)]
         
