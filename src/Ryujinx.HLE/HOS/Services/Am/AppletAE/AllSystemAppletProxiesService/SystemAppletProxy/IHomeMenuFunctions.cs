@@ -22,6 +22,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
             context.Device.System.WindowSystem.RequestApplicationToGetForeground(_pid);
+            context.Device.System.GetAppletState(_pid).SetFocusForce(true);
             
             return ResultCode.Success;
         }

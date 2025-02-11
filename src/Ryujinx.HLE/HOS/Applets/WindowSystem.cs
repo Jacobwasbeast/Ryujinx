@@ -321,17 +321,17 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 lock (_homeMenu.Lock)
                 {
-                    _homeMenu.AppletState.PushUnorderedMessage(message);
                     if (message == AppletMessage.DetectShortPressingHomeButton)
                     {
                         foreach (var applet in _applets.Values)
                         {
-                            if (applet != _homeMenu)
+                            if (applet != _homeMenu && _foregroundRequestedApplet==applet)
                             {
                                 applet.ProcessHandle.SetActivity(true);
                             }
                         }
                     }
+                    _homeMenu.AppletState.PushUnorderedMessage(message);
                 }
             }
 
