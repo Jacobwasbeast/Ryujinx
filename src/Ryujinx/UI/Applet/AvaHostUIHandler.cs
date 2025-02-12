@@ -339,6 +339,10 @@ namespace Ryujinx.Ava.UI.Applet
                 case RealAppletId.LibraryAppletSwkbd:
                     return softwareKeyboardReal;
                 case RealAppletId.LibraryAppletWeb:
+                case RealAppletId.LibraryAppletOfflineWeb:
+                case RealAppletId.LibraryAppletOfflineWebFw17:
+                case RealAppletId.LibraryAppletOfflineWeb2Fw17:
+                case RealAppletId.LibraryAppletWifiWebAuth:
                     return browserReal;
                 case RealAppletId.LibraryAppletController:
                     return controllerReal;
