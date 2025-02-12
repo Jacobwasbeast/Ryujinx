@@ -621,7 +621,7 @@ namespace Ryujinx.HLE.HOS.Applets
         public void PauseOldWindows(ulong pid)
         {
             RealApplet applet = GetByAruId(pid);
-            if (applet?.CallerApplet != null)
+            if (applet?.CallerApplet != null&&applet?.CallerApplet!=_homeMenu)
             {
                 applet.CallerApplet.ProcessHandle.SetActivity(true);
             }
