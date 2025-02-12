@@ -181,6 +181,14 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 if (process.State == ProcessState.Exited)
                 {
+                    if (applet.CallerApplet != null)
+                    {
+                        if (applet.CallerApplet.ProcessHandle.IsPaused)
+                        {
+                            applet.CallerApplet.ProcessHandle.SetActivity(false);
+                        }
+                    }
+
                     _processHolders.Remove(holder);
                 }
                 else

@@ -184,6 +184,14 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
 
+        [CommandCmif(313)] // 9.0.0+
+        // GetNpadCaptureButtonAssignment()
+        public ResultCode GetNpadCaptureButtonAssignment(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(314)] // 9.0.0+
         // GetAppletFooterUiType(u32) -> u8
         public ResultCode GetAppletFooterUiType(ServiceCtx context)

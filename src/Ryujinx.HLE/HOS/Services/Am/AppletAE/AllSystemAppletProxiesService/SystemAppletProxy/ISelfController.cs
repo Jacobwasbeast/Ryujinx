@@ -193,6 +193,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(15)]
+        // SetScreenShotAppletIdentityInfo()
+        public ResultCode SetScreenShotAppletIdentityInfo(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(16)] // 2.0.0+
         // SetOutOfFocusSuspendingEnabled(b8)

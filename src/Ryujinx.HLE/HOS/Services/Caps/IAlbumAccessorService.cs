@@ -284,6 +284,14 @@ namespace Ryujinx.HLE.HOS.Services.Caps
             var fileId = context.RequestData.ReadStruct<AlbumFileId>();
             return LoadImageEx1(320, 180, context, fileId);
         }
+        
+        [CommandCmif(50011)] // 19.0.0+
+        // GetAlbumAccessResultForDebug()
+        public ResultCode GetAlbumAccessResultForDebug(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceCaps);
+            return ResultCode.Success;
+        }
 
         public void GetWidthAndHeightFromInputBuffer(AlbumFileId id, out int width, out int height)
         {

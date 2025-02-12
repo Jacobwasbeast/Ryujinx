@@ -6,6 +6,7 @@ using Ryujinx.HLE.HOS.Services.Settings.Types;
 using Ryujinx.HLE.HOS.Services.Vi.RootService.ApplicationDisplayService;
 using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Horizon.Common;
+using Ryujinx.Horizon.Sdk.Applet;
 using Ryujinx.Horizon.Sdk.Lbl;
 using System;
 
@@ -323,6 +324,24 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
         {
             return (ResultCode)_apmSystemManagerServer.GetCurrentPerformanceConfiguration(context);
+        }
+        
+        [CommandCmif(120)] // 13.0.0+
+        // GetAppletLaunchedHistory() -> s32, buffer<AppletId>
+        public ResultCode GetAppletLaunchedHistory(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            var buffer = context.Request.ReceiveBuff[0];
+            int applets = 0;
+            Span<RealAppletId> appletsBuffer = CreateSpanFromBuffer<RealAppletId>(context, buffer, true);
+            foreach (var applet in context.Device.System.WindowSystem.GetApplets())
+            {
+                applets++;
+                appletsBuffer[applets - 1] = applet.AppletId;
+            }
+            context.ResponseData.Write((uint)applets);
+            WriteSpanToBuffer<RealAppletId>(context, buffer, appletsBuffer);
+            return ResultCode.Success;
         }
         
         [CommandCmif(200)]

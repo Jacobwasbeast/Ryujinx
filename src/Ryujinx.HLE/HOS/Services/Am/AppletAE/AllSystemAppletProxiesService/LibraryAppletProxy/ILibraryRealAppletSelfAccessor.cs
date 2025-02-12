@@ -4,6 +4,7 @@ using Ryujinx.HLE.HOS.Applets;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Threading;
+using Ryujinx.HLE.HOS.SystemState;
 using Ryujinx.Horizon.Common;
 using Ryujinx.Horizon.Sdk.Applet;
 using System;
@@ -182,7 +183,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // CanUseApplicationCore() -> bool
         public ResultCode CanUseApplicationCore(ServiceCtx context)
         {
-            context.ResponseData.Write(false);
+            context.ResponseData.Write(true);
 
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
@@ -214,6 +215,29 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         public ResultCode ReportVisibleError(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(60)]
+        // GetMainAppletApplicationDesiredLanguage() -> nn::os::Language
+        public ResultCode GetMainAppletApplicationDesiredLanguage(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            // TODO: Find a better method to get the desired language.
+            string language = "en-US";
+            switch (context.Device.Configuration.Region)
+            {
+                case RegionCode.Japan:
+                    language = "ja";
+                    break;
+                case RegionCode.Europe:
+                    language = "fr";
+                    break;
+                case RegionCode.Korea:
+                    language = "ko";
+                    break;
+            }
+            context.ResponseData.Write(language);
             return ResultCode.Success;
         }
         

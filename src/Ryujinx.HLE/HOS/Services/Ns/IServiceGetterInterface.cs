@@ -28,6 +28,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
             return ResultCode.Success;
         }
         
+        [CommandCmif(7991)] // 5.0.0+
+        //  GetReadOnlyApplicationRecordInterface() -> object<nn::ns::detail::IReadOnlyApplicationRecordInterface>
+        public ResultCode GetReadOnlyApplicationRecordInterface(ServiceCtx context)
+        {
+            MakeObject(context, new IReadOnlyApplicationRecordInterface());
+            
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(7996)]
         // GetApplicationManagerInterface() -> object<nn::ns::detail::IApplicationManagerInterface>
         public ResultCode GetApplicationManagerInterface(ServiceCtx context)
@@ -52,6 +61,15 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         {
             MakeObject(context, new IContentManagementInterface(context));
 
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(7999)]
+        // GetDocumentInterface() -> object<nn::ns::detail::IDocumentInterface>
+        public ResultCode GetDocumentInterface(ServiceCtx context)
+        {
+            MakeObject(context, new IDocumentInterface());
+            
             return ResultCode.Success;
         }
     }

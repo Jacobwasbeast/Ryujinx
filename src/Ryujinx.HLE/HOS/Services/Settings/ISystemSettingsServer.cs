@@ -551,6 +551,15 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             return ResultCode.Success;
         }
         
+        [CommandCmif(183)]
+        // GetPlatformRegion() -> s32
+        public ResultCode GetPlatformRegion(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceSet);
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(201)]
         // GetFieldTestingFlag() -> bool
         public ResultCode GetFieldTestingFlag(ServiceCtx context)

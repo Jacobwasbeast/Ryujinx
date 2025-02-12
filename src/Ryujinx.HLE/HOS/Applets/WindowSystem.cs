@@ -7,6 +7,7 @@ using System.Linq;
 using Ryujinx.Horizon.Sdk.Applet;
 using Ryujinx.Common;
 using Ryujinx.HLE.HOS.Applets.Types;
+using System.Collections;
 using System.Threading;
 
 namespace Ryujinx.HLE.HOS.Applets
@@ -563,6 +564,10 @@ namespace Ryujinx.HLE.HOS.Applets
                 }
             }
 
+            if (applet == null)
+            {
+                return _foregroundRequestedApplet;
+            }
             return applet;
         }
 
@@ -606,6 +611,20 @@ namespace Ryujinx.HLE.HOS.Applets
         public bool HasAnyApplets()
         {
             return _applets.Count > 0;
+        }
+
+        internal RealApplet[] GetApplets()
+        {
+            return _applets.Values.ToArray();
+        }
+
+        public void PauseOldWindows(ulong pid)
+        {
+            RealApplet applet = GetByAruId(pid);
+            if (applet?.CallerApplet != null)
+            {
+                applet.CallerApplet.ProcessHandle.SetActivity(true);
+            }
         }
     }
 
