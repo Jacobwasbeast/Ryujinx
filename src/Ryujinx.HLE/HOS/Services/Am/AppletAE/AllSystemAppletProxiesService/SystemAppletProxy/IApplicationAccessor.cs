@@ -91,9 +91,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // RequestExit()
         public ResultCode RequestExit(ServiceCtx context)
         {
-            applet.ProcessHandle.SetActivity(false);
-            applet.AppletState.OnExitRequested();
-            applet?.ProcessHandle.Terminate();
+            applet?.ProcessHandle?.SetActivity(false);
+            applet?.AppletState?.OnExitRequested();
+            applet?.ProcessHandle?.Terminate();
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;

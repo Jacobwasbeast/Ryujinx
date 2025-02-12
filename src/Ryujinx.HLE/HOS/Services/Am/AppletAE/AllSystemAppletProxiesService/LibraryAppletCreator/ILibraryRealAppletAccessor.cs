@@ -135,9 +135,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // RequestExit()
         public ResultCode RequestExit(ServiceCtx context)
         {
-            _applet.ProcessHandle.SetActivity(false);
-            _applet.AppletState.OnExitRequested();
-            _applet?.ProcessHandle.Terminate();
+            _applet?.ProcessHandle?.SetActivity(false);
+            _applet?.AppletState?.OnExitRequested();
+            _applet?.ProcessHandle?.Terminate();
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             return ResultCode.Success;
@@ -147,9 +147,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         // Terminate()
         public ResultCode Terminate(ServiceCtx context)
         {
-            _applet.ProcessHandle.SetActivity(false);
-            _applet.AppletState.OnExitRequested();
-            _applet?.ProcessHandle.Terminate();
+            _applet?.ProcessHandle?.SetActivity(false);
+            _applet?.AppletState?.OnExitRequested();
+            _applet?.ProcessHandle?.Terminate();
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }

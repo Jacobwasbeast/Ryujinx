@@ -199,7 +199,7 @@ namespace Ryujinx.HLE.HOS.Services
 
             if (SmObjectFactory != null)
             {
-                _context.Syscall.ManageNamedPort(out int serverPortHandle, "sm:", 50);
+                _context.Syscall.ManageNamedPort(out int serverPortHandle, "sm:", 50).AbortOnFailure();
 
                 AddPort(serverPortHandle, SmObjectFactory);
             }
@@ -304,9 +304,13 @@ namespace Ryujinx.HLE.HOS.Services
                             _wakeEvent.WritableEvent.Clear();
                         }
                     }
-                    else if (rc == KernelResult.PortRemoteClosed && signaledIndex >= 0 && SmObjectFactory != null)
+                    else if (rc == KernelResult.PortRemoteClosed && signaledIndex >= 0/* && SmObjectFactory != null*/)
                     {
                         DestroySession(handles[signaledIndex]);
+                    }
+                    else
+                    {
+                        Logger.Warning?.Print(LogClass.Service, $"ReplyAndReceive failed with unknown result: {rc}");
                     }
 
                     _selfProcess.CpuMemory.Write(messagePtr + 0x0, 0);

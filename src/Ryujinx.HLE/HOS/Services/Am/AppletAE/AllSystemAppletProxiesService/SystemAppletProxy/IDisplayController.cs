@@ -81,6 +81,8 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         }
 
         [CommandCmif(18)]
+        [CommandCmif(23)]
+        [CommandCmif(25)]
         // AcquireCallerAppletCaptureBufferEx() -> (b8, handle<copy>)
         public ResultCode AcquireCallerAppletCaptureBufferEx(ServiceCtx context)
         {
@@ -110,6 +112,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             byte unknown1 = context.RequestData.ReadByte();
             int captureSharedBuffer = context.RequestData.ReadInt32();
             uint color = context.RequestData.ReadUInt32();
+            context.Device.System.ViServerS.CancelFrameBuffer(context.Device.System.ViServerS.GetSharedLayerId(),captureSharedBuffer);
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { unknown1, captureSharedBuffer });
             return ResultCode.Success;
         }

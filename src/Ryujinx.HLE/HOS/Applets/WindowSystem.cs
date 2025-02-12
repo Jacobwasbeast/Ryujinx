@@ -507,10 +507,12 @@ namespace Ryujinx.HLE.HOS.Applets
                     if (child == _foregroundRequestedApplet)
                     {
                         UpdateAppletStateLocked(child, true);
+                        _foregroundRequestedApplet.SetInteractibleLocked(true);
                     }
                     else
                     {
                         UpdateAppletStateLocked(child, isForeground);
+                        _foregroundRequestedApplet.SetInteractibleLocked(isForeground);
                     }
                 }
             }
