@@ -318,6 +318,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(68)]
+        // GetBuiltInDisplayType() -> u32 type
+        public ResultCode GetBuiltInDisplayType(ServiceCtx context)
+        {
+            context.ResponseData.Write(0);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(91)] // 7.0.0+
         // GetCurrentPerformanceConfiguration() -> nn::apm::PerformanceConfiguration

@@ -1,4 +1,6 @@
 ﻿using Ryujinx.Common.Logging;
+using Ryujinx.HLE.HOS.Ipc;
+using Ryujinx.HLE.HOS.Kernel.Threading;
 
 namespace Ryujinx.HLE.HOS.Services.Audio
 {
@@ -80,6 +82,16 @@ namespace Ryujinx.HLE.HOS.Services.Audio
             return ResultCode.Success;
         }
 
+        [CommandCmif(34)]
+        // AcquireTargetNotification() -> handle<copy>
+        public ResultCode AcquireTargetNotification(ServiceCtx context)
+        {
+            KEvent ev = new KEvent(context.Device.System.KernelContext);
+            context.Process.HandleTable.GenerateHandle(ev.ReadableEvent, out int handle);
+            context.Response.HandleDesc = IpcHandleDesc.MakeCopy(handle);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(5000)]
         // Unknown5000() -> bool // 19.0.0+
         public ResultCode Unknown5000(ServiceCtx context)

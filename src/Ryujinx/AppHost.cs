@@ -967,7 +967,7 @@ namespace Ryujinx.Ava
                 ConfigurationState.Instance.Multiplayer.LdnServer,
                 ConfigurationState.Instance.Graphics.CustomVSyncInterval.Value,
                 ConfigurationState.Instance.Hacks.ShowDirtyHacks ? ConfigurationState.Instance.Hacks.EnabledHacks : null));
-            //Device.LoadSystemProgramId(0x010000000000100C);
+            Device.LoadSystemProgramId(0x010000000000100C);
         }
 
         private static IHardwareDeviceDriver InitializeAudio()

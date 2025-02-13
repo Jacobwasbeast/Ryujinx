@@ -318,20 +318,21 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private void SendButtonAppletMessageLocked(AppletMessage message)
         {
+            if (message == AppletMessage.DetectShortPressingHomeButton)
+            {
+                foreach (var applet in _applets.Values)
+                {
+                    if (applet != _homeMenu && applet != _overlayDisp && _foregroundRequestedApplet==applet)
+                    {
+                        applet.ProcessHandle.SetActivity(true);
+                    }
+                }
+            }
+            
             if (_homeMenu != null)
             {
                 lock (_homeMenu.Lock)
                 {
-                    if (message == AppletMessage.DetectShortPressingHomeButton)
-                    {
-                        foreach (var applet in _applets.Values)
-                        {
-                            if (applet != _homeMenu && _foregroundRequestedApplet==applet)
-                            {
-                                applet.ProcessHandle.SetActivity(true);
-                            }
-                        }
-                    }
                     _homeMenu.AppletState.PushUnorderedMessage(message);
                 }
             }
@@ -621,7 +622,7 @@ namespace Ryujinx.HLE.HOS.Applets
         public void PauseOldWindows(ulong pid)
         {
             RealApplet applet = GetByAruId(pid);
-            if (applet?.CallerApplet != null&&applet?.CallerApplet!=_homeMenu)
+            if (applet?.CallerApplet != null&&applet?.CallerApplet!=_homeMenu&&applet?.CallerApplet!=_overlayDisp)
             {
                 applet.CallerApplet.ProcessHandle.SetActivity(true);
             }
