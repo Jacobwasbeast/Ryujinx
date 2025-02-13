@@ -135,6 +135,9 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             _acquiredSleepLockEvent.ReadableEvent.Signal();
+            
+            _applet.AppletState.SetFocusForce(true);
+            context.Device.System.WindowSystem.RequestApplicationToGetForeground(_applet.ProcessHandle.Pid);
 
             return ResultCode.Success;
         }

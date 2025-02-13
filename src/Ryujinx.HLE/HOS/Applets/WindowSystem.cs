@@ -592,7 +592,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 if (_applets.TryGetValue(pid, out applet))
                 {
-                    if (_applets.Count > 1)
+                    if (_applets.Count > 2)
                     {
                         return true;
                     }
