@@ -19,8 +19,9 @@ namespace Ryujinx.HLE.HOS.Applets
         private EventObserver _eventObserver = null;
 
         // Foreground roots.
-        private RealApplet _homeMenu = null;
-        private RealApplet _overlayDisp = null;
+        RealApplet _homeMenu = null;
+        RealApplet _overlayDisp = null;
+        RealApplet _application = null;
         // Removed single application field to allow multiple applications.
 
         // Home menu state.
@@ -130,22 +131,21 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 _overlayDisp = applet;
             }
-            // For application applets, we no longer assign a unique field.
-            // They are simply tracked as root applets (if callerPid == 0) and in the _applets dictionary.
+            else if (isApplication)
+            {
+                _application = applet;
+            }
 
             _applets[applet.AppletResourceUserId] = applet;
             _eventObserver.TrackAppletProcess(applet);
 
-            // If this is the first applet being tracked, or if it is one of the special system applets,
-            // perform initial setup.
-            if (_applets.Count == 1 ||
-                applet.AppletId == RealAppletId.SystemAppletMenu ||
-                applet.AppletId == RealAppletId.OverlayApplet)
+            if (_applets.Count == 1 || applet.AppletId == RealAppletId.SystemAppletMenu || applet.AppletId == RealAppletId.OverlayApplet)
             {
                 SetupFirstApplet(applet);
-                _foregroundRequestedApplet = applet;
-                applet.AppletState.SetFocus(false);
             }
+
+            // _foregroundRequestedApplet = applet;
+            // applet.AppletState.SetFocusState(FocusState.InFocus);
 
             _eventObserver.RequestUpdate();
         }
@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 applet.AppletState.SetFocusState(FocusState.InFocus);
                 _foregroundRequestedApplet = applet;
-                RequestApplicationToGetForeground(applet.ProcessHandle.Pid);
+                RequestApplicationToGetForeground();
             }
 
             applet.UpdateSuspensionStateLocked(true);
@@ -208,63 +208,33 @@ namespace Ryujinx.HLE.HOS.Applets
             _eventObserver.RequestUpdate();
         }
 
-        /// <summary>
-        /// Requests that the home menu be focused.
-        /// The PID provided must match the home menu’s PID.
-        /// </summary>
-        internal void RequestHomeMenuToGetForeground(ulong pid)
+        internal void RequestApplicationToGetForeground()
         {
-            lock (_lock)
+            // lock (_lock)
             {
-                if (_homeMenu != null && _homeMenu.ProcessHandle.Pid == pid)
-                {
-                    _foregroundRequestedApplet = _homeMenu;
-                }
-                else
-                {
-                    Logger.Warning?.Print(LogClass.ServiceAm, $"RequestHomeMenuToGetForeground: Provided pid {pid} does not match the home menu.");
-                }
+                _foregroundRequestedApplet = _application;
             }
-            _eventObserver.RequestUpdate();
-        }
 
-        /// <summary>
-        /// Requests that an application be focused.
-        /// The PID provided must belong to an application applet.
-        /// </summary>
-        internal void RequestApplicationToGetForeground(ulong pid)
-        {
-            lock (_lock)
-            {
-                if (_applets.TryGetValue(pid, out var applet))
-                {
-                    _foregroundRequestedApplet = applet;
-                }
-                else
-                {
-                    if (pid == _homeMenu?.ProcessHandle.Pid)
-                    {
-                        _foregroundRequestedApplet.AppletState.SetFocusForce(false,true);
-                        _foregroundRequestedApplet = _homeMenu;
-                    }
-                    else
-                    {
-                        Logger.Warning?.Print(LogClass.ServiceAm, $"RequestApplicationToGetForeground: Provided pid {pid} is not an application applet.");
-                    }
-                }
-            }
             _eventObserver.RequestUpdate();
         }
 
         internal void RequestLockHomeMenuIntoForeground()
         {
-            _homeMenuForegroundLocked = true;
+            // lock (_lock)
+            {
+                _homeMenuForegroundLocked = true;
+            }
+
             _eventObserver.RequestUpdate();
         }
 
         internal void RequestUnlockHomeMenuFromForeground()
         {
-            _homeMenuForegroundLocked = false;
+            // lock (_lock)
+            {
+                _homeMenuForegroundLocked = false;
+            }
+
             _eventObserver.RequestUpdate();
         }
 
@@ -277,7 +247,7 @@ namespace Ryujinx.HLE.HOS.Applets
 
             _eventObserver.RequestUpdate();
         }
-
+        
         internal void OnOperationModeChanged()
         {
             foreach (var (_, applet) in _applets)
@@ -626,6 +596,21 @@ namespace Ryujinx.HLE.HOS.Applets
             {
                 applet.CallerApplet.ProcessHandle.SetActivity(true);
             }
+        }
+
+        public void TrackNewProcess(ulong processProcessId, ulong i, bool b)
+        {
+            TrackProcess(processProcessId, i, b);
+        }
+
+        internal RealApplet GetOverlayMenu()
+        {
+            return _overlayDisp;
+        }
+        
+        internal RealApplet GetHomeMenu()
+        {
+            return _homeMenu;
         }
     }
 

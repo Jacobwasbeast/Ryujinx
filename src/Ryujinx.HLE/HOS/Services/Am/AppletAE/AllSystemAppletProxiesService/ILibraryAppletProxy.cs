@@ -113,7 +113,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService
         // GetHomeMenuFunctions() -> object<nn::am::service::IHomeMenuFunctions>
         public ResultCode GetHomeMenuFunctions(ServiceCtx context)
         {
-            MakeObject(context, new IHomeMenuFunctions(context.Device.System, _pid));
+            MakeObject(context, new IHomeMenuFunctions(context.Device.System));
 
             return ResultCode.Success;
         }

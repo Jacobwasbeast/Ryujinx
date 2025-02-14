@@ -42,6 +42,7 @@ using Ryujinx.HLE.HOS;
 using Ryujinx.HLE.HOS.Services.Account.Acc;
 using Ryujinx.HLE.HOS.Services.Ns.Types;
 using Ryujinx.HLE.HOS.SystemState;
+using Ryujinx.HLE.Loaders.Processes;
 using Ryujinx.Input;
 using Ryujinx.Input.HLE;
 using SkiaSharp;
@@ -679,6 +680,8 @@ namespace Ryujinx.Ava
             
             InitEmulatedSwitch();
             MainWindow.UpdateGraphicsConfig();
+            Device.LoadSystemProgramId(0x010000000000100C, out ProcessResult process);
+            Device.System.WindowSystem.TrackNewProcess(process.ProcessId,0,false);
 
             SystemVersion firmwareVersion = ContentManager.GetCurrentFirmwareVersion();
 
@@ -967,7 +970,6 @@ namespace Ryujinx.Ava
                 ConfigurationState.Instance.Multiplayer.LdnServer,
                 ConfigurationState.Instance.Graphics.CustomVSyncInterval.Value,
                 ConfigurationState.Instance.Hacks.ShowDirtyHacks ? ConfigurationState.Instance.Hacks.EnabledHacks : null));
-            Device.LoadSystemProgramId(0x010000000000100C);
         }
 
         private static IHardwareDeviceDriver InitializeAudio()

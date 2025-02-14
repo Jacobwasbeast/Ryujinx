@@ -320,13 +320,6 @@ namespace Ryujinx.HLE.HOS.SystemState
 
             return false;
         }
-
-        public void SetFocus(bool isFocused)
-        {
-            SetFocusHandlingMode(false);
-            FocusState focusState = isFocused ? FocusState.InFocus : FocusState.OutOfFocus;
-            SetFocusState(focusState);
-        }
         
         public void SetFocusForce(bool isFocused, bool shouldSuspend = false)
         {

@@ -168,7 +168,7 @@ namespace Ryujinx.HLE
             System.WindowSystem.ButtonPressTracker.Update();
         }
 
-        public bool LoadSystemProgramId(ulong programId)
+        public bool LoadSystemProgramId(ulong programId, out ProcessResult result)
         {
             string contentPath = System.ContentManager.GetInstalledContentPath(programId, StorageId.BuiltInSystem, NcaContentType.Program);
             string filePath = VirtualFileSystem.SwitchPathToSystemPath(contentPath);
@@ -178,7 +178,7 @@ namespace Ryujinx.HLE
                 throw new InvalidSystemResourceException("Specified title ID is not installed on the system.");
             }
 
-            return Processes.LoadNca(filePath);
+            return Processes.LoadNca(filePath, out result);
         }
     }
 }

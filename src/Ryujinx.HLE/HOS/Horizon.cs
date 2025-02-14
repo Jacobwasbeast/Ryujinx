@@ -75,7 +75,7 @@ namespace Ryujinx.HLE.HOS
             return IntialAppletState;
         }
         
-        internal WindowSystem WindowSystem { get; private set; }
+        public WindowSystem WindowSystem { get; private set; }
 
         internal EventObserver EventObserver { get; private set; }
 
@@ -346,7 +346,7 @@ namespace Ryujinx.HLE.HOS
 
         public void ReturnFocus()
         {
-            GetAppletState(WindowSystem.GetFocusedApp()).SetFocus(true);
+            GetAppletState(WindowSystem.GetFocusedApp()).SetFocusState(FocusState.InFocus);
         }
 
         public void SimulateWakeUpMessage()
@@ -526,11 +526,20 @@ namespace Ryujinx.HLE.HOS
             IsPaused = pause;
         }
         
-        public void SetupFirst(ulong ProgramId)
+        public void SetupFirst(ulong ProgramId, ulong Pid)
         {
             bool isApp = ProgramId > 0x01000000000007FF;
-            RealApplet app = WindowSystem.TrackProcess(ProgramId, 0, isApp);
-            app.AppletState.SetFocusForce(true);
+            ulong pid = 0;
+
+            if (WindowSystem.GetOverlayMenu() != null)
+            {
+                pid = WindowSystem.GetOverlayMenu().ProcessHandle.Pid;
+            }
+            RealApplet app = WindowSystem.TrackProcess(Pid, pid, isApp);
+            if (isApp)
+            {
+                app.AppletState.SetFocusForce(true);
+            }
         }
     }
 }

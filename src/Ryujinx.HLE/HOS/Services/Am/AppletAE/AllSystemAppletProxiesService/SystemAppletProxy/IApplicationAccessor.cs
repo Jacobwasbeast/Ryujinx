@@ -110,7 +110,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             {
                 applet.ProcessHandle.SetActivity(false);
             }
-            context.Device.System.WindowSystem.RequestApplicationToGetForeground(applet.ProcessHandle.Pid);
+            context.Device.System.WindowSystem.RequestApplicationToGetForeground();
             
             return ResultCode.Success;
         }

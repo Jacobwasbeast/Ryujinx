@@ -1,3 +1,4 @@
+using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel.Threading;
 using Ryujinx.Horizon.Common;
@@ -29,6 +30,14 @@ namespace Ryujinx.HLE.HOS.Services.Npns
                 }
             }
             context.Response.HandleDesc = IpcHandleDesc.MakeCopy(receiveEventHandle);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(8)] // 18.0.0+
+        // ListenToByName()
+        public ResultCode ListenToByName(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceNpns);
             return ResultCode.Success;
         }
     }

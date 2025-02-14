@@ -117,11 +117,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
                 focusState = _applet.AppletState.GetAndClearFocusState();
             }
 
-            if (context.Device.System.WindowSystem.IsFocusedApplet(_applet))
-            {
-                focusState = FocusState.InFocus;
-            }
-
             Logger.Info?.Print(LogClass.ServiceAm, $"pid: {_applet.ProcessHandle.Pid}, GetCurrentFocusState():{focusState}");
             context.ResponseData.Write((byte)focusState);
 
@@ -135,9 +130,6 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
 
             _acquiredSleepLockEvent.ReadableEvent.Signal();
-            
-            _applet.AppletState.SetFocusForce(true);
-            context.Device.System.WindowSystem.RequestApplicationToGetForeground(_applet.ProcessHandle.Pid);
 
             return ResultCode.Success;
         }
@@ -321,7 +313,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
 
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(68)]
         // GetBuiltInDisplayType() -> u32 type
         public ResultCode GetBuiltInDisplayType(ServiceCtx context)
@@ -329,7 +321,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             context.ResponseData.Write(0);
             return ResultCode.Success;
         }
-
+        
         [CommandCmif(91)] // 7.0.0+
         // GetCurrentPerformanceConfiguration() -> nn::apm::PerformanceConfiguration
         public ResultCode GetCurrentPerformanceConfiguration(ServiceCtx context)
@@ -363,7 +355,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
             return ResultCode.Success;
         }
-        
+
         [CommandCmif(300)] // 9.0.0+
         // GetSettingsPlatformRegion() -> u8
         public ResultCode GetSettingsPlatformRegion(ServiceCtx context)
