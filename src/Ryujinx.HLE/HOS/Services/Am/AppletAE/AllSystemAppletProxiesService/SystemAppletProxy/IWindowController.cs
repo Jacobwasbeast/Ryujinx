@@ -26,8 +26,11 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Sys
         // GetAppletResourceUserIdOfCallerApplet() -> nn::applet::AppletResourceUserId
         public ResultCode GetAppletResourceUserIdOfCallerApplet(ServiceCtx context)
         {
-            ulong appletResourceUserId = _pid;
-            appletResourceUserId = context.Device.System.WindowSystem.GetByAruId(_pid).CallerApplet.ProcessHandle.TitleId;
+            ulong appletResourceUserId = 0x0100000000001000;
+            if (context.Device.System.WindowSystem.GetApplicationApplet() != null)
+            {
+                appletResourceUserId = context.Device.System.WindowSystem.GetApplicationApplet().ProcessHandle.TitleId;
+            }
             context.ResponseData.Write(appletResourceUserId);
             Logger.Stub?.PrintStub(LogClass.ServiceAm, new { appletResourceUserId });
             return ResultCode.Success;

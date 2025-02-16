@@ -218,6 +218,14 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
             return ResultCode.Success;
         }
         
+        [CommandCmif(51)]
+        // ReportVisibleErrorWithErrorContext(nn::err::ErrorCode)
+        public ResultCode ReportVisibleErrorWithErrorContext(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceAm);
+            return ResultCode.Success;
+        }
+        
         [CommandCmif(60)]
         // GetMainAppletApplicationDesiredLanguage() -> nn::os::Language
         public ResultCode GetMainAppletApplicationDesiredLanguage(ServiceCtx context)

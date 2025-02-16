@@ -522,24 +522,21 @@ namespace Ryujinx.HLE.HOS.Applets
 
         internal RealApplet GetApplicationApplet()
         {
-            RealApplet applet = null;
-            lock (_lock)
+            if (_application != null)
             {
-                foreach (var (_, value) in _applets)
+                return _application;
+            }
+            else
+            {
+                if (_homeMenu != null)
                 {
-                    if (value.IsApplication)
-                    {
-                        applet = value;
-                        break;
-                    }
+                    return _homeMenu;
+                }
+                else
+                {
+                    return _overlayDisp;
                 }
             }
-
-            if (applet == null)
-            {
-                return _foregroundRequestedApplet;
-            }
-            return applet;
         }
 
         public void RemoveProcess(ulong processHandlePid)

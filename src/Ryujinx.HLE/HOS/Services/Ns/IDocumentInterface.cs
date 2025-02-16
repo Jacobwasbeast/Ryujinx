@@ -16,7 +16,13 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // GetRunningApplicationProgramId() -> u64
         public ResultCode GetRunningApplicationProgramId(ServiceCtx context)
         {
-            context.ResponseData.Write(context.Device.Processes.ActiveApplication.ProgramId);
+            ulong appletResourceUserId = 0x0100000000001000;
+            if (context.Device.System.WindowSystem.GetApplicationApplet() != null)
+            {
+                appletResourceUserId = context.Device.System.WindowSystem.GetApplicationApplet().ProcessHandle.TitleId;
+            }
+
+            context.ResponseData.Write(appletResourceUserId);
             return ResultCode.Success;
         }
     }
