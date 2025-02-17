@@ -149,6 +149,14 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(304)]
+        // EnableAssigningSingleOnSlSrPress()
+        public ResultCode EnableAssigningSingleOnSlSrPress(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(306)]
         // GetLastActiveNpad() -> nn::hid::NpadIdType
@@ -183,6 +191,28 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             return ResultCode.Success;
         }
+        
+        [CommandCmif(310)]
+        // GetMaskedSupportedNpadStyleSet
+        public ResultCode GetMaskedSupportedNpadStyleSet(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            context.RequestData.ReadUInt32();
+
+            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
+            {
+                if (HidUtils.GetNpadIdTypeFromIndex(playerIndex) > NpadIdType.Handheld)
+                {
+                    return ResultCode.InvalidNpadIdType;
+                }
+            }
+
+            // todo: wrong
+            // context.ResponseData.Write((ulong)context.Device.Hid.Npads.SupportedStyleSets);
+            context.ResponseData.Write((ulong)AppletFooterUiType.JoyDual);
+            context.ResponseData.Write((ulong)0);
+            return ResultCode.Success;
+        }
 
         [CommandCmif(313)] // 9.0.0+
         // GetNpadCaptureButtonAssignment()
@@ -201,6 +231,42 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             context.ResponseData.Write((byte)appletFooterUiType);
 
             return resultCode;
+        }
+          
+        [CommandCmif(315)] // 9.0.0+
+        // GetAppletDetailedUiType(u32) -> u8
+        public ResultCode GetAppletDetailedUiType(ServiceCtx context)
+        {
+            ResultCode resultCode = GetAppletFooterUiTypeImpl(context, out AppletFooterUiType appletFooterUiType);
+
+            context.ResponseData.Write((byte)appletFooterUiType);
+
+            return resultCode;
+        }
+        
+        [CommandCmif(316)]
+        // GetNpadInterfaceType() -> (u32, u8) 
+        public ResultCode GetNpadInterfaceType(ServiceCtx context)
+        {
+            context.RequestData.ReadUInt32();
+            foreach (PlayerIndex playerIndex in context.Device.Hid.Npads.GetSupportedPlayers())
+            {
+                if (HidUtils.GetNpadIdTypeFromIndex(playerIndex) > NpadIdType.Handheld)
+                {
+                    return ResultCode.InvalidNpadIdType;
+                }
+            }
+            context.ResponseData.Write(1);
+            return ResultCode.Success;
+        }
+        
+        [CommandCmif(318)]
+        // HasBattery(u32) -> bool
+        public ResultCode HasBattery(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            context.ResponseData.Write(true);
+            return ResultCode.Success;
         }
 
         [CommandCmif(321)]
@@ -336,7 +402,17 @@ namespace Ryujinx.HLE.HOS.Services.Hid
 
             return ResultCode.Success;
         }
-
+        
+        [CommandCmif(548)]
+        // GetRegisteredDevices() -> (u64, buffer<nn::hid::system::RegisteredDevice, 0xa>)
+        public ResultCode GetRegisteredDevices(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceHid);
+            context.ResponseData.Write(0L);
+            return ResultCode.Success;
+        }
+        
+        
         [CommandCmif(703)]
         // GetUniquePadIds() -> (u64, buffer<nn::hid::system::UniquePadId[], 0xa>)
         public ResultCode GetUniquePadIds(ServiceCtx context)
@@ -375,6 +451,13 @@ namespace Ryujinx.HLE.HOS.Services.Hid
             return ResultCode.Success;
         }
         
+        [CommandCmif(870)]
+        // IsHandheldButtonPressedOnConsoleMode() -> bool
+        public ResultCode IsHandheldButtonPressedOnConsoleMode(ServiceCtx context)
+        {
+            context.ResponseData.Write(true);
+            return ResultCode.Success;
+        }
         [CommandCmif(1120)]
         // Unknown1120()
         public ResultCode Unknown1120(ServiceCtx context)

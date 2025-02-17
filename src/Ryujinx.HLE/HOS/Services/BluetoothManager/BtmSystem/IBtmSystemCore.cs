@@ -15,13 +15,19 @@ namespace Ryujinx.HLE.HOS.Services.BluetoothManager.BtmSystem
 
         public IBtmSystemCore() { }
 
+        [CommandCmif(0)]
+        // StartGamepadPairing()
+        public ResultCode StartGamepadPairing(ServiceCtx context)
+        {
+            Logger.Stub?.PrintStub(LogClass.ServiceBtm);
+            return ResultCode.Success;
+        }
+
         [CommandCmif(6)]
         // IsRadioEnabled() -> b8
         public ResultCode IsRadioEnabled(ServiceCtx context)
         {
             context.ResponseData.Write(true);
-
-            Logger.Stub?.PrintStub(LogClass.ServiceBtm);
 
             return ResultCode.Success;
         }

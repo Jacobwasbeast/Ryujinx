@@ -127,23 +127,30 @@ namespace Ryujinx.HLE.HOS.Applets
 
         private MultiWaitHolder WaitSignaled()
         {
-            while (true)
+            try
             {
-                LinkDeferred();
-
-                if (_cts.Token.IsCancellationRequested)
+                while (true)
                 {
-                    return null;
-                }
+                    LinkDeferred();
 
-                var selected = _multiWait.WaitAny();
-                // Logger.Warning?.Print(LogClass.ServiceAm, $"*** Selected={selected}");
-                if (selected != _wakeupHolder)
-                {
-                    selected.UnlinkFromMultiWaitHolder();
-                }
+                    if (_cts.Token.IsCancellationRequested)
+                    {
+                        return null;
+                    }
 
-                return selected;
+                    var selected = _multiWait.WaitAny();
+                    // Logger.Warning?.Print(LogClass.ServiceAm, $"*** Selected={selected}");
+                    if (selected != _wakeupHolder)
+                    {
+                        selected.UnlinkFromMultiWaitHolder();
+                    }
+
+                    return selected;
+                }
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 
