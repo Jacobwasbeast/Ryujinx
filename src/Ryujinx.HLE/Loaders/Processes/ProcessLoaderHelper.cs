@@ -169,7 +169,7 @@ namespace Ryujinx.HLE.Loaders.Processes
             MemoryRegion memoryRegion = kip.UsesSecureMemory ? MemoryRegion.Service : MemoryRegion.Application;
             KMemoryRegionManager region = context.MemoryManager.MemoryRegions[(int)memoryRegion];
 
-            Result result = region.AllocatePages(out KPageList pageList, (ulong)codePagesCount);
+            Result result = region.AllocatePages(out KPageList pageList, (ulong)codePagesCount, 0);
             if (result != Result.Success)
             {
                 Logger.Error?.Print(LogClass.Loader, $"Process initialization returned error \"{result}\".");
