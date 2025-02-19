@@ -52,7 +52,7 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         // GetApplicationDesiredLanguage() -> u32
         public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)context.Device.Configuration.Region);
+            context.ResponseData.Write((uint)context.Device.System.State.DesiredLanguageCode);
             return ResultCode.Success;
         }
     }

@@ -128,11 +128,11 @@ namespace Ryujinx.HLE.HOS.Services.Settings
             {
                 return ResultCode.NullEULAVersionBuffer;
             }
-
+            
             var eulaVersion = new EulaVersion
             {
                 Version = 0x10000,
-                RegionCode = 1,
+                RegionCode = context.Device.System.State.DesiredRegionCode,
                 ClockType = 1,
                 NetworkSystemClock = 0,
                 SteadyClock = new Time.Clock.SteadyClockTimePoint {

@@ -231,21 +231,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         public ResultCode GetMainAppletApplicationDesiredLanguage(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
-            // TODO: Find a better method to get the desired language.
-            string language = "en-US";
-            switch (context.Device.Configuration.Region)
-            {
-                case RegionCode.Japan:
-                    language = "ja";
-                    break;
-                case RegionCode.Europe:
-                    language = "fr";
-                    break;
-                case RegionCode.Korea:
-                    language = "ko";
-                    break;
-            }
-            context.ResponseData.Write(language);
+            context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
             return ResultCode.Success;
         }
         

@@ -7,11 +7,10 @@ namespace Ryujinx.HLE.HOS.SystemState
         USA,
         Europe,
         Australia,
+        HongKongTaiwanKorea,
         China,
-        Korea,
-        Taiwan,
 
         Min = Japan,
-        Max = Taiwan,
+        Max = China,
     }
 }
