@@ -79,5 +79,10 @@ namespace Ryujinx.HLE.UI
         /// Gets weather or not the applet is real in the system
         /// </summary>
         bool IsAppletReal(RealAppletId appletId);
+
+        /// <summary>
+        /// Displays a dialog informing the user that the requested applet is missing implementation.
+        /// </summary>
+        void DisplayMissingAppletDialog();
     }
 }

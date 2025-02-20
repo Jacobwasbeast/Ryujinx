@@ -364,5 +364,21 @@ namespace Ryujinx.Ava.UI.Applet
                     return missingAppletsAsReal;
             }
         }
+
+        public void DisplayMissingAppletDialog()
+        {
+            string title = LocaleManager.Instance[LocaleKeys.RealMissingApplets];
+            string message = LocaleManager.Instance[LocaleKeys.ErrorMissingApplet];
+            string real = LocaleManager.Instance[LocaleKeys.RealReal];
+            string options = LocaleManager.Instance[LocaleKeys.MenuBarOptions].Trim('_');
+            message = message.Replace("{0}", title);
+            message = message.Replace("{1}", real);
+            string location = options + "->" +
+                              LocaleManager.Instance[LocaleKeys.Settings] + "->" +
+                              LocaleManager.Instance[LocaleKeys.SettingsTabRealApplets] + "->" +
+                              LocaleManager.Instance[LocaleKeys.RealMissingApplets];
+            message += location;
+            DisplayErrorAppletDialog(title, message, [LocaleManager.Instance[LocaleKeys.InputDialogOk]]);
+        }
     }
 }

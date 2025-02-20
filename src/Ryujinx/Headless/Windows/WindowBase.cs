@@ -574,5 +574,10 @@ namespace Ryujinx.Headless
         {
             return false;
         }
+
+        public void DisplayMissingAppletDialog()
+        {
+            DisplayMessageDialog("Missing Applet", "The requested applet was not found.");
+        }
     }
 }
