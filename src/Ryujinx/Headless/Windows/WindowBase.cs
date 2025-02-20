@@ -514,7 +514,7 @@ namespace Ryujinx.Headless
             Exit();
         }
 
-        public bool DisplayErrorAppletDialog(string title, string message, string[] buttonsText)
+        public bool DisplayErrorAppletDialog(string title, string message, string[] buttonsText, (uint Module, uint Description)? errorCode = null)
         {
             SDL_MessageBoxData data = new()
             {
@@ -522,7 +522,7 @@ namespace Ryujinx.Headless
                 message = message,
                 buttons = new SDL_MessageBoxButtonData[buttonsText.Length],
                 numbuttons = buttonsText.Length,
-                window = WindowHandle,
+                window = WindowHandle
             };
 
             for (int i = 0; i < buttonsText.Length; i++)

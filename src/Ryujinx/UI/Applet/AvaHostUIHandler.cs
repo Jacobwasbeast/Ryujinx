@@ -42,7 +42,7 @@ namespace Ryujinx.Ava.UI.Applet
 
             bool okPressed = false;
 
-            if (ConfigurationState.Instance.System.IgnoreApplet)
+            if (ConfigurationState.Instance.System.IgnoreControllerApplet)
                 return false;
 
             Dispatcher.UIThread.InvokeAsync(async () =>
@@ -76,31 +76,32 @@ namespace Ryujinx.Ava.UI.Applet
                     bool opened = false;
 
                     UserResult response = await ContentDialogHelper.ShowDeferredContentDialog(_parent,
-                       title,
-                       message,
-                       string.Empty,
-                       LocaleManager.Instance[LocaleKeys.DialogOpenSettingsWindowLabel],
-                       string.Empty,
-                       LocaleManager.Instance[LocaleKeys.SettingsButtonClose],
-                       (int)Symbol.Important,
-                       deferEvent,
-                       async window =>
-                       {
-                           if (opened)
-                           {
-                               return;
-                           }
+                        title,
+                        message,
+                        string.Empty,
+                        LocaleManager.Instance[LocaleKeys.DialogOpenSettingsWindowLabel],
+                        string.Empty,
+                        LocaleManager.Instance[LocaleKeys.SettingsButtonClose],
+                        (int)Symbol.Important,
+                        deferEvent,
+                        async window =>
+                        {
+                            if (opened)
+                            {
+                                return;
+                            }
 
-                           opened = true;
+                            opened = true;
 
-                           _parent.SettingsWindow = new SettingsWindow(_parent.VirtualFileSystem, _parent.ContentManager);
+                            _parent.SettingsWindow =
+                                new SettingsWindow(_parent.VirtualFileSystem, _parent.ContentManager);
 
-                           await _parent.SettingsWindow.ShowDialog(window);
+                            await _parent.SettingsWindow.ShowDialog(window);
 
-                           _parent.SettingsWindow = null;
+                            _parent.SettingsWindow = null;
 
-                           opened = false;
-                       });
+                            opened = false;
+                        });
 
                     if (response == UserResult.Ok)
                     {
@@ -111,7 +112,9 @@ namespace Ryujinx.Ava.UI.Applet
                 }
                 catch (Exception ex)
                 {
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogMessageDialogErrorExceptionMessage, ex));
+                    await ContentDialogHelper.CreateErrorDialog(
+                        LocaleManager.Instance.UpdateAndGetDynamicValue(
+                            LocaleKeys.DialogMessageDialogErrorExceptionMessage, ex));
 
                     dialogCloseEvent.Set();
                 }
@@ -135,7 +138,9 @@ namespace Ryujinx.Ava.UI.Applet
                 try
                 {
                     _parent.ViewModel.AppHost.NpadManager.BlockInputUpdates();
-                    (UserResult result, string userInput) = await SwkbdAppletDialog.ShowInputDialog(LocaleManager.Instance[LocaleKeys.SoftwareKeyboard], args);
+                    (UserResult result, string userInput) =
+                        await SwkbdAppletDialog.ShowInputDialog(LocaleManager.Instance[LocaleKeys.SoftwareKeyboard],
+                            args);
 
                     if (result == UserResult.Ok)
                     {
@@ -147,7 +152,9 @@ namespace Ryujinx.Ava.UI.Applet
                 {
                     error = true;
 
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogSoftwareKeyboardErrorExceptionMessage, ex));
+                    await ContentDialogHelper.CreateErrorDialog(
+                        LocaleManager.Instance.UpdateAndGetDynamicValue(
+                            LocaleKeys.DialogSoftwareKeyboardErrorExceptionMessage, ex));
                 }
                 finally
                 {
@@ -178,7 +185,8 @@ namespace Ryujinx.Ava.UI.Applet
                     args.InitialText = "Ryujinx";
                     args.StringLengthMin = 1;
                     args.StringLengthMax = 25;
-                    (UserResult result, string userInput) = await SwkbdAppletDialog.ShowInputDialog(LocaleManager.Instance[LocaleKeys.CabinetDialog], args);
+                    (UserResult result, string userInput) =
+                        await SwkbdAppletDialog.ShowInputDialog(LocaleManager.Instance[LocaleKeys.CabinetDialog], args);
                     if (result == UserResult.Ok)
                     {
                         inputText = userInput;
@@ -202,11 +210,13 @@ namespace Ryujinx.Ava.UI.Applet
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 dialogCloseEvent.Set();
-                await ContentDialogHelper.CreateInfoDialog(LocaleManager.Instance[LocaleKeys.CabinetScanDialog],
-                string.Empty,
-                LocaleManager.Instance[LocaleKeys.InputDialogOk],
-                string.Empty,
-                LocaleManager.Instance[LocaleKeys.CabinetTitle]);
+                await ContentDialogHelper.CreateInfoDialog(
+                    LocaleManager.Instance[LocaleKeys.CabinetScanDialog],
+                    string.Empty,
+                    LocaleManager.Instance[LocaleKeys.InputDialogOk],
+                    string.Empty,
+                    LocaleManager.Instance[LocaleKeys.CabinetTitle]
+                );
             });
             dialogCloseEvent.WaitOne();
         }
@@ -218,7 +228,8 @@ namespace Ryujinx.Ava.UI.Applet
             _parent.ViewModel.AppHost?.Stop();
         }
 
-        public bool DisplayErrorAppletDialog(string title, string message, string[] buttons)
+        public bool DisplayErrorAppletDialog(string title, string message, string[] buttons,
+            (uint Module, uint Description)? errorCode = null)
         {
             ManualResetEvent dialogCloseEvent = new(false);
 
@@ -230,9 +241,7 @@ namespace Ryujinx.Ava.UI.Applet
                 {
                     ErrorAppletWindow msgDialog = new(_parent, buttons, message)
                     {
-                        Title = title,
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                        Width = 400
+                        Title = title, WindowStartupLocation = WindowStartupLocation.CenterScreen, Width = 400
                     };
 
                     object response = await msgDialog.Run();
@@ -250,7 +259,9 @@ namespace Ryujinx.Ava.UI.Applet
                 {
                     dialogCloseEvent.Set();
 
-                    await ContentDialogHelper.CreateErrorDialog(LocaleManager.Instance.UpdateAndGetDynamicValue(LocaleKeys.DialogErrorAppletErrorExceptionMessage, ex));
+                    await ContentDialogHelper.CreateErrorDialog(
+                        LocaleManager.Instance.UpdateAndGetDynamicValue(
+                            LocaleKeys.DialogErrorAppletErrorExceptionMessage, ex));
                 }
             });
 
@@ -260,38 +271,36 @@ namespace Ryujinx.Ava.UI.Applet
         }
 
         public IDynamicTextInputHandler CreateDynamicTextInputHandler() => new AvaloniaDynamicTextInputHandler(_parent);
-        
+
         public UserProfile ShowPlayerSelectDialog()
         {
             UserId selected = UserId.Null;
             byte[] defaultGuestImage = EmbeddedResources.Read("Ryujinx.HLE/HOS/Services/Account/Acc/GuestUserImage.jpg");
             UserProfile guest = new(new UserId("00000000000000000000000000000080"), "Guest", defaultGuestImage);
-    
+
             ManualResetEvent dialogCloseEvent = new(false);
-    
+
             Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 ObservableCollection<BaseModel> profiles = [];
                 NavigationDialogHost nav = new();
-                
+
                 _parent.AccountManager.GetAllUsers()
                     .OrderBy(x => x.Name)
                     .ForEach(profile => profiles.Add(new Models.UserProfile(profile, nav)));
-                
+
                 profiles.Add(new Models.UserProfile(guest, nav));
-                UserSelectorDialogViewModel viewModel = new()
+                ProfileSelectorDialogViewModel viewModel = new()
                 {
-                    Profiles = profiles, 
-                    SelectedUserId = _parent.AccountManager.LastOpenedUser.UserId
+                    Profiles = profiles, SelectedUserId = _parent.AccountManager.LastOpenedUser.UserId
                 };
-                UserSelectorDialog content = new(viewModel);
-                (selected, _) = await UserSelectorDialog.ShowInputDialog(content);
-        
+                (selected, _) = await ProfileSelectorDialog.ShowInputDialog(viewModel);
+
                 dialogCloseEvent.Set();
             });
-    
+
             dialogCloseEvent.WaitOne();
-            
+
             UserProfile profile = _parent.AccountManager.LastOpenedUser;
             if (selected == guest.UserId)
             {
@@ -312,6 +321,7 @@ namespace Ryujinx.Ava.UI.Applet
                     }
                 }
             }
+
             return profile;
         }
 

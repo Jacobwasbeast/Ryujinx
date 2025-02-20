@@ -1,6 +1,7 @@
 ﻿using Gommon;
 using Ryujinx.Ava.Common.Locale;
 using Ryujinx.Ava.Utilities.AppLibrary;
+using Ryujinx.Ava.Utilities.PlayReport;
 
 namespace Ryujinx.Ava.UI.ViewModels
 {
@@ -10,12 +11,14 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         public ApplicationDataViewModel(ApplicationData appData) => AppData = appData;
 
+        public string DynamicRichPresenceDescription =>
+            AppData.HasDynamicRichPresenceSupport
+                ? AppData.RichPresenceSpec.Value.Description
+                : GameSpec.DefaultDescription;
+
         public string FormattedVersion => LocaleManager.Instance[LocaleKeys.GameListHeaderVersion].Format(AppData.Version);
         public string FormattedDeveloper => LocaleManager.Instance[LocaleKeys.GameListHeaderDeveloper].Format(AppData.Developer);
-        
         public string FormattedFileExtension => LocaleManager.Instance[LocaleKeys.GameListHeaderFileExtension].Format(AppData.FileExtension);
-        public string FormattedLastPlayed => LocaleManager.Instance[LocaleKeys.GameListHeaderLastPlayed].Format(AppData.LastPlayedString);
-        public string FormattedPlayTime => LocaleManager.Instance[LocaleKeys.GameListHeaderTimePlayed].Format(AppData.TimePlayedString);
         public string FormattedFileSize => LocaleManager.Instance[LocaleKeys.GameListHeaderFileSize].Format(AppData.FileSizeString);
         
         public string FormattedLdnInfo => 
