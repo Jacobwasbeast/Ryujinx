@@ -1,6 +1,7 @@
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Applets;
+using Ryujinx.HLE.HOS.Applets.Error;
 using Ryujinx.HLE.HOS.Ipc;
 using Ryujinx.HLE.HOS.Kernel;
 using Ryujinx.HLE.HOS.Kernel.Threading;
@@ -231,7 +232,7 @@ namespace Ryujinx.HLE.HOS.Services.Am.AppletAE.AllSystemAppletProxiesService.Lib
         public ResultCode GetMainAppletApplicationDesiredLanguage(ServiceCtx context)
         {
             Logger.Stub?.PrintStub(LogClass.ServiceAm);
-            context.ResponseData.Write(context.Device.System.State.DesiredLanguageCode);
+            context.ResponseData.Write(ErrorApplet.SystemLanguageToLanguageKey(context.Device.Configuration.SystemLanguage));
             return ResultCode.Success;
         }
         

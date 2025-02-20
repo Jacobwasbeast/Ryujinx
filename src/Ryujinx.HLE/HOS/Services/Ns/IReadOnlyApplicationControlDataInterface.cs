@@ -3,6 +3,7 @@ using LibHac.Ns;
 using Ryujinx.Common;
 using Ryujinx.Common.Logging;
 using Ryujinx.HLE.HOS.Services.Ns.Types;
+using Ryujinx.HLE.HOS.SystemState;
 using System;
 using System.Linq;
 using ApplicationId = LibHac.ApplicationId;
@@ -49,11 +50,57 @@ namespace Ryujinx.HLE.HOS.Services.Ns
         }
         
         [CommandCmif(1)]
-        // GetApplicationDesiredLanguage() -> u32
+        // GetApplicationDesiredLanguage(u8) -> u8
         public ResultCode GetApplicationDesiredLanguage(ServiceCtx context)
         {
-            context.ResponseData.Write((uint)context.Device.System.State.DesiredLanguageCode);
+            byte sourceBitmask = (byte)context.RequestData.ReadInt64();
+            int desiredLangIndex = GetNacpLangEntryIndex(context.Device.System.State.DesiredSystemLanguage);
+            byte filteredBitmask = (byte)(sourceBitmask & (1 << desiredLangIndex));
+
+            if (filteredBitmask == 0)
+            {
+                filteredBitmask = sourceBitmask;
+            }
+
+            byte langEntryIndex = GetLangEntryIndex(filteredBitmask);
+
+            context.ResponseData.Write(langEntryIndex);
             return ResultCode.Success;
+        }
+
+        public static byte GetLangEntryIndex(byte bitmask)
+        {
+            for (byte i = 0; i < 16; i++)
+            {
+                if ((bitmask & (1 << i)) != 0)
+                {
+                    return i;
+                }
+            }
+            return 0xFF;
+        }
+
+        public static int GetNacpLangEntryIndex(SystemLanguage language)
+        {
+            switch (language)
+            {
+                case SystemLanguage.AmericanEnglish: return 0;
+                case SystemLanguage.BritishEnglish: return 1;
+                case SystemLanguage.Japanese: return 2;
+                case SystemLanguage.French: return 3;
+                case SystemLanguage.German: return 4;
+                case SystemLanguage.LatinAmericanSpanish: return 5;
+                case SystemLanguage.Spanish: return 6;
+                case SystemLanguage.Italian: return 7;
+                case SystemLanguage.Dutch: return 8;
+                case SystemLanguage.CanadianFrench: return 9;
+                case SystemLanguage.Portuguese: return 10;
+                case SystemLanguage.Russian: return 11;
+                case SystemLanguage.Korean: return 12;
+                case SystemLanguage.TraditionalChinese: return 13;
+                case SystemLanguage.SimplifiedChinese: return 14;
+                default: return 0;
+            }
         }
     }
 }
